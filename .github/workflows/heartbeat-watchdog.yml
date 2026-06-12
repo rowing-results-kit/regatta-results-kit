@@ -31,7 +31,7 @@ jobs:
       TZ: Asia/Tokyo
     steps:
       - name: Checkout main history
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: main
           fetch-depth: 0
@@ -50,11 +50,34 @@ jobs:
           now_ts=$(date +%s)
           now_jst=$(TZ=Asia/Tokyo date '+%Y/%m/%d %H:%M:%S JST')
 
-          TOURNAMENT_START="${{ vars.TOURNAMENT_START }}"
-          TOURNAMENT_END="${{ vars.TOURNAMENT_END }}"
+          # tournament.config.json から日付を読み取る（vars.TOURNAMENT_START/END 廃止）
+          CONFIG_FILE="tournament.config.json"
+          TOURNAMENT_START=""
+          TOURNAMENT_END=""
+
+          if [ -f "$CONFIG_FILE" ]; then
+            TOURNAMENT_START=$(python3 -c "
+          import json, sys
+          try:
+              c = json.load(open('$CONFIG_FILE'))
+              dates = c.get('tournament', {}).get('dates', [])
+              print(dates[0] if len(dates) >= 1 else '')
+          except Exception:
+              print('')
+          ")
+            TOURNAMENT_END=$(python3 -c "
+          import json, sys
+          try:
+              c = json.load(open('$CONFIG_FILE'))
+              dates = c.get('tournament', {}).get('dates', [])
+              print(dates[-1] if len(dates) >= 1 else '')
+          except Exception:
+              print('')
+          ")
+          fi
 
           if [ -z "$TOURNAMENT_START" ] || [ -z "$TOURNAMENT_END" ]; then
-            echo "TOURNAMENT_START / TOURNAMENT_END が未設定のため監視をスキップします"
+            echo "tournament.config.json が存在しないか日付が未設定のため監視をスキップします"
             exit 0
           fi
 
