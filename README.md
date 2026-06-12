@@ -2,13 +2,24 @@
 
 ボート競技大会の速報サイトを一発生成するテンプレートキット。
 年度ハブ（協会ページ）＋各大会の速報サイトを静的ファイルで構成し、
-**日常運用は Google ツール（Spreadsheet / Drive）だけ**で完結する。
+**日常運用は Google ツール（Drive）だけ**で完結する。
+
+---
+
+## 協会担当者の方へ
+
+> 配布者から受け取った URL を開き、7 ステップを自力で完結できます。
+>
+> **オンボーディングサイト**: https://ryuiyamada.github.io/regatta-results-kit/onboarding/
+>
+> ターミナル・Python・git 操作は不要です。すべてブラウザだけで完結します。
 
 ---
 
 > **English summary** — A template kit for rowing regatta live-result websites.
-> Fill in `tournament.config.json` and run `scaffold.py` to generate a complete static site.
-> Day-to-day operation requires only Google tools (Sheets / Drive → GAS auto-processing). No direct git access needed.
+> Use this template on GitHub, run the "大会初期構築" workflow from the Actions tab,
+> then connect GAS and Cloudflare Pages following the onboarding site above.
+> Day-to-day operation requires only Google Drive (upload CSV → GAS auto-processing). No direct git access needed.
 >
 > **Note**: Data files under `site/data/` are sample data only and do not represent real athletes or participants.
 
@@ -16,8 +27,8 @@
 
 ## What（このキットでできること）
 
-- **一発生成**: `tournament.config.json` を書いて `scaffold.py` を実行するだけで、大会専用の速報サイトが出来上がる
-- **年度ハブ**: 協会の大会一覧ページ（`hub/`）を静的1ページで作成できる。大会追加は `association.json` に1行追記するだけ
+- **GitHub Actions で一発生成**: Actions タブの "大会初期構築" を Run workflow するだけで、大会専用の速報サイトが出来上がる（ターミナル・Python 不要）
+- **年度ハブ**: 協会の大会一覧ページ（`hub/`）を静的1ページで作成できる。大会追加は管理者ポータルから操作するだけ
 - **Googleツールのみで日常運用**: 結果 CSV を Google Drive に置くだけで GAS が自動処理し速報サイトに反映。git への接触は不要
 - **管理者ポータル（ブラウザだけで大会登録・年度管理・Drive 接続設定・デザイン変更）**: GAS の Web アプリとして動作。大会の追加・ステータス切替・ブランド色変更まで、ターミナルや git を一切触らずにブラウザだけで完結する
 - **進行モデル（全日本モデルなど公開ライブラリから選択）**: `progression/registry.json` に蓄積されたモデルを管理者ポータルの「接続設定」タブから選択・保存できる。モデルの追加は `/progression-add` スラッシュコマンドで行う（詳細: `progression/README.md`）
@@ -26,7 +37,12 @@
 
 ## クイックスタート
 
-### A. スラッシュコマンド経由（推奨）
+### 協会担当者向け（推奨・ターミナル不要）
+
+1. オンボーディングサイト（https://ryuiyamada.github.io/regatta-results-kit/onboarding/）を開く
+2. Step 1〜7 を順番に進める
+
+### 技術者・配布者向け（ローカル開発・テスト用）
 
 ```bash
 # 1. テンプレートから新規リポジトリを作成（GitHub 画面で "Use this template"）
@@ -34,34 +50,8 @@
 cd <your-new-repo>
 claude
 
-# 3. ウィザードを起動
+# 3. ウィザードを起動（Claude Code あり環境のみ）
 /regatta-setup
-```
-
-`/regatta-setup` が対話形式で設定を作成し、scaffold 実行・GAS/Pages の手順書提示まで誘導する。
-
-### B. 手動セットアップ
-
-```bash
-# 1. テンプレートから新規リポジトリを作成（GitHub 画面で "Use this template"）
-# 2. ローカルに clone
-git clone https://github.com/<your-org>/<your-repo>.git
-cd <your-repo>
-
-# 3. 大会設定ファイルを作成
-cp template/tournament.config.example.json tournament.config.json
-# → tournament.config.json を編集（大会名・日程・会場・ブランド色 等）
-
-# 4. 一発生成（scaffold）
-python3 tools/scaffold.py --config tournament.config.json
-
-# 5. 動作確認
-cd site
-python3 -m http.server 8000
-# ブラウザで http://localhost:8000 を開く
-
-# 6. Cloudflare Pages に接続してデプロイ（Build output directory = site を必ず設定）
-#    詳細は docs/SETUP_GUIDE.generated.md 参照
 ```
 
 ---
@@ -95,20 +85,20 @@ regatta-results-kit/
 │   ├── portal.html             ← 管理者ポータル UI（4タブ: 大会管理・接続設定・デザイン・状態）
 ├── template/                   ← CSV テンプレ・サンプル（フィクションデータ）
 │   └── tournament.config.example.json
-├── tools/                      ← Python CLI ツール群
-│   ├── scaffold.py             ← 一発生成の中枢
+├── tools/                      ← Python CLI ツール群（技術者・配布者向け）
+│   ├── scaffold.py             ← 一発生成の中枢（GitHub Actions 経由で実行される）
 │   ├── generate_master.py
 │   ├── simulate_pipeline.py
-│   ├── init_tournament.py      ← セットアップウィザード
-│   └── build_gas.py
+│   └── init_tournament.py
 ├── test/                       ← e2e_test.py + フィクション fixture
 ├── docs/
 │   ├── ARCHITECTURE.md
-│   ├── SETUP_GUIDE.md          ← GAS セットアップ手順（手動）
+│   ├── SETUP_GUIDE.md          ← 協会担当者向け 7 ステップ手順書
+│   ├── DISTRIBUTION.md         ← 配布者向け運用手順書
 │   └── SPEC_phase3_config.md   ← tournament.config.json スキーマ正本
-├── .claude/commands/
-│   └── regatta-setup.md        ← /regatta-setup スラッシュコマンド定義
+├── docs/onboarding/            ← オンボーディングサイト（GitHub Pages）
 ├── .github/workflows/
+│   ├── setup-tournament.yml    ← 大会初期構築 workflow（Run workflow フォームから実行）
 │   ├── validate.yml
 │   └── heartbeat-watchdog.yml
 ├── Makefile
@@ -119,7 +109,7 @@ regatta-results-kit/
 
 ---
 
-## GAS セットアップ概要
+## GAS セットアップ概要（技術者向け参考情報）
 
 結果の自動処理（CSV → 速報サイト）は Google Apps Script（GAS）が担う。
 
@@ -134,13 +124,11 @@ regatta-results-kit/
   - 対象リポジトリ: 速報サイトのリポジトリのみに限定（全リポジトリ権限は付与しない）
   - 有効期限: **90日**（定期的に更新すること）
 
-### セットアップ手順
+### セットアップ手順（概要）
 
-1. `docs/SETUP_GUIDE.md`（一般手順書）または scaffold 実行後に生成される `docs/SETUP_GUIDE.generated.md`（大会固有値入り・scaffold 実行後に生成されます）を開く
-2. GAS プロジェクトを作成し `gas/` 配下のコードを clasp でプッシュする
-3. GAS のスクリプトプロパティに PAT・Drive フォルダ ID・GitHub リポジトリ名を設定する
-4. GAS で `setupFromConfig()` を実行して初期設定を完了する
-5. トリガーを設定（2分間隔の時間ベーストリガーで自動処理）
+1. オンボーディングサイト（または `docs/SETUP_GUIDE.md`）の 7 ステップを実施
+2. GAS テンプレートを「コピーを作成」してスクリプトプロパティに設定値を入力
+3. 管理者ポータルをデプロイして接続テストが全グリーンになれば完了
 
 > PAT は **fine-grained** で発行し、対象リポジトリを速報サイトのリポジトリのみに限定してください。
 > Classic token は必要以上に広い権限を持つため推奨しません。
@@ -253,11 +241,11 @@ regatta-results-kit/
 
 ## 配布する方へ
 
-約20協会への配布運用手順（招待方法・初期構築3パターン・アップデートポリシー・チェックリスト）: [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md)
+約20協会への配布運用手順（配布方法・アップデートポリシー・チェックリスト）: [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md)
 
 ---
 
-## Claude Code プラグインとして導入する方法
+## Claude Code プラグインとして導入する方法（技術者・配布者向け）
 
 > **注意**: プラグインとしての `/plugin install` による導入は、リポジトリが **public** 公開後に有効になります。現在は private のため、テンプレート配布（クローン方式）または `--plugin-dir` によるローカルテストのみ利用可能です。
 
@@ -295,8 +283,7 @@ claude
 
 ```bash
 git clone https://github.com/RYUIYAMADA/regatta-results-kit
-cd regatta-results-kit  # リポジトリをクローンした親ディレクトリから実行
-cd ..  # 親に戻す
+cd ..  # 親ディレクトリから実行
 claude --plugin-dir ./regatta-results-kit
 ```
 
