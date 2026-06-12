@@ -258,9 +258,13 @@ Python 環境・ターミナル操作・git 操作を前提とするため、技
 
 **セルフチェック（導入完了基準）**
 - 管理者ポータルが開ける → OK
-- GitHub 接続テストが緑バッジ → OK
 - Drive 接続テストがフォルダ名表示 → OK
+- GitHub 接続テストが緑バッジ → OK
+- 「状態」タブ「初期セットアップ実行」ボタンを押し → 「✅ Drive サブフォルダ作成済み」「✅ 自動更新 稼働開始」表示 → OK
+- 「状態」タブ「自動更新: 🟢 稼働中」表示 → OK
 - `https://<project>.pages.dev` で速報サイトに大会名・会場・日程が表示される → OK
+
+> **導入完了 = 接続テスト（Drive・GitHub）OK ＋ 自動更新が稼働中 ＝ 状態が全部緑**
 
 **NGパターンと自己復旧**
 
@@ -464,19 +468,16 @@ var patExpiresAt = props.getProperty('PAT_EXPIRES_AT') || '';
 
 ### 3-5 オンボーディングサイト
 
-#### [PM 確認事項] 配置場所 — 2 案と推奨
+#### 配置場所 — **案 A（GitHub Pages docs/onboarding）採用・PM 裁定済み（2026-06-12）**
 
-**案 A: `regatta-results-kit` リポジトリの GitHub Pages として同梱**
+**採用: 案 A — `regatta-results-kit` リポジトリの GitHub Pages として同梱**
 - 配置: `docs/onboarding/index.html`（GitHub Pages の `docs/` フォルダ公開設定）
-- メリット: リポジトリと一体管理・バージョン同期が自然・URL が固定（`https://ryuiyamada.github.io/regatta-results-kit/onboarding/`）
-- デメリット: リポジトリを public にする必要がある（現在 private）。public 化と同タイミングでのみ有効
+- URL（確定・固定）: `https://ryuiyamada.github.io/regatta-results-kit/onboarding/`
+- 実装済み（2026-06-12 working-designer）: GitHub Pages（main/docs）有効化済み
 
-**案 B: 独立した html-share スラッグとしてアップロード**
-- 配置: html-share にアップロードして固定スラッグで配信
-- メリット: リポジトリの public/private 状態に依存しない。今すぐ配信できる
-- デメリット: リポジトリ更新との同期が手動。龍偉が管理する外部サービスへの依存
+理由: オンボーディングサイトの内容（手順・スクリーンショット・GAS テンプレートリンク）はリポジトリのバージョンと密結合しており、kit の public 化 GO と同時にリリースするのが自然。
 
-**推奨（実装時は PM の裁定待ち）**: 案 A を推奨する。理由: オンボーディングサイトの内容（手順・スクリーンショット・GAS テンプレートリンク）はリポジトリのバージョンと密結合しており、kit の public 化 GO と同時にリリースするのが自然。public 化前の中間段階では案 B を暫定利用し、public 化後に案 A へ切り替える 2 段階を推奨する。
+廃案: 案 B（html-share 暫定）は不採用。リポジトリ更新との同期が手動になりメンテナンスコストが増大するため。
 
 #### オンボーディングサイトのコンテンツ要件
 
