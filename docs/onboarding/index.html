@@ -449,13 +449,18 @@ p, li, td, th, caption, .ja-text {
   border-radius: 50%;
   background: var(--color-border);
 }
+.url {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
 .screen-mock-bar .url {
   font-size: 0.7rem;
   color: var(--color-muted);
   flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .screen-mock-body {
   background: var(--color-bg);
