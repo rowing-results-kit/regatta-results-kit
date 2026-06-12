@@ -45,6 +45,10 @@ jobs:
 
       - name: 入力バリデーション
         id: validate
+        env:
+          INPUT_START_DATE: ${{ inputs.start_date }}
+          INPUT_END_DATE: ${{ inputs.end_date }}
+          INPUT_PRIMARY_COLOR: ${{ inputs.primary_color }}
         run: |
           set -euo pipefail
 
@@ -52,13 +56,13 @@ jobs:
           HAS_ERROR=false
 
           # 開始日フォーマットチェック（YYYY-MM-DD）
-          if echo "${{ inputs.start_date }}" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'; then
+          if echo "$INPUT_START_DATE" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'; then
             echo "start_date_ok=true" >> "$GITHUB_OUTPUT"
           else
             ERROR_MESSAGES="${ERROR_MESSAGES}
           ### 開始日の形式が正しくありません
 
-          入力値: \`${{ inputs.start_date }}\`
+          入力値: 確認してください
 
           **正しい形式**: \`2027-06-14\` のように **YYYY-MM-DD** 形式（年4桁-月2桁-日2桁）で入力してください。
           "
@@ -66,13 +70,13 @@ jobs:
           fi
 
           # 終了日フォーマットチェック（YYYY-MM-DD）
-          if echo "${{ inputs.end_date }}" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'; then
+          if echo "$INPUT_END_DATE" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'; then
             echo "end_date_ok=true" >> "$GITHUB_OUTPUT"
           else
             ERROR_MESSAGES="${ERROR_MESSAGES}
           ### 終了日の形式が正しくありません
 
-          入力値: \`${{ inputs.end_date }}\`
+          入力値: 確認してください
 
           **正しい形式**: \`2027-06-15\` のように **YYYY-MM-DD** 形式（年4桁-月2桁-日2桁）で入力してください。
           "
@@ -81,27 +85,28 @@ jobs:
 
           # メインカラーのフォーマットチェック（#RRGGBB）
           # NG の場合はデフォルト値にフォールバック（失敗扱いにしない）
-          if echo "${{ inputs.primary_color }}" | grep -qE '^#[0-9A-Fa-f]{6}$'; then
-            PRIMARY_COLOR="${{ inputs.primary_color }}"
+          if echo "$INPUT_PRIMARY_COLOR" | grep -qE '^#[0-9A-Fa-f]{6}$'; then
+            PRIMARY_COLOR="$INPUT_PRIMARY_COLOR"
             echo "color_fallback=false" >> "$GITHUB_OUTPUT"
           else
             PRIMARY_COLOR="#2D4F2C"
             echo "color_fallback=true" >> "$GITHUB_OUTPUT"
-            echo "color_input=${{ inputs.primary_color }}" >> "$GITHUB_OUTPUT"
+            # バリデーション不通過の raw 入力は GITHUB_OUTPUT に書かない
           fi
           echo "primary_color=${PRIMARY_COLOR}" >> "$GITHUB_OUTPUT"
 
           if [ "$HAS_ERROR" = "true" ]; then
             # Actions Summary に日本語でエラー理由と直し方を表示
-            cat >> "$GITHUB_STEP_SUMMARY" << 'SUMMARY_EOF'
+            {
+              cat << 'SUMMARY_EOF'
           ## 大会初期構築 — 入力エラー
 
           入力内容に問題があったため、処理を中止しました。
           以下の内容を確認して、もう一度 **Run workflow** を実行してください。
 
           SUMMARY_EOF
-            echo "$ERROR_MESSAGES" >> "$GITHUB_STEP_SUMMARY"
-            cat >> "$GITHUB_STEP_SUMMARY" << 'SUMMARY_EOF2'
+              echo "$ERROR_MESSAGES"
+              cat << 'SUMMARY_EOF2'
 
           ---
 
@@ -112,6 +117,7 @@ jobs:
           3. **Run workflow** をクリックして再実行
 
           SUMMARY_EOF2
+            } >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
 
@@ -121,7 +127,7 @@ jobs:
           cat >> "$GITHUB_STEP_SUMMARY" << 'SUMMARY_EOF'
           ## メインカラーの注意
 
-          入力されたカラーコード `${{ inputs.primary_color }}` の形式が正しくないため、
+          入力されたカラーコードの形式が正しくないため、
           デフォルト値 `#2D4F2C` を使用しました。
 
           カラーコードは `#1a3a5c` のように **# から始まる6桁の英数字**で指定してください。
@@ -130,27 +136,44 @@ jobs:
           SUMMARY_EOF
 
       - name: tournament.config.json 生成
+        env:
+          TOURNAMENT_NAME: ${{ inputs.tournament_name }}
+          VENUE: ${{ inputs.venue }}
+          START_DATE: ${{ inputs.start_date }}
+          END_DATE: ${{ inputs.end_date }}
+          PRIMARY_COLOR: ${{ steps.validate.outputs.primary_color }}
+          GITHUB_REPO_FULL: ${{ github.repository }}
         run: |
           set -euo pipefail
 
-          PRIMARY_COLOR="${{ steps.validate.outputs.primary_color }}"
-          REPO_NAME="${{ github.repository }}"  # owner/repo 形式
-          GITHUB_REPO="${REPO_NAME##*/}"          # repo 部分のみ
-          TOURNAMENT_ID="tournament-$(echo '${{ inputs.start_date }}' | tr -d '-')"
+          REPO_NAME="${GITHUB_REPO_FULL}"
+          GITHUB_REPO="${REPO_NAME##*/}"
+          export GITHUB_REPO
+          TOURNAMENT_ID="tournament-$(echo "${START_DATE}" | tr -d '-')"
+          export TOURNAMENT_ID
 
-          python3 - << PYEOF
+          python3 - << 'PYEOF'
           import json
+          import os
+
+          tournament_name = os.environ["TOURNAMENT_NAME"]
+          venue = os.environ["VENUE"]
+          start_date = os.environ["START_DATE"]
+          end_date = os.environ["END_DATE"]
+          primary_color = os.environ["PRIMARY_COLOR"]
+          github_repo = os.environ["GITHUB_REPO"]
+          tournament_id = os.environ["TOURNAMENT_ID"]
 
           config = {
               "tournament": {
-                  "id": "${TOURNAMENT_ID}",
-                  "name": "${{ inputs.tournament_name }}",
-                  "venue": "${{ inputs.venue }}",
-                  "dates": ["${{ inputs.start_date }}", "${{ inputs.end_date }}"],
+                  "id": tournament_id,
+                  "name": tournament_name,
+                  "venue": venue,
+                  "dates": [start_date, end_date],
                   "hub_url": "",
               },
               "brand": {
-                  "primary_color": "${PRIMARY_COLOR}",
+                  "primary_color": primary_color,
                   "accent_color": "#ffffff",
                   "font_family": "Noto Sans JP",
               },
@@ -160,7 +183,7 @@ jobs:
               },
               "categories": ["M", "W", "X"],
               "deploy": {
-                  "github_repo": "${GITHUB_REPO}",
+                  "github_repo": github_repo,
                   "pages_url": "",
                   "test_pages_url": "",
               },
@@ -187,6 +210,13 @@ jobs:
           echo "tournament.config.json をリポジトリルートにコピーしました"
 
       - name: 生成ファイルをコミット
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TOURNAMENT_NAME: ${{ inputs.tournament_name }}
+          VALIDATED_COLOR: ${{ steps.validate.outputs.primary_color }}
+          START_DATE: ${{ inputs.start_date }}
+          END_DATE: ${{ inputs.end_date }}
+          VENUE: ${{ inputs.venue }}
         run: |
           set -euo pipefail
 
@@ -199,7 +229,8 @@ jobs:
             echo "変更なし、コミットをスキップします（2回目以降の実行）"
             SKIPPED=true
           else
-            git commit -m "scaffold: 大会初期構築 [${{ inputs.tournament_name }}]"
+            COMMIT_MSG="scaffold: 大会初期構築 [${TOURNAMENT_NAME}]"
+            git commit -m "$COMMIT_MSG"
             git push
             SKIPPED=false
           fi
@@ -214,26 +245,23 @@ jobs:
           速報サイトはすでに設定済みです。
           SUMMARY_EOF
           else
-            cat >> "$GITHUB_STEP_SUMMARY" << SUMMARY_EOF
-          ## 大会初期構築 — 完了
-
-          以下の設定で速報サイトの初期構築が完了しました。
-
-          | 項目 | 設定値 |
-          |---|---|
-          | 大会名 | ${{ inputs.tournament_name }} |
-          | 会場 | ${{ inputs.venue }} |
-          | 開始日 | ${{ inputs.start_date }} |
-          | 終了日 | ${{ inputs.end_date }} |
-          | メインカラー | ${{ steps.validate.outputs.primary_color }} |
-
-          ### 次のステップ
-
-          1. **Cloudflare Pages** が自動デプロイされるまで 2〜5 分待つ
-          2. 速報サイトの URL を開いて大会名・会場・日程が表示されることを確認する
-          3. Google Drive フォルダの作成（Step 4）に進む
-
-          SUMMARY_EOF
+            {
+              echo "## 大会初期構築 — 完了"
+              echo ""
+              echo "以下の設定で速報サイトの初期構築が完了しました。"
+              echo ""
+              echo "| 項目 | 設定値 |"
+              echo "|---|---|"
+              printf "| 大会名 | %s |\n" "${TOURNAMENT_NAME}"
+              printf "| 会場 | %s |\n" "${VENUE}"
+              printf "| 開始日 | %s |\n" "${START_DATE}"
+              printf "| 終了日 | %s |\n" "${END_DATE}"
+              printf "| メインカラー | %s |\n" "${VALIDATED_COLOR}"
+              echo ""
+              echo "### 次のステップ"
+              echo ""
+              echo "1. **Cloudflare Pages** が自動デプロイされるまで 2〜5 分待つ"
+              echo "2. 速報サイトの URL を開いて大会名・会場・日程が表示されることを確認する"
+              echo "3. Google Drive フォルダの作成（Step 4）に進む"
+            } >> "$GITHUB_STEP_SUMMARY"
           fi
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
