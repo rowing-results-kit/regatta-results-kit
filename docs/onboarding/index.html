@@ -169,6 +169,12 @@ p, li, td, th, caption, .ja-text {
   font-weight: 500;
   color: var(--text);
 }
+@media (max-width: 40rem) {
+  .step-overview-item {
+    font-size: 0.8rem;
+    gap: 0.5rem;
+  }
+}
 .step-num-badge {
   display: flex;
   align-items: center;
@@ -182,6 +188,13 @@ p, li, td, th, caption, .ja-text {
   font-weight: 700;
   flex-shrink: 0;
 }
+@media (max-width: 40rem) {
+  .step-num-badge {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 0.65rem;
+  }
+}
 .total-time {
   margin-top: 1.25rem;
   padding-top: 1rem;
@@ -189,6 +202,16 @@ p, li, td, th, caption, .ja-text {
   font-size: 0.875rem;
   font-weight: 700;
   color: var(--navy);
+}
+@media (max-width: 40rem) {
+  .total-time {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    font-size: 0.8rem;
+  }
+  .step-overview-item span[style*="margin-left"] {
+    font-size: 0.65rem !important;
+  }
 }
 
 /* ── Main content ── */
@@ -607,6 +630,8 @@ p, li, td, th, caption, .ja-text {
   display: flex;
   border-bottom: 1px solid var(--border);
   margin-bottom: 0.75rem;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 .portal-tab {
   padding: 0.5rem 0.875rem;
@@ -614,6 +639,7 @@ p, li, td, th, caption, .ja-text {
   font-weight: 500;
   color: var(--muted);
   cursor: pointer;
+  flex-shrink: 0;
 }
 .portal-tab.active {
   font-weight: 700;
@@ -735,7 +761,8 @@ p, li, td, th, caption, .ja-text {
   align-items: flex-start;
   line-height: 1.6;
 }
-.alert p, .alert span {
+.alert > * {
+  min-width: 0;
   overflow-wrap: anywhere;
   word-break: normal;
 }
