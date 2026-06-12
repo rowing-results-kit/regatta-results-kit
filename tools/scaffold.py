@@ -109,9 +109,11 @@ def _rand_hex(n: int) -> str:
 def _detect_existing_paths(out_dir: Path) -> tuple[str | None, str | None]:
     """既にスキャフォールド済みの admin/staff パスを検出して返す。
 
-    検出方法:
-      - site/admin/ 配下に __ADMIN_PATH__ 以外のディレクトリがあればそれが admin_path
-      - staff/ 配下に __STAFF_PATH__ 以外のディレクトリがあればそれが staff_path
+    検出方法（優先順）:
+      1. site/admin/ 配下に __ADMIN_PATH__ 以外のディレクトリ → admin_path
+         staff/ 配下に __STAFF_PATH__ 以外のディレクトリ → staff_path
+      2. フォールバック: docs/SETUP_GUIDE.generated.md の
+         「- 管理パス: `admin/XXXX/`」「- スタッフパス: `staff/XXXX/`」行から抽出
     どちらも見つからなければ None を返す（初回実行）。
     """
     admin_path: str | None = None
@@ -130,6 +132,21 @@ def _detect_existing_paths(out_dir: Path) -> tuple[str | None, str | None]:
             if d.is_dir() and d.name != "__STAFF_PATH__":
                 staff_path = d.name
                 break
+
+    # フォールバック: SETUP_GUIDE.generated.md からパスを読み取る
+    # （staff/ ディレクトリが git add されなかった場合など）
+    if not admin_path or not staff_path:
+        guide = out_dir / "docs" / "SETUP_GUIDE.generated.md"
+        if guide.exists():
+            text = guide.read_text(encoding="utf-8")
+            if not admin_path:
+                m = re.search(r'- 管理パス: `admin/([0-9a-f]+)/', text)
+                if m:
+                    admin_path = m.group(1)
+            if not staff_path:
+                m = re.search(r'- スタッフパス: `staff/([0-9a-f]+)/', text)
+                if m:
+                    staff_path = m.group(1)
 
     return admin_path, staff_path
 
