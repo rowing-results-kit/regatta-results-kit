@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>レガッタ速報キット 管理者ポータル</title>
+<script>
+/* =========================================================================
+   ローカル静的プレビュー用モックスタブ
+   GAS 環境では本物の google.script.run が存在するため、ここは実行されない。
+   file:// で開いたときだけダミーデータを返して UI を動作させる。
+   ========================================================================= */
+if (typeof google === 'undefined') {
+  window.google = {
+    script: {
+      run: (function () {
+        var MOCK = {
+          portalGetSettings: { ok: true, data: {
+            driveRootFolderId: { masked: '1AbC***', set: true },
+            measurementPoints: { value: '500m,1000m', set: true },
+            githubOwner: { masked: 'rowi***', set: true },
+            githubRepo: { masked: 'rega***', set: true },
+            githubToken: { set: true }
+          }},
+          portalSaveSettings: { ok: true, data: { saved: ['GITHUB_OWNER'] } },
+          portalTestDrive: { ok: true, data: { folderName: 'レガッタ速報_ルート' } },
+          portalGetAssociation: { ok: true, data: {
+            association_name: 'サンプル県ボート協会',
+            tournaments: [
+              { id: 'masters-2026', name: 'サンプルマスターズレガッタ', year: 2026,
+                dates: ['2026-05-23','2026-05-24'], venue: 'サンプル漕艇場', status: 'final',
+                url: 'https://masters-2026.example.pages.dev' },
+              { id: 'sample-autumn-2026', name: 'サンプル秋季ローイング大会', year: 2026,
+                dates: ['2026-10-11','2026-10-12'], venue: 'サンプル漕艇場', status: 'live',
+                url: 'https://sample-autumn-2026.example.pages.dev' },
+              { id: 'sample-spring-2027', name: 'サンプル春季ローイング大会', year: 2027,
+                dates: ['2027-05-08','2027-05-09'], venue: 'サンプル漕艇場', status: 'upcoming',
+                url: 'https://sample-spring-2027.example.pages.dev' }
+            ]
+          }},
+          portalSaveAssociation: { ok: true, data: { count: 3 } },
+          portalGetTheme: { ok: true, data: {
+            primary_color: '#2D4F2C', accent_color: '#C9A227',
+            font_family: 'Noto Sans JP', exists: true } },
+          portalSaveTheme: { ok: true, data: {} },
+          portalGetStatus: { ok: true, data: {
+            lastTriggerAt: '2026-06-12T05:30:00.000Z', hasTrigger: true, triggerCount: 1,
+            rateLimited: false, rateLimitedAt: '', lastError: '', resultCount: 42 } },
+          portalConfigJson: { ok: true, data: { json: JSON.stringify({
+            GITHUB_OWNER:'', GITHUB_REPO:'', GITHUB_TOKEN:'',
+            DRIVE_ROOT_FOLDER_ID:'', MEASUREMENT_POINTS:'' }, null, 2) } }
+        };
+        function makeRunner(success, failure) {
+          var handler = {};
+          var proxy = new Proxy({}, {
+            get: function (_t, prop) {
+              if (prop === 'withSuccessHandler') {
+                return function (fn) { return makeRunner(fn, failure); };
+              }
+              if (prop === 'withFailureHandler') {
+                return function (fn) { return makeRunner(success, fn); };
+              }
+              return function () {
+                setTimeout(function () {
+                  var res = MOCK[prop];
+                  if (res === undefined) res = { ok: false, error: 'mock: ' + prop + ' 未定義' };
+                  if (success) success(res);
+                }, 180);
+              };
+            }
+          });
+          return proxy;
+        }
+        return makeRunner(null, null);
+      })()
+    }
+  };
+}
+</script>
+<style>
+:root{
+  --color-primary:#2D4F2C;
+  --color-accent:#C9A227;
+  --bg:#F4F1EB;
+  --card:#FFFFFF;
+  --border:#DDD8CE;
+  --text:#252220;
+  --text-sub:#6B6560;
+  --text-muted:#A8A19A;
+  --gold:#A8831E;--gold-bg:#FBF6E8;
+  --silver:#6A7F90;--silver-bg:#EDF2F5;
+  --bronze:#8F5A2E;--bronze-bg:#F8EFE8;
+  --live:#C0392B;--live-bg:#FDEEEC;
+  --radius:6px;--radius-lg:10px;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:"Noto Sans JP",-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",sans-serif;
+  font-weight:500;line-height:1.6;
+}
+.app-header{
+  background:var(--color-primary);color:#fff;padding:18px 20px;
+}
+.app-header h1{margin:0;font-size:18px;font-weight:700;}
+.app-header p{margin:4px 0 0;font-size:12px;opacity:.85;font-weight:500;}
+.tabs{
+  display:flex;gap:2px;background:var(--color-primary);
+  padding:0 12px;overflow-x:auto;
+}
+.tab-btn{
+  background:transparent;border:none;color:rgba(255,255,255,.7);
+  padding:12px 18px;font-size:14px;font-weight:700;cursor:pointer;
+  border-bottom:3px solid transparent;white-space:nowrap;font-family:inherit;
+}
+.tab-btn.active{color:#fff;border-bottom-color:var(--color-accent);}
+.container{max-width:920px;margin:0 auto;padding:20px 16px 60px;}
+.panel{display:none;}
+.panel.active{display:block;}
+.card{
+  background:var(--card);border-radius:var(--radius-lg);
+  padding:20px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.06);
+}
+.card h2{margin:0 0 4px;font-size:16px;font-weight:700;}
+.card .sub{margin:0 0 16px;font-size:13px;color:var(--text-sub);}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:13px;font-weight:700;margin-bottom:5px;}
+.field .hint{font-size:12px;color:var(--text-muted);margin-top:3px;}
+input[type=text],input[type=number],input[type=url],select,textarea{
+  width:100%;padding:9px 11px;border:1px solid var(--border);
+  border-radius:var(--radius);font-size:14px;font-family:inherit;
+  font-weight:500;background:#fff;color:var(--text);
+}
+textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;}
+.mask{
+  font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--text-sub);
+  background:var(--bg);padding:6px 10px;border-radius:var(--radius);
+  display:inline-block;
+}
+.set-yes{color:var(--color-primary);font-weight:700;}
+.set-no{color:var(--live);font-weight:700;}
+.btn{
+  background:var(--color-primary);color:#fff;border:none;
+  padding:10px 18px;border-radius:var(--radius);font-size:14px;font-weight:700;
+  cursor:pointer;font-family:inherit;
+}
+.btn:hover{filter:brightness(1.08);}
+.btn.secondary{background:#fff;color:var(--color-primary);border:1px solid var(--color-primary);}
+.btn.accent{background:var(--color-accent);color:#3a2f08;}
+.btn.danger{background:var(--live);color:#fff;}
+.btn.small{padding:6px 12px;font-size:13px;}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:620px){.row2{grid-template-columns:1fr;}}
+.msg{margin-top:12px;padding:10px 12px;border-radius:var(--radius);font-size:13px;font-weight:700;display:none;}
+.msg.ok{background:#E4F0E5;color:var(--color-primary);display:block;}
+.msg.err{background:var(--live-bg);color:var(--live);display:block;}
+.msg.info{background:var(--gold-bg);color:var(--gold);display:block;}
+
+/* ===== 大会管理 ===== */
+.year-group{margin-bottom:22px;}
+.year-head{font-size:15px;font-weight:700;color:var(--color-primary);
+  border-bottom:2px solid var(--color-accent);padding-bottom:6px;margin-bottom:12px;}
+.t-item{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;
+}
+.t-item:last-child{border-bottom:none;}
+.t-main{flex:1;min-width:200px;}
+.t-name{font-weight:700;font-size:14px;}
+.t-meta{font-size:12px;color:var(--text-sub);margin-top:2px;}
+.t-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+
+/* ===== バッジ ===== */
+.badge{
+  display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;
+  padding:3px 10px;border-radius:999px;
+}
+.badge-dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+.badge-upcoming{background:var(--gold-bg);color:var(--gold);}
+.badge-live{background:var(--live-bg);color:var(--live);}
+.badge-final{background:#EAF0EA;color:var(--color-primary);}
+
+/* ===== モーダル ===== */
+.modal-bg{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);
+  align-items:flex-start;justify-content:center;padding:30px 14px;z-index:50;overflow-y:auto;
+}
+.modal-bg.open{display:flex;}
+.modal{
+  background:#fff;border-radius:var(--radius-lg);padding:22px;width:100%;max-width:520px;
+}
+.modal h3{margin:0 0 16px;font-size:16px;font-weight:700;}
+
+/* ===== デザインプレビュー ===== */
+.preview-wrap{
+  border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;
+  font-family:var(--preview-font,"Noto Sans JP"),sans-serif;
+}
+.pv-header{background:var(--pv-header-bg,#2D4F2C);color:#fff;padding:14px 16px;}
+.pv-header .t{font-size:15px;font-weight:700;}
+.pv-header .s{font-size:11px;opacity:.85;}
+.pv-body{padding:14px 16px;background:var(--bg);}
+.pv-event-card{
+  background:#fff;border-radius:var(--radius);padding:12px 14px;margin-bottom:12px;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);
+}
+.pv-event-card .ev-title{font-weight:700;font-size:13px;border-left:4px solid var(--pv-accent,#C9A227);padding-left:8px;}
+.pv-rank{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border);}
+.pv-rank:last-child{border-bottom:none;}
+.pv-medal{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;}
+.m1{background:var(--gold);}.m2{background:var(--silver);}.m3{background:var(--bronze);}
+.pv-crew{flex:1;font-weight:500;}
+.pv-time{font-variant-numeric:tabular-nums;color:var(--text-sub);}
+.pv-badges{display:flex;gap:8px;margin:12px 0;}
+.pv-hub-card{
+  background:#fff;border-radius:var(--radius);padding:12px 14px;
+  border-top:3px solid var(--pv-primary,#2D4F2C);box-shadow:0 1px 3px rgba(0,0,0,.06);
+}
+.pv-hub-card .h-name{font-weight:700;font-size:13px;}
+.pv-hub-card .h-meta{font-size:11px;color:var(--text-sub);margin-top:2px;}
+.swatch{display:inline-block;width:16px;height:16px;border-radius:3px;vertical-align:middle;margin-right:6px;}
+.color-field{display:flex;align-items:center;gap:10px;}
+.color-field input[type=color]{width:48px;height:38px;padding:2px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;cursor:pointer;}
+.color-field input[type=text]{max-width:130px;}
+
+/* ===== 状態 ===== */
+.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:620px){.status-grid{grid-template-columns:1fr;}}
+.stat{background:var(--bg);border-radius:var(--radius);padding:14px;}
+.stat .k{font-size:12px;color:var(--text-sub);font-weight:700;}
+.stat .v{font-size:16px;font-weight:700;margin-top:4px;word-break:break-all;}
+.dot-ok{color:var(--color-primary);}
+.dot-bad{color:var(--live);}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--color-primary);border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;}
+@keyframes sp{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <h1>レガッタ速報キット 管理者ポータル</h1>
+  <p>大会の登録・接続設定・デザイン・稼働状態をブラウザだけで管理</p>
+</header>
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="t1">大会管理</button>
+  <button class="tab-btn" data-tab="t2">接続設定</button>
+  <button class="tab-btn" data-tab="t3">デザイン</button>
+  <button class="tab-btn" data-tab="t4">状態</button>
+</nav>
+
+<div class="container">
+
+  <!-- ===== タブ1: 大会管理 ===== -->
+  <section class="panel active" id="t1">
+    <div class="card">
+      <h2>大会一覧</h2>
+      <p class="sub">年ごとにまとめて表示します。ステータスを切り替えると公開ハブに反映できます。</p>
+      <div class="btn-row" style="margin-bottom:14px;">
+        <button class="btn" id="btnAddT">＋ 大会を追加</button>
+        <button class="btn accent" id="btnSaveAssoc">公開ハブに反映</button>
+      </div>
+      <div id="assocMsg" class="msg"></div>
+      <div id="tournamentList"><p class="sub">読み込み中 <span class="spin"></span></p></div>
+    </div>
+  </section>
+
+  <!-- ===== タブ2: 接続設定 ===== -->
+  <section class="panel" id="t2">
+    <div class="card">
+      <h2>Drive / GitHub 接続設定</h2>
+      <p class="sub">秘密値はサーバー側のみで保持します。ここにはマスク値だけが表示されます。</p>
+      <div class="field">
+        <label>Drive ルートフォルダ（URL を貼ると ID を自動抽出）</label>
+        <div class="mask" id="curDrive">—</div>
+        <input type="text" id="inDrive" placeholder="https://drive.google.com/drive/folders/XXXX または ID">
+      </div>
+      <div class="field">
+        <label>計測ポイント（MEASUREMENT_POINTS）</label>
+        <input type="text" id="inPoints" placeholder="例: 500m,1000m">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>GITHUB_OWNER</label>
+          <div class="mask" id="curOwner">—</div>
+          <input type="text" id="inOwner" placeholder="例: rowingishikawadev-del">
+        </div>
+        <div class="field">
+          <label>GITHUB_REPO</label>
+          <div class="mask" id="curRepo">—</div>
+          <input type="text" id="inRepo" placeholder="例: regatta-results-kit">
+        </div>
+      </div>
+      <div class="field">
+        <label>GITHUB_TOKEN（入力時のみ更新・空欄なら変更しません）</label>
+        <div class="mask" id="curToken">—</div>
+        <input type="text" id="inToken" placeholder="github_pat_... を入力したときだけ保存されます">
+        <div class="hint">トークンは保存後マスク表示されず「設定あり」のみ表示します。</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="btnSaveSettings">設定を保存</button>
+        <button class="btn secondary" id="btnTestDrive">Drive 接続テスト</button>
+      </div>
+      <div id="settingsMsg" class="msg"></div>
+    </div>
+
+    <div class="card">
+      <h2>pdf / judge 用 設定 JSON</h2>
+      <p class="sub">pdf_publisher / judge_form_publisher の setupFromConfig に貼り付ける雛形です（値は空・自分で入力）。</p>
+      <textarea id="configJson" readonly rows="8"></textarea>
+      <div class="btn-row">
+        <button class="btn secondary small" id="btnCopyConfig">JSON をコピー</button>
+      </div>
+      <div id="configMsg" class="msg"></div>
+    </div>
+  </section>
+
+  <!-- ===== タブ3: デザイン ===== -->
+  <section class="panel" id="t3">
+    <div class="card">
+      <h2>ブランドデザイン</h2>
+      <p class="sub">色とフォントを選ぶと右のプレビューに即反映されます。「公開サイトに反映」で theme.json をコミットします。</p>
+      <div class="row2">
+        <div>
+          <div class="field">
+            <label>メインカラー（primary）</label>
+            <div class="color-field">
+              <input type="color" id="cPrimary" value="#2D4F2C">
+              <input type="text" id="tPrimary" value="#2D4F2C">
+            </div>
+          </div>
+          <div class="field">
+            <label>アクセントカラー（accent）</label>
+            <div class="color-field">
+              <input type="color" id="cAccent" value="#C9A227">
+              <input type="text" id="tAccent" value="#C9A227">
+            </div>
+          </div>
+          <div class="field">
+            <label>フォント</label>
+            <select id="selFont">
+              <option value="Noto Sans JP">Noto Sans JP</option>
+              <option value="Noto Serif JP">Noto Serif JP</option>
+              <option value="sans-serif">システム sans-serif</option>
+            </select>
+          </div>
+          <div class="btn-row">
+            <button class="btn accent" id="btnSaveTheme">公開サイトに反映</button>
+          </div>
+          <div id="themeMsg" class="msg"></div>
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:700;display:block;margin-bottom:6px;">ライブプレビュー</label>
+          <div class="preview-wrap" id="previewWrap">
+            <div class="pv-header">
+              <div class="t">サンプルレガッタ</div>
+              <div class="s">2026.05.23 - 24 ／ サンプル漕艇場</div>
+            </div>
+            <div class="pv-body">
+              <div class="pv-badges">
+                <span class="badge badge-upcoming"><span class="badge-dot"></span>開催予定</span>
+                <span class="badge badge-live"><span class="badge-dot"></span>速報中</span>
+                <span class="badge badge-final"><span class="badge-dot"></span>結果確定</span>
+              </div>
+              <div class="pv-event-card">
+                <div class="ev-title">男子シングルスカル 決勝</div>
+                <div class="pv-rank"><span class="pv-medal m1">1</span><span class="pv-crew">サンプル漕艇クラブ A</span><span class="pv-time">3:42.11</span></div>
+                <div class="pv-rank"><span class="pv-medal m2">2</span><span class="pv-crew">サンプル大学 B</span><span class="pv-time">3:44.08</span></div>
+                <div class="pv-rank"><span class="pv-medal m3">3</span><span class="pv-crew">サンプルローイング C</span><span class="pv-time">3:45.92</span></div>
+              </div>
+              <div class="pv-hub-card">
+                <div class="h-name">サンプルマスターズレガッタ</div>
+                <div class="h-meta">2026.05.23-24 ／ サンプル漕艇場</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== タブ4: 状態 ===== -->
+  <section class="panel" id="t4">
+    <div class="card">
+      <h2>稼働状態</h2>
+      <p class="sub">トリガー稼働・最終ハートビート・API レート制限の状況を確認できます。</p>
+      <div class="btn-row" style="margin-bottom:14px;">
+        <button class="btn secondary small" id="btnReloadStatus">再読み込み</button>
+      </div>
+      <div class="status-grid" id="statusGrid">
+        <p class="sub">読み込み中 <span class="spin"></span></p>
+      </div>
+      <div id="statusMsg" class="msg"></div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ===== 大会 追加/編集モーダル ===== -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3 id="modalTitle">大会を追加</h3>
+    <input type="hidden" id="mIndex" value="-1">
+    <div class="field"><label>大会名 *</label><input type="text" id="mName"></div>
+    <div class="row2">
+      <div class="field"><label>ID *</label><input type="text" id="mId" placeholder="masters-2026"></div>
+      <div class="field"><label>年 *</label><input type="number" id="mYear" placeholder="2026"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>開始日</label><input type="text" id="mDateStart" placeholder="2026-05-23"></div>
+      <div class="field"><label>終了日</label><input type="text" id="mDateEnd" placeholder="2026-05-24"></div>
+    </div>
+    <div class="field"><label>会場</label><input type="text" id="mVenue"></div>
+    <div class="field"><label>公開 URL</label><input type="url" id="mUrl" placeholder="https://..."></div>
+    <div class="field"><label>ステータス *</label>
+      <select id="mStatus">
+        <option value="upcoming">開催予定</option>
+        <option value="live">速報中</option>
+        <option value="final">結果確定</option>
+      </select>
+    </div>
+    <div id="modalMsg" class="msg"></div>
+    <div class="btn-row" style="justify-content:flex-end;">
+      <button class="btn secondary" id="mCancel">キャンセル</button>
+      <button class="btn" id="mSave">この内容で反映待ちに追加</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== ユーティリティ ===== */
+function $(id){return document.getElementById(id);}
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function setText(el,t){el.textContent=(t==null?'':String(t));}
+function showMsg(el,text,type){
+  el.className='msg '+(type||'info');
+  el.textContent=text;
+}
+function clearMsg(el){el.className='msg';el.textContent='';}
+function run(){return google.script.run;}
+
+var STATUS_LABEL={upcoming:'開催予定',live:'速報中',final:'結果確定'};
+var STATUS_CLS={upcoming:'badge-upcoming',live:'badge-live',final:'badge-final'};
+
+/* 大会データはクライアントで保持（保存時にまとめて送信） */
+var ASSOC={association_name:'',tournaments:[]};
+
+/* ===== タブ切替 ===== */
+function activateTab(id){
+  document.querySelectorAll('.tab-btn').forEach(function(x){
+    x.classList.toggle('active',x.dataset.tab===id);
+  });
+  document.querySelectorAll('.panel').forEach(function(x){
+    x.classList.toggle('active',x.id===id);
+  });
+}
+document.querySelectorAll('.tab-btn').forEach(function(b){
+  b.addEventListener('click',function(){activateTab(b.dataset.tab);});
+});
+/* file:// プレビューで #t2 等のハッシュ指定があれば該当タブを開く */
+if(/^#t[1-4]$/.test(location.hash))activateTab(location.hash.slice(1));
+
+/* =========================================================
+   タブ1: 大会管理
+   ========================================================= */
+function loadAssociation(){
+  run().withSuccessHandler(function(res){
+    if(!res||!res.ok){showMsg($('assocMsg'),(res&&res.error)||'読み込み失敗','err');return;}
+    ASSOC=res.data||{tournaments:[]};
+    if(!Array.isArray(ASSOC.tournaments))ASSOC.tournaments=[];
+    renderTournaments();
+  }).withFailureHandler(function(e){
+    showMsg($('assocMsg'),'通信エラー: '+esc(e&&e.message),'err');
+  }).portalGetAssociation();
+}
+
+function renderTournaments(){
+  var host=$('tournamentList');
+  host.textContent='';
+  if(!ASSOC.tournaments.length){
+    var p=document.createElement('p');p.className='sub';
+    p.textContent='まだ大会がありません。「＋ 大会を追加」から登録してください。';
+    host.appendChild(p);return;
+  }
+  /* 年でグループ化 */
+  var groups={};
+  ASSOC.tournaments.forEach(function(t,i){
+    var y=t.year||'未設定';
+    (groups[y]=groups[y]||[]).push({t:t,i:i});
+  });
+  Object.keys(groups).sort(function(a,b){return String(b).localeCompare(String(a));}).forEach(function(y){
+    var g=document.createElement('div');g.className='year-group';
+    var h=document.createElement('div');h.className='year-head';
+    h.textContent=y+' 年';g.appendChild(h);
+    groups[y].forEach(function(rec){
+      g.appendChild(tournamentRow(rec.t,rec.i));
+    });
+    host.appendChild(g);
+  });
+}
+
+function tournamentRow(t,idx){
+  var item=document.createElement('div');item.className='t-item';
+  var main=document.createElement('div');main.className='t-main';
+  var nm=document.createElement('div');nm.className='t-name';nm.textContent=t.name||'(無題)';
+  var meta=document.createElement('div');meta.className='t-meta';
+  var dates=Array.isArray(t.dates)?t.dates.join(' 〜 '):'';
+  meta.textContent=[t.id,dates,t.venue].filter(Boolean).join(' ／ ');
+  main.appendChild(nm);main.appendChild(meta);
+
+  var actions=document.createElement('div');actions.className='t-actions';
+  /* バッジ（クリックで status 切替） */
+  var badge=document.createElement('button');
+  badge.className='badge '+(STATUS_CLS[t.status]||'badge-final');
+  badge.style.border='none';badge.style.cursor='pointer';
+  var dot=document.createElement('span');dot.className='badge-dot';
+  badge.appendChild(dot);
+  badge.appendChild(document.createTextNode(STATUS_LABEL[t.status]||t.status||''));
+  badge.title='クリックでステータス切替';
+  badge.addEventListener('click',function(){cycleStatus(idx);});
+
+  var edit=document.createElement('button');edit.className='btn secondary small';
+  edit.textContent='編集';edit.addEventListener('click',function(){openModal(idx);});
+  var del=document.createElement('button');del.className='btn danger small';
+  del.textContent='削除';del.addEventListener('click',function(){deleteTournament(idx);});
+
+  actions.appendChild(badge);actions.appendChild(edit);actions.appendChild(del);
+  item.appendChild(main);item.appendChild(actions);
+  return item;
+}
+
+function cycleStatus(idx){
+  var order=['upcoming','live','final'];
+  var cur=ASSOC.tournaments[idx].status;
+  var ni=(order.indexOf(cur)+1)%order.length;
+  ASSOC.tournaments[idx].status=order[ni];
+  renderTournaments();
+  showMsg($('assocMsg'),'ステータスを変更しました（未反映）。「公開ハブに反映」で確定します。','info');
+}
+
+function deleteTournament(idx){
+  var t=ASSOC.tournaments[idx];
+  if(!window.confirm('「'+(t.name||t.id)+'」を削除しますか？\n（公開ハブに反映するまで確定しません）'))return;
+  ASSOC.tournaments.splice(idx,1);
+  renderTournaments();
+  showMsg($('assocMsg'),'削除しました（未反映）。「公開ハブに反映」で確定します。','info');
+}
+
+/* ===== モーダル ===== */
+function openModal(idx){
+  clearMsg($('modalMsg'));
+  $('mIndex').value=String(idx);
+  if(idx>=0){
+    var t=ASSOC.tournaments[idx];
+    $('modalTitle').textContent='大会を編集';
+    $('mName').value=t.name||'';
+    $('mId').value=t.id||'';
+    $('mYear').value=t.year||'';
+    $('mDateStart').value=(t.dates&&t.dates[0])||'';
+    $('mDateEnd').value=(t.dates&&t.dates[1])||'';
+    $('mVenue').value=t.venue||'';
+    $('mUrl').value=t.url||'';
+    $('mStatus').value=t.status||'upcoming';
+  }else{
+    $('modalTitle').textContent='大会を追加';
+    ['mName','mId','mYear','mDateStart','mDateEnd','mVenue','mUrl'].forEach(function(k){$(k).value='';});
+    $('mStatus').value='upcoming';
+  }
+  $('modalBg').classList.add('open');
+}
+function closeModal(){$('modalBg').classList.remove('open');}
+
+function saveModal(){
+  var name=$('mName').value.trim();
+  var id=$('mId').value.trim();
+  var year=$('mYear').value.trim();
+  var status=$('mStatus').value;
+  if(!name){showMsg($('modalMsg'),'大会名は必須です','err');return;}
+  if(!id){showMsg($('modalMsg'),'ID は必須です','err');return;}
+  if(!year){showMsg($('modalMsg'),'年は必須です','err');return;}
+  var dates=[];
+  if($('mDateStart').value.trim())dates.push($('mDateStart').value.trim());
+  if($('mDateEnd').value.trim())dates.push($('mDateEnd').value.trim());
+  var obj={
+    id:id,name:name,year:Number(year),dates:dates,
+    venue:$('mVenue').value.trim(),status:status,url:$('mUrl').value.trim()
+  };
+  var idx=parseInt($('mIndex').value,10);
+  if(idx>=0)ASSOC.tournaments[idx]=obj;
+  else ASSOC.tournaments.push(obj);
+  closeModal();
+  renderTournaments();
+  showMsg($('assocMsg'),'入力を反映待ちに追加しました。「公開ハブに反映」で確定します。','info');
+}
+
+function saveAssociation(){
+  showMsg($('assocMsg'),'反映中 …','info');
+  run().withSuccessHandler(function(res){
+    if(!res||!res.ok){showMsg($('assocMsg'),(res&&res.error)||'保存失敗','err');return;}
+    showMsg($('assocMsg'),'公開ハブに反映しました（'+res.data.count+'件）。','ok');
+  }).withFailureHandler(function(e){
+    showMsg($('assocMsg'),'通信エラー: '+esc(e&&e.message),'err');
+  }).portalSaveAssociation(JSON.stringify(ASSOC));
+}
+
+$('btnAddT').addEventListener('click',function(){openModal(-1);});
+$('btnSaveAssoc').addEventListener('click',saveAssociation);
+$('mCancel').addEventListener('click',closeModal);
+$('mSave').addEventListener('click',saveModal);
+$('modalBg').addEventListener('click',function(e){if(e.target===$('modalBg'))closeModal();});
+
+/* =========================================================
+   タブ2: 接続設定
+   ========================================================= */
+function loadSettings(){
+  run().withSuccessHandler(function(res){
+    if(!res||!res.ok){showMsg($('settingsMsg'),(res&&res.error)||'読み込み失敗','err');return;}
+    var d=res.data;
+    setText($('curDrive'),d.driveRootFolderId.set?('現在: '+d.driveRootFolderId.masked):'未設定');
+    setText($('curOwner'),d.githubOwner.set?('現在: '+d.githubOwner.masked):'未設定');
+    setText($('curRepo'),d.githubRepo.set?('現在: '+d.githubRepo.masked):'未設定');
+    setText($('curToken'),d.githubToken.set?'設定あり':'未設定');
+    if(d.measurementPoints&&d.measurementPoints.value)$('inPoints').value=d.measurementPoints.value;
+  }).withFailureHandler(function(e){
+    showMsg($('settingsMsg'),'通信エラー: '+esc(e&&e.message),'err');
+  }).portalGetSettings();
+}
+
+function saveSettings(){
+  var obj={};
+  if($('inDrive').value.trim())obj.driveRootFolderId=$('inDrive').value.trim();
+  if($('inPoints').value.trim())obj.measurementPoints=$('inPoints').value.trim();
+  if($('inOwner').value.trim())obj.githubOwner=$('inOwner').value.trim();
+  if($('inRepo').value.trim())obj.githubRepo=$('inRepo').value.trim();
+  if($('inToken').value.trim())obj.githubToken=$('inToken').value.trim();
+  showMsg($('settingsMsg'),'保存中 …','info');
+  run().withSuccessHandler(function(res){
+    if(!res||!res.ok){showMsg($('settingsMsg'),(res&&res.error)||'保存失敗','err');return;}
+    showMsg($('settingsMsg'),'保存しました: '+(res.data.saved.join(', ')||'（変更なし）'),'ok');
+    $('inDrive').value='';$('inOwner').value='';$('inRepo').value='';$('inToken').value='';
+    loadSettings();
+  }).withFailureHandler(function(e){
+    showMsg($('settingsMsg'),'通信エラー: '+esc(e&&e.message),'err');
+  }).portalSaveSettings(obj);
+}
+
+function testDrive(){
+  showMsg($('settingsMsg'),'Drive に接続中 …','info');
+  run().withSuccessHandler(function(res){
+    if(!res||!res.ok){showMsg($('settingsMsg'),'接続失敗: '+esc((res&&res.error)||''),'err');return;}
+    showMsg($('settingsMsg'),'接続成功 ✓ フォルダ名: '+esc(res.data.folderName),'ok');
+  }).withFailureHandler(function(e){
+    showMsg($('settingsMsg'),'通信エラー: '+esc(e&&e.message),'err');
+  }).portalTestDrive();
+}
+
+function loadConfigJson(){
+  run().withSuccessHandler(function(res){
+    if(res&&res.ok)$('configJson').value=res.data.json;
+  }).withFailureHandler(function(){}).portalConfigJson();
+}
+
+function copyConfig(){
+  var ta=$('configJson');ta.select();
+  try{document.execCommand('copy');showMsg($('configMsg'),'コピーしました ✓','ok');}
+  catch(e){showMsg($('configMsg'),'コピー失敗。手動で選択してください','err');}
+}
+
+$('btnSaveSettings').addEventListener('click',saveSettings);
+$('btnTestDrive').addEventListener('click',testDrive);
+$('btnCopyConfig').addEventListener('click',copyConfig);
+
+/* =========================================================
+   タブ3: デザイン
+   ========================================================= */
+var HEX_RE=/^#[0-9A-Fa-f]{6}$/;
+
+/* =====================================================================
+   ヘッダーグラデーション計算ヘルパー
+   shared.js と同一実装。変更時は両方を必ず更新すること
+   (shared.js ↔ portal.html applyPreview)
+   ===================================================================== */
+function _hexToRgb(hex){
+  var m=/^#([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})$/.exec(hex);
+  if(!m)return null;
+  return{r:parseInt(m[1],16),g:parseInt(m[2],16),b:parseInt(m[3],16)};
+}
+function _toHex(rgb){
+  function c(n){return('0'+Math.max(0,Math.min(255,Math.round(n))).toString(16)).slice(-2);}
+  return'#'+c(rgb.r)+c(rgb.g)+c(rgb.b);
+}
+function _mix(ca,cb,ratio){
+  var a=_hexToRgb(ca),b=_hexToRgb(cb);
+  if(!a||!b)return ca;
+  return _toHex({r:a.r+(b.r-a.r)*ratio,g:a.g+(b.g-a.g)*ratio,b:a.b+(b.b-a.b)*ratio});
+}
+function _buildHeaderGradient(p){
+  var c0=_mix(p,'#000000',0.45);
+  var c1=_mix(p,'#000000',0.25);
+  var c2=p;
+  var c3=_mix(p,'#FFFFFF',0.10);
+  return'linear-gradient(160deg,'+c0+' 0%,'+c1+' 45%,'+c2+' 75%,'+c3+' 100%)';
+}
+/* ===================================================================== */
+
+function applyPreview(){
+  var p=$('tPrimary').value.trim();
+  var a=$('tAccent').value.trim();
+  var f=$('selFont').value;
+  var wrap=$('previewWrap');
+  if(HEX_RE.test(p)){
+    wrap.style.setProperty('--pv-primary',p);
+    wrap.style.setProperty('--pv-header-bg',_buildHeaderGradient(p));
+  }
+  if(HEX_RE.test(a))wrap.style.setProperty('--pv-accent',a);
+  wrap.style.setProperty('--preview-font',f);
+}
+function syncColor(colorEl,textEl){
+  colorEl.addEventListener('input',function(){textEl.value=colorEl.value.toUpperCase();applyPreview();});
+  textEl.addEventListener('input',function(){
+    var v=textEl.value.trim();
+    if(HEX_RE.test(v))colorEl.value=v;
+    applyPreview();
+  });
+}
+syncColor($('cPrimary'),$('tPrimary'));
+syncColor($('cAccent'),$('tAccent'));
+$('selFont').addEventListener('change',applyPreview);
+
+function loadTheme(){
+  run().withSuccessHandler(function(res){
+    if(!res||!res.ok)return;
+    var d=res.data;
+    if(HEX_RE.test(d.primary_color||'')){$('tPrimary').value=d.primary_color;$('cPrimary').value=d.primary_color;}
+    if(HEX_RE.test(d.accent_color||'')){$('tAccent').value=d.accent_color;$('cAccent').value=d.accent_color;}
+    if(d.font_family)$('selFont').value=d.font_family;
+    applyPreview();
+  }).withFailureHandler(function(){}).portalGetTheme();
+}
+
+function saveTheme(){
+  var p=$('tPrimary').value.trim();
+  var a=$('tAccent').value.trim();
+  if(!HEX_RE.test(p)){showMsg($('themeMsg'),'メインカラーは #RRGGBB 形式で入力してください','err');return;}
+  if(!HEX_RE.test(a)){showMsg($('themeMsg'),'アクセントカラーは #RRGGBB 形式で入力してください','err');return;}
+  var theme={primary_color:p,accent_color:a,font_family:$('selFont').value};
+  showMsg($('themeMsg'),'反映中 …','info');
+  run().withSuccessHandler(function(res){
+    if(!res||!res.ok){showMsg($('themeMsg'),(res&&res.error)||'反映失敗','err');return;}
+    showMsg($('themeMsg'),'公開サイトに反映しました ✓','ok');
+  }).withFailureHandler(function(e){
+    showMsg($('themeMsg'),'通信エラー: '+esc(e&&e.message),'err');
+  }).portalSaveTheme(theme);
+}
+$('btnSaveTheme').addEventListener('click',saveTheme);
+
+/* =========================================================
+   タブ4: 状態
+   ========================================================= */
+function fmtDate(iso){
+  if(!iso)return '記録なし';
+  var d=new Date(iso);
+  if(isNaN(d.getTime()))return esc(iso);
+  return d.toLocaleString('ja-JP');
+}
+function loadStatus(){
+  var grid=$('statusGrid');
+  grid.innerHTML='<p class="sub">読み込み中 <span class="spin"></span></p>';
+  run().withSuccessHandler(function(res){
+    if(!res||!res.ok){showMsg($('statusMsg'),(res&&res.error)||'読み込み失敗','err');grid.textContent='';return;}
+    clearMsg($('statusMsg'));
+    var d=res.data;
+    grid.textContent='';
+    addStat(grid,'トリガー稼働',d.hasTrigger?'稼働中 ●':'停止中 ●',d.hasTrigger?'dot-ok':'dot-bad');
+    addStat(grid,'最終ハートビート',fmtDate(d.lastTriggerAt),'');
+    addStat(grid,'結果 JSON 数',(d.resultCount==null?'—':d.resultCount+' 件'),'');
+    addStat(grid,'API レート制限',d.rateLimited?('制限中（'+fmtDate(d.rateLimitedAt)+'〜）'):'正常',d.rateLimited?'dot-bad':'dot-ok');
+    if(d.lastError)addStat(grid,'直近エラー',d.lastError,'dot-bad');
+  }).withFailureHandler(function(e){
+    showMsg($('statusMsg'),'通信エラー: '+esc(e&&e.message),'err');grid.textContent='';
+  }).portalGetStatus();
+}
+function addStat(grid,k,v,cls){
+  var s=document.createElement('div');s.className='stat';
+  var kk=document.createElement('div');kk.className='k';kk.textContent=k;
+  var vv=document.createElement('div');vv.className='v'+(cls?(' '+cls):'');vv.textContent=v;
+  s.appendChild(kk);s.appendChild(vv);grid.appendChild(s);
+}
+$('btnReloadStatus').addEventListener('click',loadStatus);
+
+/* ===== 初期ロード ===== */
+loadAssociation();
+loadSettings();
+loadConfigJson();
+loadTheme();
+loadStatus();
+</script>
+</body>
+</html>

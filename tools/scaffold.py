@@ -9,7 +9,7 @@ scaffold.py — 大会設定を元にサイト・GAS をワンショット生成
   1. config 検証（必須フィールド・色形式）
   2. __ADMIN_PATH__ → ランダム8hex / __STAFF_PATH__ → ランダム6hex に置換（ディレクトリ名ごと）
   3. staff テンプレの {{...}} を config 値で全置換（置換漏れゼロを自己検査・残存なら exit 1）
-  4. site/ の brand CSS 変数を config.brand で上書き
+  4. site/data/theme.json を config.brand から生成（shared.js applyTheme() がランタイムで CSS 変数を適用）
   5. master.json 雛形（schema_version:3）を site/data/ に生成
   6. docs/SETUP_GUIDE.generated.md を出力（セットアップ手順書）
   7. 実行サマリ表示
@@ -107,20 +107,30 @@ def _rename_placeholder_dirs(base: Path, admin_path: str, staff_path: str) -> No
 
 
 # ---------------------------------------------------------------------------
-# brand CSS 変数の上書き
+# theme.json 生成（brand CSS 変数の上書きを一本化）
 # ---------------------------------------------------------------------------
-def _patch_brand_css(out_dir: Path, brand: dict) -> None:
-    css_path = out_dir / "site" / "css" / "style.css"
-    if not css_path.exists():
-        print(f"  warn: {css_path} not found, skipping brand patch")
+# 旧: _patch_brand_css で site/css/style.css の :root を直接書き換えていた
+# 新: site/data/theme.json を生成し、shared.js の applyTheme() が実行時に適用する
+#     → scaffold が style.css を書き換えない = テンプレートファイルを汚さない
+def _generate_theme_json(out_dir: Path, brand: dict) -> None:
+    primary = brand.get("primary_color", "")
+    accent  = brand.get("accent_color", "")
+    font    = brand.get("font_family", "Noto Sans JP")
+
+    if not COLOR_RE.match(primary) or not COLOR_RE.match(accent):
+        print("  warn: brand colors invalid, skipping theme.json generation")
         return
-    text = css_path.read_text(encoding="utf-8")
-    if brand.get("primary_color"):
-        text = re.sub(r'(--color-primary\s*:\s*)#[0-9A-Fa-f]{6}', f'\\g<1>{brand["primary_color"]}', text)
-    if brand.get("accent_color"):
-        text = re.sub(r'(--color-accent\s*:\s*)#[0-9A-Fa-f]{6}', f'\\g<1>{brand["accent_color"]}', text)
-    css_path.write_text(text, encoding="utf-8")
-    print(f"  patched brand CSS: {css_path.relative_to(out_dir)}")
+
+    theme = {
+        "primary_color": primary,
+        "accent_color":  accent,
+        "font_family":   font,
+    }
+    data_dir = out_dir / "site" / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    dest = data_dir / "theme.json"
+    dest.write_text(json.dumps(theme, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"  generated: {dest.relative_to(out_dir)}")
 
 
 # ---------------------------------------------------------------------------
@@ -337,9 +347,9 @@ def main() -> None:
         _replace_in_dir(site_dir, mapping)
         print(f"  replaced in: site/")
 
-    # 4. brand CSS
-    print(f"\n{C.CYAN}[4/7] Patching brand CSS variables...{C.RESET}")
-    _patch_brand_css(out_dir, cfg.get("brand", {}))
+    # 4. theme.json 生成（brand 色をランタイム適用 — CSS ファイル直書きは廃止）
+    print(f"\n{C.CYAN}[4/7] Generating theme.json...{C.RESET}")
+    _generate_theme_json(out_dir, cfg.get("brand", {}))
 
     # 5. master.json 雛形
     print(f"\n{C.CYAN}[5/7] Generating master.json skeleton...{C.RESET}")

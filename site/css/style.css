@@ -49,7 +49,7 @@ body {
 
 /* ========= カバーエリア（site-header） ========= */
 .site-header {
-  background: linear-gradient(160deg, #162E16 0%, #1E4020 45%, #274F2A 75%, #2E5C32 100%);
+  background: var(--header-bg, linear-gradient(160deg, #162E16 0%, #1E4020 45%, #274F2A 75%, #2E5C32 100%));
   padding: 36px 40px 30px;
   position: relative;
   overflow: hidden;

@@ -17,6 +17,7 @@
 - **一発生成**: `tournament.config.json` を書いて `scaffold.py` を実行するだけで、大会専用の速報サイトが出来上がる
 - **年度ハブ**: 協会の大会一覧ページ（`hub/`）を静的1ページで作成できる。大会追加は `association.json` に1行追記するだけ
 - **Googleツールのみで日常運用**: 結果 CSV を Google Drive に置くだけで GAS が自動処理し速報サイトに反映。git への接触は不要
+- **管理者ポータル（ブラウザだけで大会登録・年度管理・Drive 接続設定・デザイン変更）**: GAS の Web アプリとして動作。大会の追加・ステータス切替・ブランド色変更まで、ターミナルや git を一切触らずにブラウザだけで完結する
 
 ---
 
@@ -82,6 +83,8 @@ regatta-results-kit/
 │   └── _redirects
 ├── staff/__STAFF_PATH__/       ← スタッフ向け HTML テンプレ（6本 + shared.css）
 ├── gas/                        ← GAS プロジェクト（クリーン版）+ shared/
+│   ├── AdminPortal.gs          ← 管理者ポータル サーバー関数（doGet + タブ処理）
+│   ├── portal.html             ← 管理者ポータル UI（4タブ: 大会管理・接続設定・デザイン・状態）
 ├── template/                   ← CSV テンプレ・サンプル（フィクションデータ）
 │   └── tournament.config.example.json
 ├── tools/                      ← Python CLI ツール群

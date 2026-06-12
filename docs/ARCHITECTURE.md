@@ -30,13 +30,23 @@ Google Apps Script（A. CSV→JSON Push GAS）
 GitHub リポジトリ
   site/data/master.json
   site/data/results/race_NNN.json
+  site/data/theme.json          ← 管理者ポータル「デザイン」タブが生成・コミット
     │
     │  Cloudflare Pages が自動デプロイ
     ▼
 速報サイト（Cloudflare Pages）
+  shared.js applyTheme() が起動時に theme.json を fetch
+  → --color-primary / --color-accent CSS 変数を上書き（失敗時は既定色維持）
     │
     ▼
 観客のスマホ・PC（120秒間隔で自動更新）
+
+管理者ポータル（GAS Web アプリ）
+    │
+    ├─ タブ1: 大会管理 → hub/association.json を GitHub にコミット
+    ├─ タブ2: 接続設定 → Script Properties を読み書き
+    ├─ タブ3: デザイン → site/data/theme.json を GitHub にコミット
+    └─ タブ4: 状態    → props / ログ参照
 ```
 
 ### 主要コンポーネント一覧
@@ -44,9 +54,11 @@ GitHub リポジトリ
 | コンポーネント | 場所 | 役割 |
 |---|---|---|
 | 速報サイト | `site/index.html`, `site/js/app.js`, `site/css/style.css` | Cloudflare Pages 上で公開される大会速報 UI。`master.json` と `race_NNN.json` を読み込み、レース情報・着順・区分を表示する。 |
+| Admin Portal | `gas/AdminPortal.gs`, `gas/portal.html` | GAS Web アプリとして動作する管理者ポータル。大会の登録・年度管理・Drive 接続設定・デザイン変更をブラウザだけで完結させる（4タブ: 大会管理・接続設定・デザイン・状態）。 |
+| テーマ設定 | `site/data/theme.json` | 管理者ポータルの「デザイン」タブが GitHub にコミットするブランド色設定ファイル。速報サイト起動時に `shared.js applyTheme()` が fetch し `--color-primary` / `--color-accent` CSS 変数を上書きする（ファイルがなければ既定色を維持）。 |
 | 大会マスタ | Drive `master/`, GitHub `site/data/master.json` | `schedule.csv`, `entries.csv` を元に生成される大会全体の基礎データ。 |
 | 結果 JSON | GitHub `site/data/results/race_NNN.json` | 500m / 1000m CSV から生成されるレース別結果データ。速報サイト表示と PDF 自動生成のトリガーになる。 |
-| CSV→JSON Push GAS | `gas/Code.gs` | Drive 上の CSV を解析し、GitHub の JSON データを更新する GAS。 |
+| CSV→JSON Push GAS | `gas/Code.gs` | Drive 上の CSV を解析し、GitHub の JSON データを更新する GAS。Admin Portal はこの GAS プロジェクトに同居する。 |
 | PDF Publisher GAS | `gas/pdf_publisher/Code.gs`, `gas/pdf_publisher/Setup.gs` | GitHub の結果 JSON を監視し、競漕記録 PDF と準備資料 PDF を生成する GAS。 |
 | 判定員帳票 GAS | `gas/judge_form_publisher/Code.gs`, `gas/judge_form_publisher/Setup.gs` | 判定員用帳票 PDF を手動生成する GAS。 |
 | 雛形 Sheets | Drive 上の Template | PDF Publisher と判定員帳票 GAS がコピーして使う帳票テンプレート。 |
@@ -252,9 +264,12 @@ GitHub リポジトリ
 | `site/data/results/race_NNN.json` | レース別結果データ（GAS が Push）。 |
 | `site/_headers` | Cloudflare Pages の HTTP ヘッダー設定。`data/*` に `no-store` を付与。 |
 | `gas/Code.gs` | CSV→JSON Push GAS。 |
+| `gas/AdminPortal.gs` | 管理者ポータル サーバー関数。doGet + 4タブのサーバー処理。CSV→JSON Push GAS プロジェクトに同居。 |
+| `gas/portal.html` | 管理者ポータル UI（HTMLService テンプレート）。4タブ: 大会管理・接続設定・デザイン・状態。 |
+| `site/data/theme.json` | ブランド色設定ファイル（scaffold または管理者ポータルが生成）。`primary_color` / `accent_color` / `font_family` を持つ。速報サイト起動時に applyTheme() が fetch して CSS 変数に反映。 |
 | `gas/pdf_publisher/` | PDF Publisher GAS。競漕記録 PDF と準備資料 PDF を生成する。 |
 | `gas/judge_form_publisher/` | 判定員帳票 GAS。 |
-| `tools/scaffold.py` | 一発生成の中枢。`tournament.config.json` から `site/` 以下を生成する。 |
+| `tools/scaffold.py` | 一発生成の中枢。`tournament.config.json` から `site/` 以下を生成する。brand 色は `site/data/theme.json` として出力（CSS ファイル直書きは廃止）。 |
 | `template/tournament.config.example.json` | 大会設定ファイルのテンプレート。 |
 | `docs/` | プロジェクトドキュメント。 |
 
