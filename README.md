@@ -9,6 +9,8 @@
 > **English summary** — A template kit for rowing regatta live-result websites.
 > Fill in `tournament.config.json` and run `scaffold.py` to generate a complete static site.
 > Day-to-day operation requires only Google tools (Sheets / Drive → GAS auto-processing). No direct git access needed.
+>
+> **Note**: Data files under `site/data/` are sample data only and do not represent real athletes or participants.
 
 ---
 
