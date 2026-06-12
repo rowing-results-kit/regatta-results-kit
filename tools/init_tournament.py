@@ -78,6 +78,7 @@ DEFAULTS = {
     "tournament_name":            "",
     "tournament_venue":           "",
     "tournament_dates":           "",
+    "tournament_hub_url":         "",
     "course_length_m":            "1000",
     "measurement_points":         "500,1000",
     "categories":                 "M,W,X",
@@ -133,10 +134,11 @@ def collect_answers(non_interactive: bool) -> dict:
     print("Enter のみでデフォルト値を採用します。空欄可のフィールドはそのまま Enter でOK。\n")
 
     print(f"{C.BOLD}▶ 大会情報{C.RESET}")
-    ans["tournament_id"]    = prompt("Q01 大会ID (英数ハイフン)", D["tournament_id"])
-    ans["tournament_name"]  = prompt("Q02 大会名", D["tournament_name"])
-    ans["tournament_venue"] = prompt("Q03 会場", D["tournament_venue"])
-    ans["tournament_dates"] = prompt("Q04 開催日 (YYYY-MM-DD カンマ区切り)", D["tournament_dates"])
+    ans["tournament_id"]      = prompt("Q01 大会ID (英数ハイフン)", D["tournament_id"])
+    ans["tournament_name"]    = prompt("Q02 大会名", D["tournament_name"])
+    ans["tournament_venue"]   = prompt("Q03 会場", D["tournament_venue"])
+    ans["tournament_dates"]   = prompt("Q04 開催日 (YYYY-MM-DD カンマ区切り)", D["tournament_dates"])
+    ans["tournament_hub_url"] = prompt("Q04b ハブサイトURL (空欄可)", D["tournament_hub_url"])
 
     print(f"\n{C.BOLD}▶ コース設定{C.RESET}")
     ans["course_length_m"]       = prompt("Q05 コース距離 (m)", D["course_length_m"])
@@ -195,10 +197,11 @@ def build_config(ans: dict) -> dict:
     return {
         "_spec": "tournament.config.json — SPEC §5 (docs/SPEC_phase3_config.md v1.1). このファイルは .gitignore 対象。example は tournament.config.example.json を参照。",
         "tournament": {
-            "id":    ans["tournament_id"],
-            "name":  ans["tournament_name"],
-            "venue": ans["tournament_venue"],
-            "dates": dates,
+            "id":      ans["tournament_id"],
+            "name":    ans["tournament_name"],
+            "venue":   ans["tournament_venue"],
+            "dates":   dates,
+            "hub_url": ans.get("tournament_hub_url", ""),
         },
         "default_course": {
             "length_m":            length_m,

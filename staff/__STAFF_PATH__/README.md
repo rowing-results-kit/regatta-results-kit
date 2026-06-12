@@ -32,13 +32,16 @@ Phase 4 でアーカイブへ移動する。
 | 変数名 | 意味 | 例 |
 |---|---|---|
 | `{{TOURNAMENT_NAME}}` | 大会の正式名称 | 第01回○○レガッタ |
+| `{{TOURNAMENT_ID}}` | 大会ID（英数ハイフン） | 2026-masters |
 | `{{YEAR}}` | 開催年 | 2026 |
 | `{{VENUE}}` | 会場名（コース含む） | ○○漕艇場 |
+| `{{DATES_LABEL}}` | 開催日一覧（スラッシュ区切り） | 2026-05-23 / 2026-05-24 |
 | `{{DATE_DAY1}}` | 1日目の日付（YYYY-MM-DD） | 2026-05-23 |
 | `{{DATE_DAY2}}` | 2日目の日付（YYYY-MM-DD） | 2026-05-24 |
-| `{{DATE_DAY1_JA}}` | 1日目の日付（日本語） | 2026年5月23日(土) |
-| `{{DATE_DAY2_JA}}` | 2日目の日付（日本語） | 2026年5月24日(日) |
-| `{{SITE_URL}}` | 速報サイトのホスト名（https:// なし） | your-regatta-2026.pages.dev |
+| `{{DATE_DAY1_JA}}` | 1日目の日付（日本語） | 5月23日(土) |
+| `{{DATE_DAY2_JA}}` | 2日目の日付（日本語） | 5月24日(日) |
+| `{{SITE_URL}}` | 速報サイトURL（https:// なし） | your-regatta-2026.pages.dev |
+| `{{HUB_URL}}` | ハブサイトURL | https://rowing-hub.pages.dev |
 | `{{GITHUB_REPO}}` | GitHubリポジトリ（オーナー/リポジトリ名） | OWNER/repo-name |
 | `{{ADMIN_PATH}}` | 管理者パス（URLセキュリティ用の数字列） | __ADMIN_PATH__ |
 | `{{STAFF_PATH}}` | スタッフパス（URLセキュリティ用の文字列） | __STAFF_PATH__ |

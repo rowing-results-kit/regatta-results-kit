@@ -4,7 +4,8 @@
     "id": "",
     "name": "",
     "venue": "",
-    "dates": []
+    "dates": [],
+    "hub_url": ""
   },
   "default_course": {
     "length_m": 1000,

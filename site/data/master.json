@@ -1,0 +1,643 @@
+{
+  "schema_version": 3,
+  "tournament": {
+    "id": "tournament",
+    "name": "大会名をここに入力",
+    "dates": [
+      "2025-06-07",
+      "2025-06-08"
+    ],
+    "venue": "会場名",
+    "youtube_url": "",
+    "hub_url": ""
+  },
+  "default_course": {
+    "length_m": 1000,
+    "measurement_points": [
+      500,
+      1000
+    ]
+  },
+  "categories": [
+    "M",
+    "W"
+  ],
+  "measurement_points": [
+    "500m",
+    "1000m"
+  ],
+  "schedule": [
+    {
+      "race_no": 1,
+      "event_code": "M1X",
+      "event_name": "男子シングルスカル",
+      "category": "M",
+      "age_group": "G",
+      "round": "FA",
+      "date": "2025-09-14",
+      "time": "09:00",
+      "entries": [
+        {
+          "lane": 1,
+          "crew_name": "山田太郎",
+          "affiliation": "諏訪漕艇クラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 2,
+          "crew_name": "鈴木次郎",
+          "affiliation": "松本ボートクラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 3,
+          "crew_name": "佐藤健一",
+          "affiliation": "長野漕艇協会",
+          "age_group": ""
+        },
+        {
+          "lane": 4,
+          "crew_name": "木村四郎",
+          "affiliation": "上田ローイング",
+          "age_group": ""
+        }
+      ]
+    },
+    {
+      "race_no": 2,
+      "event_code": "W1X",
+      "event_name": "女子シングルスカル",
+      "category": "W",
+      "age_group": "G",
+      "round": "FA",
+      "date": "2025-09-14",
+      "time": "09:08",
+      "entries": [
+        {
+          "lane": 1,
+          "crew_name": "田中花子",
+          "affiliation": "岡谷漕艇クラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 2,
+          "crew_name": "伊藤明美",
+          "affiliation": "飯田ローイング",
+          "age_group": ""
+        },
+        {
+          "lane": 3,
+          "crew_name": "渡辺麻衣",
+          "affiliation": "諏訪漕艇クラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 4,
+          "crew_name": "中村さくら",
+          "affiliation": "松本ボートクラブ",
+          "age_group": ""
+        }
+      ]
+    },
+    {
+      "race_no": 3,
+      "event_code": "M2X",
+      "event_name": "男子ダブルスカル",
+      "category": "M",
+      "age_group": "G",
+      "round": "FA",
+      "date": "2025-09-14",
+      "time": "09:16",
+      "entries": [
+        {
+          "lane": 1,
+          "crew_name": "高橋雄介 / 小林誠",
+          "affiliation": "長野漕艇協会",
+          "age_group": ""
+        },
+        {
+          "lane": 2,
+          "crew_name": "加藤大輔 / 吉田拓也",
+          "affiliation": "諏訪漕艇クラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 3,
+          "crew_name": "山本隆太 / 石川健",
+          "affiliation": "岡谷漕艇クラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 4,
+          "crew_name": "林直樹 / 清水翔",
+          "affiliation": "松本ボートクラブ",
+          "age_group": ""
+        }
+      ]
+    },
+    {
+      "race_no": 4,
+      "event_code": "W2X",
+      "event_name": "女子ダブルスカル",
+      "category": "W",
+      "age_group": "G",
+      "round": "FA",
+      "date": "2025-09-14",
+      "time": "09:24",
+      "entries": [
+        {
+          "lane": 1,
+          "crew_name": "斎藤由美 / 松田綾",
+          "affiliation": "上田ローイング",
+          "age_group": ""
+        },
+        {
+          "lane": 2,
+          "crew_name": "井上千恵 / 木下瞳",
+          "affiliation": "飯田ローイング",
+          "age_group": ""
+        },
+        {
+          "lane": 3,
+          "crew_name": "橋本美香 / 坂本奈々",
+          "affiliation": "諏訪漕艇クラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 4,
+          "crew_name": "西村友美 / 藤田香",
+          "affiliation": "長野漕艇協会",
+          "age_group": ""
+        }
+      ]
+    },
+    {
+      "race_no": 5,
+      "event_code": "M4X",
+      "event_name": "男子クォドルプル",
+      "category": "M",
+      "age_group": "G",
+      "round": "FA",
+      "date": "2025-09-14",
+      "time": "09:32",
+      "entries": [
+        {
+          "lane": 1,
+          "crew_name": "中島拓 / 前田亮 / 野村健 / 大野聡",
+          "affiliation": "諏訪漕艇クラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 2,
+          "crew_name": "後藤慎 / 岡田悠 / 長谷川涼 / 近藤豊",
+          "affiliation": "松本ボートクラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 3,
+          "crew_name": "菊地恒 / 河野純 / 池田充 / 市川努",
+          "affiliation": "岡谷漕艇クラブ",
+          "age_group": ""
+        }
+      ]
+    },
+    {
+      "race_no": 6,
+      "event_code": "W4X",
+      "event_name": "女子クォドルプル",
+      "category": "W",
+      "age_group": "G",
+      "round": "FA",
+      "date": "2025-09-14",
+      "time": "09:40",
+      "entries": [
+        {
+          "lane": 1,
+          "crew_name": "上野彩 / 内田葵 / 杉山莉 / 村田葉",
+          "affiliation": "長野漕艇協会",
+          "age_group": ""
+        },
+        {
+          "lane": 2,
+          "crew_name": "石田朱 / 浜田恵 / 宮本陽 / 金子桜",
+          "affiliation": "上田ローイング",
+          "age_group": ""
+        }
+      ]
+    },
+    {
+      "race_no": 7,
+      "event_code": "M1X",
+      "event_name": "男子シングルスカル",
+      "category": "M",
+      "age_group": "J",
+      "round": "FA",
+      "date": "2025-09-14",
+      "time": "09:48",
+      "entries": [
+        {
+          "lane": 1,
+          "crew_name": "小川光太",
+          "affiliation": "長野県立松本高等学校",
+          "age_group": "J"
+        },
+        {
+          "lane": 2,
+          "crew_name": "三浦颯太",
+          "affiliation": "長野県立諏訪清陵高等学校",
+          "age_group": "J"
+        },
+        {
+          "lane": 3,
+          "crew_name": "岩田海斗",
+          "affiliation": "長野県立岡谷東高等学校",
+          "age_group": "J"
+        },
+        {
+          "lane": 4,
+          "crew_name": "竹内蒼太",
+          "affiliation": "長野県立上田高等学校",
+          "age_group": "J"
+        }
+      ]
+    },
+    {
+      "race_no": 8,
+      "event_code": "W1X",
+      "event_name": "女子シングルスカル",
+      "category": "W",
+      "age_group": "J",
+      "round": "FA",
+      "date": "2025-09-14",
+      "time": "09:56",
+      "entries": [
+        {
+          "lane": 1,
+          "crew_name": "松本優奈",
+          "affiliation": "長野県立松本高等学校",
+          "age_group": "J"
+        },
+        {
+          "lane": 2,
+          "crew_name": "福田結衣",
+          "affiliation": "長野県立諏訪清陵高等学校",
+          "age_group": "J"
+        },
+        {
+          "lane": 3,
+          "crew_name": "川口美咲",
+          "affiliation": "長野県立飯田高等学校",
+          "age_group": "J"
+        },
+        {
+          "lane": 4,
+          "crew_name": "古田葵衣",
+          "affiliation": "長野県立上田高等学校",
+          "age_group": "J"
+        }
+      ]
+    },
+    {
+      "race_no": 9,
+      "event_code": "M1X",
+      "event_name": "男子シングルスカル",
+      "category": "M",
+      "age_group": "G",
+      "round": "H",
+      "date": "2025-09-14",
+      "time": "10:04",
+      "entries": [
+        {
+          "lane": 1,
+          "crew_name": "山崎雅人",
+          "affiliation": "長野漕艇協会",
+          "age_group": "G"
+        },
+        {
+          "lane": 2,
+          "crew_name": "桜井昭夫",
+          "affiliation": "諏訪漕艇クラブ",
+          "age_group": "M"
+        },
+        {
+          "lane": 3,
+          "crew_name": "荒木浩之",
+          "affiliation": "岡谷漕艇クラブ",
+          "age_group": "G"
+        },
+        {
+          "lane": 4,
+          "crew_name": "工藤達也",
+          "affiliation": "松本ボートクラブ",
+          "age_group": "M"
+        }
+      ]
+    },
+    {
+      "race_no": 10,
+      "event_code": "W1X",
+      "event_name": "女子シングルスカル",
+      "category": "W",
+      "age_group": "G",
+      "round": "H",
+      "date": "2025-09-14",
+      "time": "10:12",
+      "entries": [
+        {
+          "lane": 1,
+          "crew_name": "丸山和子",
+          "affiliation": "飯田ローイング",
+          "age_group": "G"
+        },
+        {
+          "lane": 2,
+          "crew_name": "津田由紀",
+          "affiliation": "諏訪漕艇クラブ",
+          "age_group": "M"
+        },
+        {
+          "lane": 3,
+          "crew_name": "青木恵子",
+          "affiliation": "長野漕艇協会",
+          "age_group": "G"
+        },
+        {
+          "lane": 4,
+          "crew_name": "平野智美",
+          "affiliation": "上田ローイング",
+          "age_group": "M"
+        }
+      ]
+    },
+    {
+      "race_no": 11,
+      "event_code": "M2X",
+      "event_name": "男子ダブルスカル",
+      "category": "M",
+      "age_group": "G",
+      "round": "H",
+      "date": "2025-09-15",
+      "time": "09:00",
+      "entries": [
+        {
+          "lane": 1,
+          "crew_name": "高橋雄介 / 小林誠",
+          "affiliation": "長野漕艇協会",
+          "age_group": ""
+        },
+        {
+          "lane": 2,
+          "crew_name": "加藤大輔 / 吉田拓也",
+          "affiliation": "諏訪漕艇クラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 3,
+          "crew_name": "山本隆太 / 石川健",
+          "affiliation": "岡谷漕艇クラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 4,
+          "crew_name": "林直樹 / 清水翔",
+          "affiliation": "松本ボートクラブ",
+          "age_group": ""
+        }
+      ]
+    },
+    {
+      "race_no": 12,
+      "event_code": "W2X",
+      "event_name": "女子ダブルスカル",
+      "category": "W",
+      "age_group": "G",
+      "round": "H",
+      "date": "2025-09-15",
+      "time": "09:08",
+      "entries": [
+        {
+          "lane": 1,
+          "crew_name": "斎藤由美 / 松田綾",
+          "affiliation": "上田ローイング",
+          "age_group": ""
+        },
+        {
+          "lane": 2,
+          "crew_name": "井上千恵 / 木下瞳",
+          "affiliation": "飯田ローイング",
+          "age_group": ""
+        },
+        {
+          "lane": 3,
+          "crew_name": "橋本美香 / 坂本奈々",
+          "affiliation": "諏訪漕艇クラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 4,
+          "crew_name": "西村友美 / 藤田香",
+          "affiliation": "長野漕艇協会",
+          "age_group": ""
+        }
+      ]
+    },
+    {
+      "race_no": 13,
+      "event_code": "M4X",
+      "event_name": "男子クォドルプル",
+      "category": "M",
+      "age_group": "G",
+      "round": "H",
+      "date": "2025-09-15",
+      "time": "09:16",
+      "entries": [
+        {
+          "lane": 1,
+          "crew_name": "中島拓 / 前田亮 / 野村健 / 大野聡",
+          "affiliation": "諏訪漕艇クラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 2,
+          "crew_name": "後藤慎 / 岡田悠 / 長谷川涼 / 近藤豊",
+          "affiliation": "松本ボートクラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 3,
+          "crew_name": "菊地恒 / 河野純 / 池田充 / 市川努",
+          "affiliation": "岡谷漕艇クラブ",
+          "age_group": ""
+        }
+      ]
+    },
+    {
+      "race_no": 14,
+      "event_code": "W4X",
+      "event_name": "女子クォドルプル",
+      "category": "W",
+      "age_group": "G",
+      "round": "H",
+      "date": "2025-09-15",
+      "time": "09:24",
+      "entries": [
+        {
+          "lane": 1,
+          "crew_name": "上野彩 / 内田葵 / 杉山莉 / 村田葉",
+          "affiliation": "長野漕艇協会",
+          "age_group": ""
+        },
+        {
+          "lane": 2,
+          "crew_name": "石田朱 / 浜田恵 / 宮本陽 / 金子桜",
+          "affiliation": "上田ローイング",
+          "age_group": ""
+        }
+      ]
+    },
+    {
+      "race_no": 15,
+      "event_code": "M1X",
+      "event_name": "男子シングルスカル",
+      "category": "M",
+      "age_group": "G",
+      "round": "SF",
+      "date": "2025-09-15",
+      "time": "10:00",
+      "entries": [
+        {
+          "lane": 1,
+          "crew_name": "山田太郎",
+          "affiliation": "諏訪漕艇クラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 2,
+          "crew_name": "鈴木次郎",
+          "affiliation": "松本ボートクラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 3,
+          "crew_name": "佐藤健一",
+          "affiliation": "長野漕艇協会",
+          "age_group": ""
+        },
+        {
+          "lane": 4,
+          "crew_name": "木村四郎",
+          "affiliation": "上田ローイング",
+          "age_group": ""
+        }
+      ]
+    },
+    {
+      "race_no": 16,
+      "event_code": "W1X",
+      "event_name": "女子シングルスカル",
+      "category": "W",
+      "age_group": "G",
+      "round": "SF",
+      "date": "2025-09-15",
+      "time": "10:08",
+      "entries": [
+        {
+          "lane": 1,
+          "crew_name": "田中花子",
+          "affiliation": "岡谷漕艇クラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 2,
+          "crew_name": "伊藤明美",
+          "affiliation": "飯田ローイング",
+          "age_group": ""
+        },
+        {
+          "lane": 3,
+          "crew_name": "渡辺麻衣",
+          "affiliation": "諏訪漕艇クラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 4,
+          "crew_name": "中村さくら",
+          "affiliation": "松本ボートクラブ",
+          "age_group": ""
+        }
+      ]
+    },
+    {
+      "race_no": 17,
+      "event_code": "M2X",
+      "event_name": "男子ダブルスカル",
+      "category": "M",
+      "age_group": "G",
+      "round": "SF",
+      "date": "2025-09-15",
+      "time": "10:16",
+      "entries": [
+        {
+          "lane": 1,
+          "crew_name": "高橋雄介 / 小林誠",
+          "affiliation": "長野漕艇協会",
+          "age_group": ""
+        },
+        {
+          "lane": 2,
+          "crew_name": "加藤大輔 / 吉田拓也",
+          "affiliation": "諏訪漕艇クラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 3,
+          "crew_name": "山本隆太 / 石川健",
+          "affiliation": "岡谷漕艇クラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 4,
+          "crew_name": "林直樹 / 清水翔",
+          "affiliation": "松本ボートクラブ",
+          "age_group": ""
+        }
+      ]
+    },
+    {
+      "race_no": 18,
+      "event_code": "W2X",
+      "event_name": "女子ダブルスカル",
+      "category": "W",
+      "age_group": "G",
+      "round": "SF",
+      "date": "2025-09-15",
+      "time": "10:24",
+      "entries": [
+        {
+          "lane": 1,
+          "crew_name": "斎藤由美 / 松田綾",
+          "affiliation": "上田ローイング",
+          "age_group": ""
+        },
+        {
+          "lane": 2,
+          "crew_name": "井上千恵 / 木下瞳",
+          "affiliation": "飯田ローイング",
+          "age_group": ""
+        },
+        {
+          "lane": 3,
+          "crew_name": "橋本美香 / 坂本奈々",
+          "affiliation": "諏訪漕艇クラブ",
+          "age_group": ""
+        },
+        {
+          "lane": 4,
+          "crew_name": "西村友美 / 藤田香",
+          "affiliation": "長野漕艇協会",
+          "age_group": ""
+        }
+      ]
+    }
+  ]
+}
