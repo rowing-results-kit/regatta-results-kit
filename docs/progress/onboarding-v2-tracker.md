@@ -1,6 +1,6 @@
 ---
 status: in_progress
-progress_pct: 5
+progress_pct: 30
 last_updated: 2026-06-12
 created: 2026-06-12
 ---
@@ -23,10 +23,10 @@ created: 2026-06-12
 
 | # | タスク | 担当 | 状態 | 依存 |
 |---|---|---|---|---|
-| W1-1 | `setup-tournament.yml` 新規作成（workflow_dispatch 5項目 + バリデーション + scaffold 呼び出し + self-commit + 冪等性） | working-engineer | - | なし |
-| W1-2 | `heartbeat-watchdog.yml` 改修（`vars.TOURNAMENT_START/END` 廃止 → `tournament.config.json` 読み取り） | working-engineer | - | W1-1（`tournament.config.json` のスキーマが確定してから） |
-| W1-3 | `validate.yml` / `test/e2e_test.py` の雛形状態 fail 防止（空 schedule での skip 対応） | working-engineer | - | W1-1 |
-| W1-4 | W1 の冪等性テスト実行・確認（ジョブ 2 回実行で 2 回目コミットなし） | qa-reviewer | - | W1-1 |
+| W1-1 | `setup-tournament.yml` 新規作成（workflow_dispatch 5項目 + バリデーション + scaffold 呼び出し + self-commit + 冪等性） | working-engineer | ✅ | なし |
+| W1-2 | `heartbeat-watchdog.yml` 改修（`vars.TOURNAMENT_START/END` 廃止 → `tournament.config.json` 読み取り） | working-engineer | ✅ | W1-1（`tournament.config.json` のスキーマが確定してから） |
+| W1-3 | `validate.yml` / `test/e2e_test.py` の雛形状態 fail 防止（空 schedule での skip 対応） | working-engineer | ✅ | W1-1 |
+| W1-4 | W1 の冪等性テスト実行・確認（ジョブ 2 回実行で 2 回目コミットなし） | qa-reviewer | ✅（ローカル確認済） | W1-1 |
 
 ### W2: GAS 系（`gas/AdminPortal.gs` + `gas/portal.html` + `gas/Code.gs` 改修）
 
@@ -34,11 +34,11 @@ created: 2026-06-12
 
 | # | タスク | 担当 | 状態 | 依存 |
 |---|---|---|---|---|
-| W2-1 | `gas/AdminPortal.gs` に `portalTestGitHub()` 追加（リポジトリ疎通確認・401/404 のエラーメッセージ日本語化） | working-engineer | - | なし |
-| W2-2 | `gas/AdminPortal.gs` の `portalGetStatus()` に PAT 期限取得・キャッシュロジック追加（`PAT_EXPIRES_AT` プロパティ） | working-engineer | - | W2-1 |
-| W2-3 | `gas/portal.html` の「接続設定」タブに「GitHub 接続テスト」ボタン追加・結果バッジ表示 | working-engineer | - | W2-1 |
-| W2-4 | `gas/portal.html` の「状態」タブに PAT 期限バッジ（赤: 14 日以内 / 黄: 30 日以内）表示追加 | working-engineer | - | W2-2 |
-| W2-5 | `gas/Code.gs` のグローバル定数 `SETUP_DRIVE_FOLDER_ID` / `SETUP_GITHUB_TOKEN` 削除（スクリプトプロパティ直接入力を主フロー化） | working-engineer | - | W2-1 完了後（ポータル設定 UI が先に使えるようにしてから削除） |
+| W2-1 | `gas/AdminPortal.gs` に `portalTestGitHub()` 追加（リポジトリ疎通確認・401/404 のエラーメッセージ日本語化） | working-engineer | ✅ | なし |
+| W2-2 | `gas/AdminPortal.gs` の `portalGetStatus()` に PAT 期限取得・キャッシュロジック追加（`PAT_EXPIRES_AT` プロパティ） | working-engineer | ✅ | W2-1 |
+| W2-3 | `gas/portal.html` の「接続設定」タブに「GitHub 接続テスト」ボタン追加・結果バッジ表示 | working-engineer | ✅ | W2-1 |
+| W2-4 | `gas/portal.html` の「状態」タブに PAT 期限バッジ（赤: 14 日以内 / 黄: 30 日以内）表示追加 | working-engineer | ✅ | W2-2 |
+| W2-5 | `gas/Code.gs` のグローバル定数 `SETUP_DRIVE_FOLDER_ID` / `SETUP_GITHUB_TOKEN` 削除（スクリプトプロパティ直接入力を主フロー化） | working-engineer | ✅ | W2-1 完了後（ポータル設定 UI が先に使えるようにしてから削除） |
 | W2-6 | `docs/SETUP_GUIDE.md` ステップ 5 を「コピーを作成」方式に書き換え（`saveSetup()` コード貼り付け手順を廃止） | working-engineer | - | W2-5 |
 
 ### W3: オンボーディングサイト
@@ -91,6 +91,14 @@ W3-1 + W3-2 ─→ W3-3 ─→ W3-4 (配置・公開 / PM 確認後)
 - 進捗管理表（本ファイル）作成
 - W1〜W4 のタスク分解完了
 - [PM 確認事項] オンボーディングサイト配置場所（案 A vs 案 B）を PM に投げた状態
+- **W2 実装完了（W2-1〜W2-5）**
+  - AdminPortal.gs: `portalTestGitHub()` 追加（401/404/403 の日本語エラー判別）
+  - AdminPortal.gs: `portalGetPatExpiry()` 追加、`portalGetStatus()` に patExpiresAt/daysLeft/patStatus 追加
+  - portal.html: 接続設定タブに「GitHub 接続テスト」ボタン + 結果バッジ + PAT 期限赤/黄バッジ追加
+  - portal.html: 状態タブに PAT 期限行追加（赤≦14日 / 黄≦30日 / 緑 / 不明）
+  - Code.gs: `saveSetup()` / `SETUP_DRIVE_FOLDER_ID` / `SETUP_GITHUB_TOKEN` グローバル定数廃止
+  - Code.gs / AdminPortal.gs: 「コピーを作成」配布前提のコメントヘッダー追加（7行以内）
+  - W2-6（SETUP_GUIDE.md 改訂）は W4 フェーズで実施
 
 ---
 

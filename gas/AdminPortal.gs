@@ -1,12 +1,18 @@
 /**
  * AdminPortal.gs — 管理者ポータル（GAS Web アプリ）
- * SPEC: docs/SPEC_admin_portal.md
+ * SPEC: docs/SPEC_admin_portal.md / docs/SPEC-onboarding-v2.md（W2）
+ *
+ * 配布方法: このファイルは「コピーを作成」方式で配布する GAS テンプレートの一部です。
+ * コードを直接コピー&ペーストする必要はありません。オンボーディングサイトの
+ * GAS-A テンプレートリンクから「コピーを作成」してください。
+ * 初期設定: プロジェクト設定 → スクリプトプロパティ に以下を追加してください:
+ *   DRIVE_ROOT_FOLDER_ID / GITHUB_OWNER / GITHUB_REPO / GITHUB_TOKEN / MEASUREMENT_POINTS
  *
  * 方針:
  * - Code.gs の CONFIG（github.owner/repo/branch/apiBase/masterPath, props.*）を再利用する
  * - GitHub の contents API（GET sha → PUT）を本ファイル内で自前実装し、association.json /
  *   theme.json のように Code.gs に専用ヘルパーが無いパスにも対応する
- * - 全サーバー関数は try/catch で {ok:true, data} / {ok:false, error} の形に統一して返す
+ * - 全サーバー関数は try/catch で {ok:true, data|error} の形に統一して返す
  * - 秘密値（GITHUB_TOKEN 全文・フォルダ ID 全文）はクライアントへ返さない（マスク or 有無のみ）
  *
  * Code.gs から再利用しているもの:
@@ -223,6 +229,138 @@ function portalSaveSettings(obj) {
   }
 }
 
+// ============================================================
+// GitHub 接続テスト（SPEC-onboarding-v2 W2）
+// ============================================================
+
+/**
+ * GitHub 接続テスト。
+ * リポジトリメタデータを GET して認証・到達性を確認する。
+ * 戻り値: {ok:true, data:{repo, private, patExpiresAt}} / {ok:false, error:<日本語説明>}
+ *
+ * エラー判別:
+ *   401 → PAT が無効または期限切れ
+ *   404 → GITHUB_OWNER / GITHUB_REPO が誤り
+ *   その他 → HTTP ステータスをそのまま表示
+ */
+function portalTestGitHub() {
+  try {
+    var ctx = portalGithubCtx_();
+    var url = ctx.apiBase + '/repos/' + ctx.owner + '/' + ctx.repo;
+    var res = UrlFetchApp.fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: 'token ' + ctx.token,
+        Accept: 'application/vnd.github.v3+json',
+      },
+      muteHttpExceptions: true,
+    });
+    var code = res.getResponseCode();
+
+    // PAT 期限をレスポンスヘッダーから取得してキャッシュ
+    var patExpiresAt = '';
+    try {
+      var expHeader = res.getHeaders()['github-authentication-token-expiration'] || '';
+      if (expHeader) {
+        patExpiresAt = expHeader;
+        portalProps_().setProperty('PAT_EXPIRES_AT', patExpiresAt);
+      }
+    } catch (hErr) {
+      // ヘッダー取得失敗は無視
+    }
+
+    if (code === 200) {
+      var body = JSON.parse(res.getContentText());
+      return {
+        ok: true,
+        data: {
+          repo: body.full_name,
+          private: body.private,
+          patExpiresAt: patExpiresAt,
+        },
+      };
+    }
+    if (code === 401) {
+      return {
+        ok: false,
+        error: 'GITHUB_TOKEN が無効または期限切れです。\n' +
+          '【直し方】GitHub → Settings → Developer settings → Personal access tokens で' +
+          '新しいトークンを生成し、スクリプトプロパティの GITHUB_TOKEN に貼り直してください。',
+      };
+    }
+    if (code === 404) {
+      return {
+        ok: false,
+        error: 'リポジトリが見つかりません（HTTP 404）。\n' +
+          '【直し方】スクリプトプロパティの GITHUB_OWNER と GITHUB_REPO を確認してください。' +
+          '大文字小文字・スペルを GitHub リポジトリ URL と一文字ずつ照合してください。',
+      };
+    }
+    if (code === 403) {
+      return {
+        ok: false,
+        error: 'アクセス権限がありません（HTTP 403）。\n' +
+          '【直し方】PAT に Repository permissions → Contents: Read and Write が付いているか確認してください。',
+      };
+    }
+    return { ok: false, error: 'GitHub から予期しないエラーが返りました（HTTP ' + code + '）。しばらく待ってから再試行してください。' };
+  } catch (e) {
+    return { ok: false, error: '通信エラー: ' + String(e && e.message ? e.message : e) };
+  }
+}
+
+/**
+ * PAT 期限情報を取得。キャッシュ（PAT_EXPIRES_AT プロパティ）を優先し、
+ * 空の場合は /user エンドポイントで確認してキャッシュする。
+ * 戻り値: {ok:true, data:{patExpiresAt, daysLeft, status}}
+ *   status: 'ok' | 'warn' (≤30日) | 'danger' (≤14日) | 'unknown'
+ */
+function portalGetPatExpiry() {
+  try {
+    var props = portalProps_();
+    var cached = props.getProperty('PAT_EXPIRES_AT') || '';
+    var patExpiresAt = cached;
+
+    if (!patExpiresAt) {
+      // キャッシュ未設定の場合は /user で疎通しつつヘッダーを拾う
+      try {
+        var token = props.getProperty(CONFIG.props.githubToken) || '';
+        if (token) {
+          var res = UrlFetchApp.fetch(CONFIG.github.apiBase + '/user', {
+            method: 'GET',
+            headers: {
+              Authorization: 'token ' + token,
+              Accept: 'application/vnd.github.v3+json',
+            },
+            muteHttpExceptions: true,
+          });
+          if (res.getResponseCode() === 200) {
+            var expHeader = res.getHeaders()['github-authentication-token-expiration'] || '';
+            if (expHeader) {
+              patExpiresAt = expHeader;
+              props.setProperty('PAT_EXPIRES_AT', patExpiresAt);
+            }
+          }
+        }
+      } catch (inner) {
+        // 取得失敗は unknown 扱い
+      }
+    }
+
+    if (!patExpiresAt) {
+      return { ok: true, data: { patExpiresAt: '', daysLeft: null, status: 'unknown' } };
+    }
+
+    var expDate = new Date(patExpiresAt);
+    var now = new Date();
+    var daysLeft = Math.floor((expDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    var status = daysLeft <= 14 ? 'danger' : (daysLeft <= 30 ? 'warn' : 'ok');
+    return { ok: true, data: { patExpiresAt: patExpiresAt, daysLeft: daysLeft, status: status } };
+  } catch (e) {
+    return { ok: false, error: String(e && e.message ? e.message : e) };
+  }
+}
+
 /** Drive 疎通テスト: フォルダ名を返す（ID 全文は返さない） */
 function portalTestDrive() {
   try {
@@ -364,6 +502,17 @@ function portalGetStatus() {
       lastError = lastError || ('master.json 取得不可: ' + inner.message);
     }
 
+    // PAT 期限（キャッシュ優先）
+    var patExpiresAt = props.getProperty('PAT_EXPIRES_AT') || '';
+    var patDaysLeft = null;
+    var patStatus = 'unknown';
+    if (patExpiresAt) {
+      var expDate = new Date(patExpiresAt);
+      var now = new Date();
+      patDaysLeft = Math.floor((expDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      patStatus = patDaysLeft <= 14 ? 'danger' : (patDaysLeft <= 30 ? 'warn' : 'ok');
+    }
+
     return {
       ok: true,
       data: {
@@ -374,6 +523,9 @@ function portalGetStatus() {
         rateLimitedAt: rateLimitedAt,
         lastError: lastError,
         resultCount: resultCount,
+        patExpiresAt: patExpiresAt,
+        patDaysLeft: patDaysLeft,
+        patStatus: patStatus,
       },
     };
   } catch (e) {

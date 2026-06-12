@@ -488,7 +488,9 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
       <div class="btn-row">
         <button class="btn" id="btnSaveSettings">設定を保存</button>
         <button class="btn secondary" id="btnTestDrive">Drive 接続テスト</button>
+        <button class="btn secondary" id="btnTestGitHub">GitHub 接続テスト</button>
       </div>
+      <div id="patBadge" style="display:none;margin-top:8px;padding:8px 12px;border-radius:6px;font-size:13px;"></div>
       <div id="settingsMsg" class="msg"></div>
     </div>
 
@@ -1061,6 +1063,43 @@ function testDrive(){
   }).portalTestDrive();
 }
 
+function testGitHub(){
+  showMsg($('settingsMsg'),'GitHub に接続中 …','info');
+  var badge=$('patBadge');
+  badge.style.display='none';
+  run().withSuccessHandler(function(res){
+    if(!res||!res.ok){
+      showMsg($('settingsMsg'),'❌ 接続NG — '+(res&&res.error?esc(res.error):'不明なエラー'),'err');
+      return;
+    }
+    var d=res.data;
+    var msg='✅ 接続OK — リポジトリ: '+esc(d.repo)+(d.private?' (プライベート)':' (パブリック)');
+    showMsg($('settingsMsg'),msg,'ok');
+    // PAT 期限バッジ
+    if(d.patExpiresAt){
+      var exp=new Date(d.patExpiresAt);
+      var daysLeft=Math.floor((exp.getTime()-Date.now())/(1000*60*60*24));
+      if(daysLeft<=14){
+        badge.style.display='block';
+        badge.style.background='#fde8e8';
+        badge.style.color='#c0392b';
+        badge.style.border='1px solid #e57373';
+        badge.innerHTML='⚠ <strong>PAT 期限まであと '+daysLeft+' 日</strong>です。今すぐ更新してください。<br>'+
+          '→ GitHub → Settings → Developer settings → Personal access tokens で新しいトークンを生成し、'+
+          '「接続設定」の GitHub Token 欄に貼り付けて保存してください。';
+      } else if(daysLeft<=30){
+        badge.style.display='block';
+        badge.style.background='#fff8e1';
+        badge.style.color='#b7770d';
+        badge.style.border='1px solid #f9c846';
+        badge.innerHTML='⏰ PAT 期限まであと '+daysLeft+' 日です。早めに更新を検討してください。';
+      }
+    }
+  }).withFailureHandler(function(e){
+    showMsg($('settingsMsg'),'通信エラー: '+esc(e&&e.message),'err');
+  }).portalTestGitHub();
+}
+
 function loadConfigJson(){
   run().withSuccessHandler(function(res){
     if(res&&res.ok)$('configJson').value=res.data.json;
@@ -1075,6 +1114,7 @@ function copyConfig(){
 
 $('btnSaveSettings').addEventListener('click',saveSettings);
 $('btnTestDrive').addEventListener('click',testDrive);
+$('btnTestGitHub').addEventListener('click',testGitHub);
 $('btnCopyConfig').addEventListener('click',copyConfig);
 
 /* =========================================================
@@ -1261,6 +1301,16 @@ function loadStatus(){
     addStat(grid,'最終ハートビート',fmtDate(d.lastTriggerAt),'');
     addStat(grid,'結果 JSON 数',(d.resultCount==null?'—':d.resultCount+' 件'),'');
     addStat(grid,'API レート制限',d.rateLimited?('制限中（'+fmtDate(d.rateLimitedAt)+'〜）'):'正常',d.rateLimited?'dot-bad':'dot-ok');
+    // PAT 期限表示
+    if(d.patStatus==='danger'){
+      addStat(grid,'GitHub PAT 期限','⚠ あと '+d.patDaysLeft+' 日で期限切れ — 今すぐ更新してください','dot-bad');
+    } else if(d.patStatus==='warn'){
+      addStat(grid,'GitHub PAT 期限','あと '+d.patDaysLeft+' 日（30日以内）— 早めに更新を','dot-warn');
+    } else if(d.patStatus==='ok'){
+      addStat(grid,'GitHub PAT 期限','あと '+d.patDaysLeft+' 日（正常）','dot-ok');
+    } else {
+      addStat(grid,'GitHub PAT 期限','不明（接続設定タブの GitHub 接続テストを実行すると表示されます）','');
+    }
     if(d.lastError)addStat(grid,'直近エラー',d.lastError,'dot-bad');
   }).withFailureHandler(function(e){
     showMsg($('statusMsg'),'通信エラー: '+esc(e&&e.message),'err');grid.textContent='';
