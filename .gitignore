@@ -1,0 +1,22 @@
+# 大会固有設定（テンプレートリポジトリのため除外）
+tournament.config.json
+.clasp.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+
+# データ（gitkeep を除く）
+data/results/*.json
+
+# ビルド成果物
+build/
+dist/
+.next/
