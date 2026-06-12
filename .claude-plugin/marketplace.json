@@ -6,7 +6,10 @@
   "plugins": [
     {
       "name": "regatta-results-kit",
-      "source": "./",
+      "source": {
+        "source": "github",
+        "repo": "RYUIYAMADA/regatta-results-kit"
+      },
       "description": "ボート競技大会の速報サイトを一発生成する Claude Code キット。新大会セットアップ・進行モデル登録コマンドを提供します。"
     }
   ]
