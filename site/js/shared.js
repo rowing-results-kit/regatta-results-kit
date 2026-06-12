@@ -119,6 +119,119 @@
     return attempt(1);
   }
 
+  // ========= hex カラー操作ヘルパー =========
+  // NOTE: portal.html のデザインタブプレビューに同一実装をコピーしている。
+  //       変更時は両方を必ず更新すること（shared.js ↔ portal.html applyPreview）。
+
+  /**
+   * "#RRGGBB" → {r, g, b}
+   * @param {string} hex
+   * @returns {{r:number, g:number, b:number}|null}
+   */
+  function hexToRgb(hex) {
+    var m = /^#([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})$/.exec(hex);
+    if (!m) return null;
+    return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) };
+  }
+
+  /**
+   * {r, g, b} → "#RRGGBB"
+   * @param {{r:number, g:number, b:number}} rgb
+   * @returns {string}
+   */
+  function toHex(rgb) {
+    function c(n) { return ('0' + Math.max(0, Math.min(255, Math.round(n))).toString(16)).slice(-2); }
+    return '#' + c(rgb.r) + c(rgb.g) + c(rgb.b);
+  }
+
+  /**
+   * 2色を ratio で線形補間（ratio=0 → colorA, ratio=1 → colorB）
+   * @param {string} colorA  "#RRGGBB"
+   * @param {string} colorB  "#RRGGBB"
+   * @param {number} ratio   0.0 〜 1.0
+   * @returns {string} "#RRGGBB"
+   */
+  function mix(colorA, colorB, ratio) {
+    var a = hexToRgb(colorA), b = hexToRgb(colorB);
+    if (!a || !b) return colorA;
+    return toHex({
+      r: a.r + (b.r - a.r) * ratio,
+      g: a.g + (b.g - a.g) * ratio,
+      b: a.b + (b.b - a.b) * ratio
+    });
+  }
+
+  /**
+   * primary_color からヘッダーグラデーション用の濃淡4色を生成する。
+   *   darken(p, 45%): p と #000000 を 45% 混合（最暗）
+   *   darken(p, 25%): p と #000000 を 25% 混合
+   *   p:              そのまま
+   *   lighten(p, 10%): p と #FFFFFF を 10% 混合
+   *
+   * @param {string} primary  "#RRGGBB"
+   * @returns {string}  linear-gradient(...) 文字列
+   */
+  function buildHeaderGradient(primary) {
+    var c0 = mix(primary, '#000000', 0.45);
+    var c1 = mix(primary, '#000000', 0.25);
+    var c2 = primary;
+    var c3 = mix(primary, '#FFFFFF', 0.10);
+    return 'linear-gradient(160deg, ' + c0 + ' 0%, ' + c1 + ' 45%, ' + c2 + ' 75%, ' + c3 + ' 100%)';
+  }
+
+  // ========= theme.json 適用 =========
+  /**
+   * basePath 配下の data/theme.json を fetch し、CSS 変数 / font_family を適用する。
+   *
+   * - タイムアウト 5 秒。失敗（ネットワーク・404・タイムアウト等）は黙って無視し既定色を維持。
+   * - 色値は ^#[0-9A-Fa-f]{6}$ のみ受理（それ以外は無視 = インジェクション防止）。
+   * - font_family は [\w\s,'\-]+ のみ受理。
+   * - theme.json が存在しない（404）場合は何も変更しない（既定維持）。
+   *
+   * primary_color 指定時は以下の CSS 変数をまとめて上書きする:
+   *   --color-primary  … ブランドプライマリ色
+   *   --header-bg      … ヘッダー帯グラデーション (darken/lighten 計算)
+   *   --accent-light   … primary を 12% ライトニング
+   *   --accent-bg      … primary と #FFFFFF の 88% ミックス
+   *
+   * index.html 側から呼び出す（shared.js 内の自動実行は禁止 — admin テンプレにも効くため）:
+   *   RegattaShared.applyTheme('')          // 速報サイト (basePath = '')
+   *   RegattaShared.applyTheme('../../')    // admin テンプレページ
+   *
+   * @param {string} basePath
+   * @returns {Promise<void>}
+   */
+  function applyTheme(basePath) {
+    var trimmed = (basePath || '').replace(/\/?$/, '');
+    var base = trimmed === '' ? '' : trimmed + '/';
+    var url = base + 'data/theme.json';
+
+    var COLOR_RE  = /^#[0-9A-Fa-f]{6}$/;
+    var FONT_RE   = /^[\w\s,'\-]+$/;
+
+    return fetchJSON(url, 5000, 'no-cache')
+      .then(function(theme) {
+        if (!theme || typeof theme !== 'object') return;
+        var root = document.documentElement;
+        if (COLOR_RE.test(theme.primary_color)) {
+          var p = theme.primary_color;
+          root.style.setProperty('--color-primary', p);
+          root.style.setProperty('--header-bg', buildHeaderGradient(p));
+          root.style.setProperty('--accent-light', mix(p, '#FFFFFF', 0.12));
+          root.style.setProperty('--accent-bg',    mix(p, '#FFFFFF', 0.88));
+        }
+        if (COLOR_RE.test(theme.accent_color)) {
+          root.style.setProperty('--color-accent', theme.accent_color);
+        }
+        if (theme.font_family && FONT_RE.test(theme.font_family)) {
+          document.body.style.fontFamily = theme.font_family + ', sans-serif';
+        }
+      })
+      .catch(function() {
+        // 失敗は黙って無視 — 既定色を維持
+      });
+  }
+
   // ========= 公開 =========
   global.RegattaShared = {
     h: h,
@@ -130,6 +243,7 @@
     paths: paths,
     fetchJSON: fetchJSON,
     fetchJSONWithRetry: fetchJSONWithRetry,
+    applyTheme: applyTheme,
   };
 
 })(window);

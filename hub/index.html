@@ -366,6 +366,19 @@ function render(data) {
   });
 }
 
+// ===== brand セクションを CSS 変数に適用 =====
+var COLOR_RE_HUB = /^#[0-9A-Fa-f]{6}$/;
+var FONT_RE_HUB  = /^[\w\s,'\-]+$/;
+function applyBrand(brand) {
+  if (!brand || typeof brand !== 'object') return;
+  var root = document.documentElement;
+  if (COLOR_RE_HUB.test(brand.primary_color)) root.style.setProperty('--color-primary', brand.primary_color);
+  if (COLOR_RE_HUB.test(brand.accent_color))  root.style.setProperty('--color-accent',  brand.accent_color);
+  if (brand.font_family && FONT_RE_HUB.test(brand.font_family)) {
+    document.body.style.fontFamily = brand.font_family + ', sans-serif';
+  }
+}
+
 // ===== 起動 =====
 (async function init() {
   const loadingEl = document.getElementById('hub-loading');
@@ -376,6 +389,9 @@ function render(data) {
     const res = await fetch('association.json');
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
+
+    // brand セクションがあれば CSS 変数に適用（なければ既定色のまま）
+    applyBrand(data.brand);
 
     loadingEl.style.display = 'none';
     contentEl.style.display = 'block';
