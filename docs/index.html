@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大会の速報サイトが、自分たちで作れます — regatta-results-kit</title>
+<meta name="description" content="ボート競技の大会速報サイトを無料・7ステップで導入できるキット。計測CSVを決まった場所に入れるだけで約2分後に自動公開されます。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
+<style data-critical>
+/* ===== Design Tokens ===== */
+:root {
+  --navy-900: #0A1628;
+  --navy:     #152E58;
+  --navy-600: #264E96;
+  --navy-300: #93C5FD;
+  --navy-100: #EFF6FF;
+  --orange:   #EA580C;
+  --orange-bg:#FFF7ED;
+  --text:     #1A1A2E;
+  --muted:    #6B7280;
+  --border:   #E5E7EB;
+  --bg:       #FFFFFF;
+  --bg-sub:   #F8FAFC;
+  --success:  #16A34A;
+  --success-bg:#DCFCE7;
+
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-raised: 0 4px 16px rgba(0,0,0,0.10);
+  --radius-md: 0.5rem;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  --duration-fast: 100ms;
+  --duration-normal: 200ms;
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== Reset ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: "Noto Sans JP", sans-serif;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+  word-break: auto-phrase;
+  line-break: strict;
+  hanging-punctuation: first;
+}
+img, svg { display: block; max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+
+/* ===== Layout ===== */
+.container {
+  width: min(100%, 1040px);
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 5vw, 3rem);
+}
+section { padding-block: clamp(4rem, 10vw, 7rem); }
+section + section { border-top: 1px solid var(--border); }
+
+/* ===== Typography ===== */
+.eyebrow {
+  font-size: clamp(0.625rem, 1vw, 0.6875rem);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--navy-600);
+}
+.display {
+  font-size: clamp(2rem, 5.5vw, 3.25rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+.h1 {
+  font-size: clamp(1.625rem, 4vw, 2.25rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+.h2 {
+  font-size: clamp(1.25rem, 3vw, 1.625rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+.h3 {
+  font-size: clamp(1rem, 2vw, 1.125rem);
+  font-weight: 700;
+  line-height: 1.5;
+}
+.body-lg {
+  font-size: clamp(1rem, 1.6vw, 1.125rem);
+  font-weight: 500;
+  line-height: 1.9;
+  color: var(--muted);
+}
+.body {
+  font-size: clamp(0.9375rem, 1.4vw, 1rem);
+  font-weight: 500;
+  line-height: 1.85;
+}
+.kpi {
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--navy);
+}
+.kpi-unit {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 700;
+  color: var(--navy-600);
+}
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: "Noto Sans JP", sans-serif;
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: box-shadow var(--duration-fast) var(--ease-default),
+              transform var(--duration-fast) var(--ease-default);
+}
+.btn:focus-visible {
+  outline: 2px solid var(--navy-600);
+  outline-offset: 2px;
+}
+.btn-primary {
+  background: var(--navy);
+  color: var(--bg);
+  font-size: clamp(0.9375rem, 1.4vw, 1rem);
+  padding: 0.875rem 2rem;
+}
+.btn-primary:hover {
+  box-shadow: 0 4px 16px rgba(21,46,88,0.35);
+  transform: translateY(-1px);
+}
+.btn-outline {
+  background: transparent;
+  color: var(--navy);
+  font-size: clamp(0.9375rem, 1.4vw, 1rem);
+  padding: 0.75rem 1.75rem;
+  border: 2px solid var(--navy);
+}
+.btn-outline:hover {
+  background: var(--navy-100);
+}
+
+/* ===== Nav ===== */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255,255,255,0.97);
+  border-bottom: 1px solid var(--border);
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: 1rem;
+}
+.nav-logo {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: -0.01em;
+}
+.nav-cta {
+  font-size: 0.875rem;
+  font-weight: 700;
+  background: var(--navy);
+  color: var(--bg);
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-full);
+  transition: box-shadow var(--duration-fast) var(--ease-default);
+}
+.nav-cta:hover {
+  box-shadow: 0 4px 12px rgba(21,46,88,0.3);
+}
+
+/* ===== Hero ===== */
+.hero {
+  padding-block: clamp(5rem, 12vw, 9rem);
+  background: var(--bg);
+}
+.hero-inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+@media (min-width: 768px) {
+  .hero-inner {
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+  }
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--navy-100);
+  color: var(--navy-600);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.375rem 1rem;
+  border-radius: var(--radius-full);
+  margin-bottom: 1.5rem;
+}
+.hero-badge-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--success);
+  border-radius: 50%;
+}
+.hero-title {
+  margin-bottom: 1.25rem;
+}
+.hero-sub {
+  margin-bottom: 2rem;
+}
+.hero-cta-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+.hero-note {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--muted);
+  margin-top: 1rem;
+}
+
+/* ===== Screen Mock ===== */
+.mock-browser {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  overflow: hidden;
+  background: var(--bg-sub);
+  border: 1px solid var(--border);
+}
+.mock-browser-bar {
+  background: #E8ECF0;
+  padding: 0.625rem 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.mock-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.mock-dot-r { background: #FF5F57; }
+.mock-dot-y { background: #FEBC2E; }
+.mock-dot-g { background: #28C840; }
+.mock-url-bar {
+  flex: 1;
+  margin-left: 0.5rem;
+  background: var(--bg);
+  border-radius: var(--radius-md);
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+.mock-screen {
+  padding: 1rem;
+}
+.mock-header {
+  background: var(--navy);
+  color: var(--bg);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 0.75rem;
+}
+.mock-header-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  margin-bottom: 0.125rem;
+}
+.mock-header-sub {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  opacity: 0.7;
+}
+.mock-table-head {
+  display: grid;
+  grid-template-columns: 2rem 1fr 3.5rem 3.5rem;
+  gap: 0.25rem;
+  padding: 0.375rem 0.5rem;
+  background: var(--navy-100);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--navy-600);
+}
+.mock-table-row {
+  display: grid;
+  grid-template-columns: 2rem 1fr 3.5rem 3.5rem;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--bg);
+  align-items: center;
+}
+.mock-table-row:last-child { border-bottom: none; border-radius: 0 0 var(--radius-md) var(--radius-md); }
+.mock-rank {
+  font-weight: 700;
+  color: var(--navy);
+  text-align: center;
+}
+.mock-rank-1 { color: var(--orange); }
+.mock-time {
+  font-weight: 700;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+}
+.mock-update-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: var(--success-bg);
+  color: var(--success);
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+  margin-top: 0.75rem;
+}
+.mock-update-dot {
+  width: 5px;
+  height: 5px;
+  background: var(--success);
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ===== Pain Section ===== */
+.pain-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-top: 3rem;
+}
+@media (min-width: 640px) {
+  .pain-grid { grid-template-columns: repeat(3, 1fr); }
+}
+.pain-card {
+  background: var(--bg-sub);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem 1.5rem;
+}
+.pain-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--orange-bg);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+.pain-icon svg { color: var(--orange); }
+
+/* ===== KPI Section ===== */
+.kpi-section {
+  background: var(--navy);
+  color: var(--bg);
+  border-top: none !important;
+}
+.kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+  margin-top: 3rem;
+}
+@media (min-width: 640px) {
+  .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+}
+.kpi-card {
+  padding: 2.5rem 2rem;
+  text-align: center;
+  position: relative;
+}
+.kpi-card + .kpi-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background: rgba(255,255,255,0.12);
+}
+@media (max-width: 639px) {
+  .kpi-card + .kpi-card::before { display: none; }
+  .kpi-card {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding: 2rem 1.5rem;
+  }
+}
+.kpi-section .kpi { color: var(--bg); }
+.kpi-section .kpi-unit { color: rgba(255,255,255,0.7); }
+.kpi-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.6);
+  margin-top: 0.5rem;
+}
+.kpi-note {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.45);
+  margin-top: 0.25rem;
+}
+.kpi-section .eyebrow { color: var(--navy-300); }
+.kpi-section .h1 { color: var(--bg); }
+.kpi-section .body-lg { color: rgba(255,255,255,0.65); }
+
+/* ===== Howto Section ===== */
+.howto-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+  margin-top: 3rem;
+  align-items: start;
+}
+@media (min-width: 768px) {
+  .howto-content { grid-template-columns: 1fr 1fr; }
+}
+.step-list { display: flex; flex-direction: column; gap: 0; }
+.step-item {
+  display: flex;
+  gap: 1rem;
+  position: relative;
+  padding-bottom: 1.75rem;
+}
+.step-item:last-child { padding-bottom: 0; }
+.step-connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+.step-num {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: var(--bg);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.step-line {
+  flex: 1;
+  width: 1px;
+  background: var(--border);
+  margin-top: 0.25rem;
+}
+.step-item:last-child .step-line { display: none; }
+.step-body { padding-top: 0.375rem; }
+.step-title { font-size: 0.9375rem; font-weight: 700; margin-bottom: 0.25rem; }
+.step-desc { font-size: 0.875rem; font-weight: 500; color: var(--muted); line-height: 1.7; }
+
+/* ===== Drive Mock ===== */
+.mock-drive {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+.mock-drive-header {
+  padding: 0.75rem 1rem;
+  background: var(--bg-sub);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+.mock-drive-icon {
+  width: 20px;
+  height: 20px;
+}
+.mock-drive-path {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+.mock-drive-body { padding: 0.75rem; }
+.mock-folder-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+.mock-folder-item.active { background: var(--navy-100); }
+.mock-folder-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.mock-csv-badge {
+  margin-left: auto;
+  font-size: 0.625rem;
+  font-weight: 700;
+  background: var(--success-bg);
+  color: var(--success);
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+}
+.mock-arrow-wrap {
+  text-align: center;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--navy-600);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.mock-result-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--success-bg);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  margin-top: 0.5rem;
+}
+.mock-result-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--success);
+}
+.mock-result-time {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+/* ===== Admin Mock ===== */
+.admin-mock {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  margin-top: 2rem;
+}
+.admin-mock-head {
+  padding: 0.75rem 1rem;
+  background: var(--navy-900);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.admin-mock-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--bg);
+}
+.admin-mock-body {
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+@media (max-width: 480px) {
+  .admin-mock-body { grid-template-columns: 1fr; }
+}
+.admin-stat {
+  background: var(--bg-sub);
+  border-radius: var(--radius-md);
+  padding: 0.875rem 1rem;
+}
+.admin-stat-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+.admin-stat-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+.admin-stat-value.ok { color: var(--success); }
+.admin-stat-value.warn { color: var(--warning); }
+
+/* ===== Flow Section ===== */
+.flow-section { background: var(--bg-sub); }
+.flow-steps {
+  margin-top: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.flow-step {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  padding-bottom: 2rem;
+  position: relative;
+}
+.flow-step:last-child { padding-bottom: 0; }
+.flow-num-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+.flow-num {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: var(--bg);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.flow-line {
+  width: 1px;
+  flex: 1;
+  min-height: 1.5rem;
+  background: var(--border);
+  margin-top: 0.25rem;
+}
+.flow-step:last-child .flow-line { display: none; }
+.flow-body { padding-top: 0.625rem; }
+.flow-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; }
+.flow-desc { font-size: 0.9375rem; font-weight: 500; color: var(--muted); line-height: 1.75; }
+.flow-tag {
+  display: inline-flex;
+  align-items: center;
+  background: var(--navy-100);
+  color: var(--navy-600);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
+  margin-top: 0.375rem;
+}
+.flow-tag.done {
+  background: var(--success-bg);
+  color: var(--success);
+}
+.flow-cta-wrap {
+  margin-top: 3.5rem;
+  padding: 2.5rem;
+  background: var(--navy-100);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+/* ===== FAQ ===== */
+.faq-list {
+  margin-top: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.faq-item {
+  border-bottom: 1px solid var(--border);
+}
+.faq-item:first-child { border-top: 1px solid var(--border); }
+.faq-q {
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 1.375rem 0;
+  font-family: "Noto Sans JP", sans-serif;
+  font-size: clamp(0.9375rem, 1.4vw, 1rem);
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  transition: color var(--duration-fast) var(--ease-default);
+}
+.faq-q:hover { color: var(--navy-600); }
+.faq-q:focus-visible {
+  outline: 2px solid var(--navy-600);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.faq-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  transition: transform var(--duration-normal) var(--ease-default);
+}
+.faq-item.open .faq-icon { transform: rotate(45deg); }
+.faq-a {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height var(--duration-normal) var(--ease-default),
+              padding-bottom var(--duration-normal) var(--ease-default);
+}
+.faq-item.open .faq-a { max-height: 400px; padding-bottom: 1.375rem; }
+.faq-a-inner {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--muted);
+  line-height: 1.85;
+}
+.account-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.account-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: var(--navy-100);
+  color: var(--navy);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.375rem 0.875rem;
+  border-radius: var(--radius-full);
+}
+
+/* ===== Footer CTA ===== */
+.footer-cta {
+  background: var(--navy);
+  padding-block: clamp(4rem, 8vw, 6rem);
+  text-align: center;
+  border-top: none !important;
+}
+.footer-cta .h1 { color: var(--bg); margin-bottom: 1rem; }
+.footer-cta .body-lg { color: rgba(255,255,255,0.65); margin-bottom: 2.5rem; }
+.footer-cta-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+.btn-light {
+  background: var(--bg);
+  color: var(--navy);
+  font-size: clamp(0.9375rem, 1.4vw, 1rem);
+  padding: 0.875rem 2rem;
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: box-shadow var(--duration-fast) var(--ease-default),
+              transform var(--duration-fast) var(--ease-default);
+}
+.btn-light:hover {
+  box-shadow: 0 4px 20px rgba(255,255,255,0.3);
+  transform: translateY(-1px);
+}
+.btn-light:focus-visible {
+  outline: 2px solid var(--bg);
+  outline-offset: 2px;
+}
+
+/* ===== Footer ===== */
+footer {
+  background: var(--navy-900);
+  padding-block: 2rem;
+  text-align: center;
+  border-top: none !important;
+}
+.footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.footer-logo {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+}
+.footer-links {
+  display: flex;
+  gap: 1.5rem;
+}
+.footer-link {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.4);
+  transition: color var(--duration-fast) var(--ease-default);
+}
+.footer-link:hover { color: rgba(255,255,255,0.7); }
+.footer-copy {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.3);
+  margin-top: 0.75rem;
+}
+
+/* ===== Section header ===== */
+.section-header { max-width: 600px; margin-bottom: 0; }
+.section-header .eyebrow { margin-bottom: 0.75rem; }
+.section-header .h1 { margin-bottom: 1rem; }
+
+/* ===== Divider ===== */
+.divider {
+  width: 40px;
+  height: 3px;
+  background: var(--navy);
+  border-radius: var(--radius-full);
+  margin-bottom: 1.25rem;
+}
+
+/* ===== Responsive helpers ===== */
+@media (max-width: 767px) {
+  .hide-mobile { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== Navigation ===== -->
+<nav class="nav" role="navigation" aria-label="メインナビゲーション">
+  <div class="container nav-inner">
+    <span class="nav-logo">regatta-results-kit</span>
+    <a href="./onboarding/" class="nav-cta" aria-label="導入をはじめる（オンボーディングガイドへ）">導入をはじめる</a>
+  </div>
+</nav>
+
+<!-- ===== Section 1: Hero ===== -->
+<section class="hero" aria-labelledby="hero-heading">
+  <div class="container hero-inner">
+    <div class="hero-text">
+      <div class="hero-badge" role="status">
+        <span class="hero-badge-dot" aria-hidden="true"></span>
+        無料で使えます
+      </div>
+      <h1 id="hero-heading" class="display hero-title">
+        大会の速報サイトが、<br>自分たちで作れます。
+      </h1>
+      <p class="body-lg hero-sub">
+        計測データを決まった場所に入れるだけ。<br>
+        約2分後、参加者のスマホに結果が届きます。
+      </p>
+      <div class="hero-cta-group">
+        <a href="./onboarding/" class="btn btn-primary" aria-label="導入をはじめる（オンボーディングガイドへ）">
+          導入をはじめる
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <a href="#howto" class="btn btn-outline">使い方を見る</a>
+      </div>
+      <p class="hero-note">準備に必要なもの: Google / GitHub / Cloudflare の3アカウント</p>
+    </div>
+
+    <!-- Screen Mock -->
+    <div class="hero-mock" aria-hidden="true">
+      <div class="mock-browser">
+        <div class="mock-browser-bar">
+          <span class="mock-dot mock-dot-r"></span>
+          <span class="mock-dot mock-dot-y"></span>
+          <span class="mock-dot mock-dot-g"></span>
+          <span class="mock-url-bar">masters-regatta-2026.pages.dev</span>
+        </div>
+        <div class="mock-screen">
+          <div class="mock-header">
+            <div class="mock-header-title">第17回全日本マスターズレガッタ — 速報</div>
+            <div class="mock-header-sub">石川県津幡漕艇競技場 / 2026-05-23</div>
+          </div>
+          <div style="font-size:0.6875rem;font-weight:700;color:var(--muted);padding:0.5rem 0.5rem 0.25rem;letter-spacing:0.1em;">M1X — 1000m 決勝</div>
+          <div class="mock-table-head">
+            <span>順位</span><span>チーム</span><span>500m</span><span>1000m</span>
+          </div>
+          <div class="mock-table-row">
+            <span class="mock-rank mock-rank-1">1</span>
+            <span>秋田RC</span>
+            <span class="mock-time">3:42.1</span>
+            <span class="mock-time">7:18.4</span>
+          </div>
+          <div class="mock-table-row">
+            <span class="mock-rank">2</span>
+            <span>石川OB</span>
+            <span class="mock-time">3:44.8</span>
+            <span class="mock-time">7:23.1</span>
+          </div>
+          <div class="mock-table-row">
+            <span class="mock-rank">3</span>
+            <span>東北BRC</span>
+            <span class="mock-time">3:47.2</span>
+            <span class="mock-time">7:29.7</span>
+          </div>
+          <div style="text-align:right;padding:0.25rem 0.5rem;">
+            <span class="mock-update-badge">
+              <span class="mock-update-dot"></span>
+              自動更新中
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Section 2: Pain ===== -->
+<section aria-labelledby="pain-heading">
+  <div class="container">
+    <div class="section-header">
+      <div class="divider" aria-hidden="true"></div>
+      <h2 id="pain-heading" class="h1">こんな課題、ありませんか？</h2>
+      <p class="body-lg" style="margin-top:0.75rem;">大会当日、こんな場面で困ったことはないでしょうか。</p>
+    </div>
+    <div class="pain-grid" role="list">
+      <article class="pain-card" role="listitem">
+        <div class="pain-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <rect x="3" y="3" width="14" height="18" rx="2" stroke="currentColor" stroke-width="1.75"/>
+            <line x1="6.5" y1="8" x2="13.5" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="6.5" y1="11" x2="13.5" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="6.5" y1="14" x2="10" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3 class="h3" style="margin-bottom:0.5rem;">紙の速報を貼り出すため<br>結果の掲示が遅れる</h3>
+        <p class="body" style="color:var(--muted);">計測が終わってから印刷・掲示まで時間がかかり、参加者が会場を離れてしまうことも。</p>
+      </article>
+      <article class="pain-card" role="listitem">
+        <div class="pain-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M3 5h14M3 10h8M3 15h5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+            <circle cx="15" cy="13.5" r="3.5" stroke="currentColor" stroke-width="1.5"/>
+            <line x1="17.5" y1="16" x2="19" y2="17.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3 class="h3" style="margin-bottom:0.5rem;">電話・メールでの<br>結果問い合わせが大量に来る</h3>
+        <p class="body" style="color:var(--muted);">他の種目を応援中の参加者が「今どうなってる？」と運営スタッフに聞いてくる。対応が追いつかない。</p>
+      </article>
+      <article class="pain-card" role="listitem">
+        <div class="pain-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <rect x="3" y="2" width="14" height="16" rx="1.5" stroke="currentColor" stroke-width="1.75"/>
+            <path d="M7 7h6M7 10h6M7 13h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="15.5" cy="15.5" r="3" fill="currentColor" opacity="0.15"/>
+            <path d="M14.5 17l1-2 1 2" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h3 class="h3" style="margin-bottom:0.5rem;">結果の公開が翌日になり<br>参加者の熱が冷めてしまう</h3>
+        <p class="body" style="color:var(--muted);">大会当日に結果を確認できず、翌日のWebサイト更新を待つしかない。感動のタイミングがずれていく。</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Section 3: KPI ===== -->
+<section class="kpi-section" aria-labelledby="kpi-heading">
+  <div class="container">
+    <div class="section-header">
+      <div class="eyebrow">できること</div>
+      <h2 id="kpi-heading" class="h1" style="color:var(--bg);">数字で見る、3つのこと</h2>
+      <p class="body-lg">専門知識がなくても、費用をかけなくても、始められます。</p>
+    </div>
+    <div class="kpi-grid" role="list">
+      <div class="kpi-card" role="listitem">
+        <div class="kpi">約<span style="font-size:clamp(3rem,9vw,4.5rem);">2</span><span class="kpi-unit">分</span></div>
+        <div class="kpi-label">CSVを入れてから結果が公開されるまで</div>
+        <div class="kpi-note">自動で反映。手作業は不要</div>
+      </div>
+      <div class="kpi-card" role="listitem">
+        <div class="kpi" style="letter-spacing:-0.01em;"><span class="kpi-unit">費用</span><span style="font-size:clamp(3rem,9vw,4.5rem);">0</span><span class="kpi-unit">円</span></div>
+        <div class="kpi-label">無料の範囲で十分に運用できます</div>
+        <div class="kpi-note">Google / GitHub / Cloudflare 全て無料枠あり</div>
+      </div>
+      <div class="kpi-card" role="listitem">
+        <div class="kpi"><span style="font-size:clamp(3rem,9vw,4.5rem);">7</span><span class="kpi-unit">ステップ</span></div>
+        <div class="kpi-label">導入に必要な手順の数</div>
+        <div class="kpi-note">所要時間の目安: 50〜70分</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Section 4: Howto ===== -->
+<section id="howto" aria-labelledby="howto-heading">
+  <div class="container">
+    <div class="section-header">
+      <div class="divider" aria-hidden="true"></div>
+      <h2 id="howto-heading" class="h1">当日の使い方</h2>
+      <p class="body-lg" style="margin-top:0.75rem;">大会当日にやることは、たった1つだけです。</p>
+    </div>
+    <div class="howto-content">
+      <div>
+        <h3 class="h3" style="margin-bottom:1.5rem;">CSVをドライブに入れるだけ</h3>
+        <div class="step-list" role="list">
+          <div class="step-item" role="listitem">
+            <div class="step-connector">
+              <div class="step-num" aria-hidden="true">1</div>
+              <div class="step-line" aria-hidden="true"></div>
+            </div>
+            <div class="step-body">
+              <div class="step-title">計測機器からCSVを書き出す</div>
+              <div class="step-desc">計測ソフトが出す通常のCSVファイルをそのまま使います</div>
+            </div>
+          </div>
+          <div class="step-item" role="listitem">
+            <div class="step-connector">
+              <div class="step-num" aria-hidden="true">2</div>
+              <div class="step-line" aria-hidden="true"></div>
+            </div>
+            <div class="step-body">
+              <div class="step-title">Google ドライブの決まったフォルダに入れる</div>
+              <div class="step-desc">フォルダの場所は導入時に1回だけ設定します。あとは毎回ここに入れるだけ</div>
+            </div>
+          </div>
+          <div class="step-item" role="listitem">
+            <div class="step-connector">
+              <div class="step-num" aria-hidden="true">3</div>
+              <div class="step-line" aria-hidden="true"></div>
+            </div>
+            <div class="step-body">
+              <div class="step-title">約2分後に速報サイトへ自動反映</div>
+              <div class="step-desc">参加者がスマホでURLを開くと、最新の結果が表示されています</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin Mock -->
+        <div class="admin-mock" aria-label="管理者ポータル画面のイメージ">
+          <div class="admin-mock-head">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <circle cx="7" cy="7" r="6" stroke="rgba(255,255,255,0.5)" stroke-width="1.25"/>
+              <path d="M7 4v3.5l2 2" stroke="rgba(255,255,255,0.8)" stroke-width="1.25" stroke-linecap="round"/>
+            </svg>
+            <span class="admin-mock-title">管理者ポータル — 状態確認</span>
+          </div>
+          <div class="admin-mock-body">
+            <div class="admin-stat">
+              <div class="admin-stat-label">接続状態</div>
+              <div class="admin-stat-value ok">正常</div>
+            </div>
+            <div class="admin-stat">
+              <div class="admin-stat-label">最終更新</div>
+              <div class="admin-stat-value" style="font-size:0.9375rem;">2分前</div>
+            </div>
+            <div class="admin-stat">
+              <div class="admin-stat-label">本日の処理件数</div>
+              <div class="admin-stat-value">12 件</div>
+            </div>
+            <div class="admin-stat">
+              <div class="admin-stat-label">サイト公開状態</div>
+              <div class="admin-stat-value ok">公開中</div>
+            </div>
+          </div>
+        </div>
+        <p class="body" style="color:var(--muted);font-size:0.8125rem;margin-top:0.75rem;">管理者ポータルで接続確認・処理状態をリアルタイムに確認できます</p>
+      </div>
+
+      <!-- Drive Mock -->
+      <div aria-label="Google ドライブ操作のイメージ">
+        <div class="mock-drive">
+          <div class="mock-drive-header">
+            <svg class="mock-drive-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M10 2L3 14h14L10 2z" fill="#34A853" opacity="0.15"/>
+              <path d="M10 2L3 14" stroke="#34A853" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M10 2l7 12" stroke="#FBBC05" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M3 14h14" stroke="#4285F4" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span class="mock-drive-path">マイドライブ / 大会データ / 2026-05-23</span>
+          </div>
+          <div class="mock-drive-body">
+            <div class="mock-folder-item">
+              <svg class="mock-folder-icon" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                <path d="M2 5a2 2 0 012-2h4l2 2h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V5z" fill="#FCD34D" opacity="0.5" stroke="#D97706" stroke-width="1.25"/>
+              </svg>
+              <span style="font-size:0.8125rem;font-weight:500;">M1X_第1レース.csv</span>
+            </div>
+            <div class="mock-folder-item">
+              <svg class="mock-folder-icon" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                <path d="M2 5a2 2 0 012-2h4l2 2h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V5z" fill="#FCD34D" opacity="0.5" stroke="#D97706" stroke-width="1.25"/>
+              </svg>
+              <span style="font-size:0.8125rem;font-weight:500;">W2X_予選.csv</span>
+            </div>
+            <div class="mock-folder-item active">
+              <svg class="mock-folder-icon" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                <path d="M2 5a2 2 0 012-2h4l2 2h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V5z" fill="#FCD34D" opacity="0.5" stroke="#D97706" stroke-width="1.25"/>
+              </svg>
+              <span style="font-size:0.8125rem;font-weight:700;color:var(--navy);">M4+_決勝.csv</span>
+              <span class="mock-csv-badge">いまここ</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mock-arrow-wrap" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 3v10M4 9l4 4 4-4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          約2分後に自動反映
+        </div>
+
+        <div class="mock-browser" style="margin-top:0;">
+          <div class="mock-browser-bar">
+            <span class="mock-dot mock-dot-r"></span>
+            <span class="mock-dot mock-dot-y"></span>
+            <span class="mock-dot mock-dot-g"></span>
+            <span class="mock-url-bar">masters-regatta-2026.pages.dev</span>
+          </div>
+          <div class="mock-screen">
+            <div style="font-size:0.6875rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;letter-spacing:0.05em;">M4+ — 決勝 結果</div>
+            <div class="mock-result-bar">
+              <span class="mock-result-label">自動更新完了</span>
+              <span class="mock-result-time">たった今</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Section 5: Flow ===== -->
+<section class="flow-section" aria-labelledby="flow-heading">
+  <div class="container">
+    <div class="section-header">
+      <div class="divider" aria-hidden="true"></div>
+      <h2 id="flow-heading" class="h1">導入の流れ</h2>
+      <p class="body-lg" style="margin-top:0.75rem;">7つのステップで完了します。詳しい手順は次のページで確認できます。</p>
+    </div>
+    <div class="flow-steps" role="list">
+      <div class="flow-step" role="listitem">
+        <div class="flow-num-wrap">
+          <div class="flow-num" aria-hidden="true">1</div>
+          <div class="flow-line" aria-hidden="true"></div>
+        </div>
+        <div class="flow-body">
+          <div class="flow-title">3つのアカウントを準備する</div>
+          <div class="flow-desc">Google / GitHub / Cloudflare のアカウントを作ります。全て無料です。</div>
+          <span class="flow-tag">所要時間: 10〜15分</span>
+        </div>
+      </div>
+      <div class="flow-step" role="listitem">
+        <div class="flow-num-wrap">
+          <div class="flow-num" aria-hidden="true">2</div>
+          <div class="flow-line" aria-hidden="true"></div>
+        </div>
+        <div class="flow-body">
+          <div class="flow-title">キットをコピーする</div>
+          <div class="flow-desc">GitHub からテンプレートを自分のアカウントにコピー（フォーク）します。</div>
+          <span class="flow-tag">所要時間: 5分</span>
+        </div>
+      </div>
+      <div class="flow-step" role="listitem">
+        <div class="flow-num-wrap">
+          <div class="flow-num" aria-hidden="true">3</div>
+          <div class="flow-line" aria-hidden="true"></div>
+        </div>
+        <div class="flow-body">
+          <div class="flow-title">速報サイトを公開する</div>
+          <div class="flow-desc">Cloudflare に接続するだけで、URLが自動で発行されます。</div>
+          <span class="flow-tag">所要時間: 10分</span>
+        </div>
+      </div>
+      <div class="flow-step" role="listitem">
+        <div class="flow-num-wrap">
+          <div class="flow-num" aria-hidden="true">4</div>
+          <div class="flow-line" aria-hidden="true"></div>
+        </div>
+        <div class="flow-body">
+          <div class="flow-title">Google ドライブのフォルダを用意する</div>
+          <div class="flow-desc">CSVを入れる専用フォルダを作り、共有設定をします。</div>
+          <span class="flow-tag">所要時間: 5分</span>
+        </div>
+      </div>
+      <div class="flow-step" role="listitem">
+        <div class="flow-num-wrap">
+          <div class="flow-num" aria-hidden="true">5</div>
+          <div class="flow-line" aria-hidden="true"></div>
+        </div>
+        <div class="flow-body">
+          <div class="flow-title">自動化の仕組みを設定する（GAS）</div>
+          <div class="flow-desc">Google スプレッドシートに付属のスクリプトを貼り付けて、3か所だけ書き換えます。</div>
+          <span class="flow-tag">所要時間: 10〜15分</span>
+        </div>
+      </div>
+      <div class="flow-step" role="listitem">
+        <div class="flow-num-wrap">
+          <div class="flow-num" aria-hidden="true">6</div>
+          <div class="flow-line" aria-hidden="true"></div>
+        </div>
+        <div class="flow-body">
+          <div class="flow-title">大会の基本情報を登録する</div>
+          <div class="flow-desc">大会名・日程・会場名・種目名などをスプレッドシートに入力します。</div>
+          <span class="flow-tag">所要時間: 10分</span>
+        </div>
+      </div>
+      <div class="flow-step" role="listitem">
+        <div class="flow-num-wrap">
+          <div class="flow-num" aria-hidden="true">7</div>
+          <div class="flow-line" aria-hidden="true"></div>
+        </div>
+        <div class="flow-body">
+          <div class="flow-title">動作を確認して完了</div>
+          <div class="flow-desc">テスト用のCSVを入れてサイトに反映されるか確認します。</div>
+          <span class="flow-tag done">ここまで来たら本番OK</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-cta-wrap">
+      <p class="eyebrow" style="margin-bottom:0.75rem;">各ステップにセルフチェックと対処方法つき</p>
+      <h3 class="h2" style="margin-bottom:0.75rem;">詳しい手順を確認する</h3>
+      <p class="body" style="color:var(--muted);margin-bottom:1.75rem;">画面キャプチャつきの丁寧な手順書を用意しています。詰まったときの対処方法も各ステップに記載しています。</p>
+      <a href="./onboarding/" class="btn btn-primary" style="font-size:1rem;padding:1rem 2.5rem;" aria-label="オンボーディングガイドを開く">
+        導入ガイドを開く
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Section 6: FAQ ===== -->
+<section aria-labelledby="faq-heading">
+  <div class="container">
+    <div class="section-header">
+      <div class="divider" aria-hidden="true"></div>
+      <h2 id="faq-heading" class="h1">よくある質問</h2>
+    </div>
+    <div class="faq-list" role="list">
+
+      <div class="faq-item" role="listitem">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-a-1" id="faq-q-1">
+          使うのに費用はかかりますか？
+          <svg class="faq-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <div class="faq-a" id="faq-a-1" role="region" aria-labelledby="faq-q-1">
+          <p class="faq-a-inner">かかりません。Google / GitHub / Cloudflare はいずれも無料枠があり、大会の速報サイト用途であれば無料の範囲で十分に運用できます。</p>
+        </div>
+      </div>
+
+      <div class="faq-item" role="listitem">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-a-2" id="faq-q-2">
+          プログラミングの知識がなくても大丈夫ですか？
+          <svg class="faq-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <div class="faq-a" id="faq-a-2" role="region" aria-labelledby="faq-q-2">
+          <p class="faq-a-inner">大丈夫です。導入に必要な操作は「コピー&ペーストと3か所の書き換え」だけです。プログラミングの経験がない方でも、手順書のとおりに進めれば完了できるよう設計しています。</p>
+        </div>
+      </div>
+
+      <div class="faq-item" role="listitem">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-a-3" id="faq-q-3">
+          導入に何を用意すればいいですか？
+          <svg class="faq-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <div class="faq-a" id="faq-a-3" role="region" aria-labelledby="faq-q-3">
+          <p class="faq-a-inner">3つのアカウントを用意するだけです。</p>
+          <div class="account-pills" role="list">
+            <span class="account-pill" role="listitem">Google アカウント</span>
+            <span class="account-pill" role="listitem">GitHub アカウント</span>
+            <span class="account-pill" role="listitem">Cloudflare アカウント</span>
+          </div>
+          <p class="faq-a-inner" style="margin-top:0.75rem;">いずれも無料で作成できます。パソコン（スマホ不可）とインターネット環境があれば始められます。</p>
+        </div>
+      </div>
+
+      <div class="faq-item" role="listitem">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-a-4" id="faq-q-4">
+          途中で詰まったらどうすればいいですか？
+          <svg class="faq-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <div class="faq-a" id="faq-a-4" role="region" aria-labelledby="faq-q-4">
+          <p class="faq-a-inner">各ステップの末尾に「うまくいかないとき」の確認項目と対処方法を記載しています。エラーメッセージが出たときの対応も書いているので、見ながら進めれば解決できる場合がほとんどです。</p>
+        </div>
+      </div>
+
+      <div class="faq-item" role="listitem">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-a-5" id="faq-q-5">
+          年間を通じて複数の大会で使えますか？
+          <svg class="faq-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <div class="faq-a" id="faq-a-5" role="region" aria-labelledby="faq-q-5">
+          <p class="faq-a-inner">使えます。大会ごとにデータをリセットする操作だけで、同じ仕組みを繰り返し使えます。将来的には、複数大会の結果を1か所で管理する機能の追加も検討しています。</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== Footer CTA ===== -->
+<section class="footer-cta" aria-labelledby="footer-cta-heading">
+  <div class="container">
+    <h2 id="footer-cta-heading" class="h1">さっそく、始めてみましょう。</h2>
+    <p class="body-lg">手順書を見ながら進めれば、今日中に速報サイトが作れます。</p>
+    <div class="footer-cta-btns">
+      <a href="./onboarding/" class="btn-light" aria-label="導入ガイドを開く">
+        導入ガイドを開く
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Footer ===== -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <span class="footer-logo">regatta-results-kit</span>
+      <nav class="footer-links" aria-label="フッターナビゲーション">
+        <a href="./onboarding/" class="footer-link">導入ガイド</a>
+        <a href="https://github.com/RYUIYAMADA/regatta-results-kit" class="footer-link" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </nav>
+    </div>
+    <p class="footer-copy">ボート競技大会の速報公開を、もっと簡単に。</p>
+  </div>
+</footer>
+
+<script>
+/* FAQ accordion */
+document.querySelectorAll('.faq-q').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var item = btn.closest('.faq-item');
+    var isOpen = item.classList.contains('open');
+
+    /* close all */
+    document.querySelectorAll('.faq-item').forEach(function(el) {
+      el.classList.remove('open');
+      el.querySelector('.faq-q').setAttribute('aria-expanded', 'false');
+    });
+
+    /* toggle clicked */
+    if (!isOpen) {
+      item.classList.add('open');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  });
+});
+</script>
+</body>
+</html>
