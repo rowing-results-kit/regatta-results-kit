@@ -49,8 +49,8 @@ created: 2026-06-12
 | # | タスク | 担当 | 状態 | 依存 |
 |---|---|---|---|---|
 | W3-1 | オンボーディングサイト HTML 作成（Step 1〜7 のスクリーンショット枠付き手順 + セルフチェックリスト + FAQ） | working-designer | ✅ | W1・W2 の手順確定後 |
-| W3-2 | GAS テンプレート GAS プロジェクト 3 つ（A/B/C）を龍偉の Google Drive 上に作成・共有リンク取得 | 龍偉（手動） | - | W2-5 完了後 |
-| W3-3 | オンボーディングサイトに GAS テンプレートリンク（A/B/C）を埋め込む | working-designer | - | W3-2 |
+| W3-2 | GAS テンプレート GAS プロジェクト 3 つ（A/B/C）を龍偉の Google Drive 上に作成・共有リンク取得 | clasp 自動化（Sonnet） | ✅ | W2-5 完了後 |
+| W3-3 | オンボーディングサイトに GAS テンプレートリンク（A/B/C）を埋め込む | working-designer | ✅ | W3-2 |
 | W3-4 | [案 A 決定] GitHub Pages（main/docs）でデプロイ完了 | working-designer | ✅ | PM 裁定 |
 
 ### W4: ドキュメント再編
