@@ -69,10 +69,10 @@ created: 2026-06-12
 
 | # | タスク | 担当 | 状態 | 依存 |
 |---|---|---|---|---|
-| W5-01 | SPEC-hub-v1.md PM 裁定（設計選択肢 A/B/C の決定） | PM（龍偉裁定） | pending | なし |
-| W5-02 | `hub/association.json` スキーマ拡張（ハブ用フィールド追加・裁定結果反映） | working-engineer | pending | W5-01 |
-| W5-03 | `hub/index.html` 実装調整（大会一覧表示・ステータスバッジ・裁定結果反映） | working-engineer | pending | W5-01（既存実装あり・調整のみの可能性） |
-| W5-04 | 大会追加 + ステータス変更ワークフロー実装（`.github/workflows/hub-add-tournament.yml` + `hub-update-status.yml`） | working-engineer | pending | W5-01・W5-02（スキーマ確定後） |
+| W5-01 | SPEC-hub-v1.md PM 裁定（設計選択肢 A/B/C の決定） | PM（龍偉裁定） | done | なし |
+| W5-02 | `hub/association.json` スキーマ拡張（schema_version フィールド追加） | working-engineer | done | W5-01 |
+| W5-03 | `hub/index.html` 実装調整（3状態バッジ確認・既存実装で充足） | working-engineer | done | W5-01（既存実装あり・追加変更不要） |
+| W5-04 | 大会追加 + ステータス変更ワークフロー実装（`.github/workflows/hub-add-tournament.yml` + `hub-update-status.yml`） | working-engineer | done | W5-01・W5-02（スキーマ確定後） |
 | W5-05 | 管理者ポータルにハブ管理 UI 追加（`gas/portal.html` 新タブ + `gas/AdminPortal.gs` 関数追加） | working-engineer | pending | W5-04（ワークフロー API が確定後） |
 | W5-06 | E2E テスト・受入確認（HT-1〜HT-5 全件手動確認 + AT-1〜AT-3 確認） | qa-reviewer | pending | W5-03・W5-04・W5-05 |
 
