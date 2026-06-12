@@ -180,16 +180,35 @@ def _generate_setup_guide(out_dir: Path, cfg: dict, admin_path: str, staff_path:
         f"- スタッフパス: `staff/{staff_path}/`",
         "",
         "## GAS スクリプトプロパティ設定",
+        "",
+        "### A. CSV→JSON Push GAS（gas/Code.gs）",
         "| プロパティ名 | 値 |",
         "|---|---|",
-        f"| `GITHUB_REPO` | `{dep.get('github_repo')}` |",
-        f"| `GITHUB_BRANCH` | `main` |",
-        f"| `GITHUB_TOKEN` | ← GitHub PAT（fine-grained / Contents RW / 90日）|",
-        f"| `DRIVE_ROOT_FOLDER_ID` | ← Google Drive ルートフォルダID |",
+        f"| `DRIVE_ROOT_FOLDER_ID` | ← Google Drive ルートフォルダID（saveSetup() で自動保存）|",
+        f"| `GITHUB_TOKEN` | ← GitHub PAT（fine-grained / Contents RW / 90日）（saveSetup() で自動保存）|",
+        f"| `MEASUREMENT_POINTS` | `500m,1000m`（saveSetup() でデフォルト保存。変更時のみ上書き）|",
+        f"| `GITHUB_OWNER` | ← GitHub オーナー名（手動設定必須）|",
+        f"| `GITHUB_REPO` | `{dep.get('github_repo')}` （手動設定必須）|",
+        "",
+        "### B. PDF Publisher GAS（gas/pdf_publisher/）",
+        "| プロパティ名 | 値 |",
+        "|---|---|",
+        f"| `GITHUB_TOKEN` | ← A と同じ PAT（手動設定必須）|",
+        f"| `GITHUB_REPO` | `{dep.get('github_repo')}` （setupFromConfig() で設定）|",
+        f"| `GITHUB_BRANCH` | `main`（saveSetup() デフォルト）|",
         f"| `TEMPLATE_SHEET_ID` | `{gas.get('pdf_template_sheet_id') or '未設定'}` |",
         f"| `PDF_OUTPUT_FOLDER_ID` | `{gas.get('pdf_output_folder_id') or '未設定'}` |",
         f"| `PDF_ARCHIVE_FOLDER_ID` | `{gas.get('pdf_archive_folder_id') or '未設定'}` |",
-        f"| `JUDGE_TEMPLATE_SHEET_ID` | `{gas.get('judge_template_sheet_id') or '未設定'}` |",
+        f"| `PRE_RACE_BOOKLET_FOLDER_ID` | `{gas.get('booklet_folder_id') or '未設定'}` |",
+        f"| `BOOKLET_TEMPLATE_GID` | `{gas.get('booklet_template_gid') or '未設定'}` |",
+        "",
+        "### C. 判定員帳票 GAS（gas/judge_form_publisher/）",
+        "| プロパティ名 | 値 |",
+        "|---|---|",
+        f"| `GITHUB_TOKEN` | ← A と同じ PAT（手動設定必須）|",
+        f"| `GITHUB_REPO` | `{dep.get('github_repo')}` （setupFromConfig() で設定）|",
+        f"| `GITHUB_BRANCH` | `main`（saveSetup() デフォルト）|",
+        f"| `TEMPLATE_SHEET_ID` | `{gas.get('judge_template_sheet_id') or '未設定'}` |",
         f"| `OUTPUT_FOLDER_ID` | `{gas.get('prep_folder_id') or '未設定'}` |",
         "",
         "## 次のステップ",
@@ -271,6 +290,23 @@ def main() -> None:
     # 開催年（dates[0] から抽出。未設定時は空文字）
     year = dates[0][:4] if dates else ""
     today = datetime.date.today().isoformat()
+
+    # DATE_DAY 系: dates[0]/dates[1] をそれぞれ YYYY-MM-DD と日本語（M月D日(曜)）に展開
+    _WEEKDAY_JA = ["月", "火", "水", "木", "金", "土", "日"]
+
+    def _format_ja(date_str: str) -> str:
+        """'YYYY-MM-DD' → 'M月D日(曜)' 形式に変換。"""
+        try:
+            d = datetime.date.fromisoformat(date_str)
+            return f"{d.month}月{d.day}日({_WEEKDAY_JA[d.weekday()]})"
+        except (ValueError, AttributeError):
+            return date_str
+
+    date_day1    = dates[0] if len(dates) > 0 else ""
+    date_day2    = dates[1] if len(dates) > 1 else date_day1
+    date_day1_ja = _format_ja(date_day1)
+    date_day2_ja = _format_ja(date_day2)
+
     mapping = {
         "{{TOURNAMENT_NAME}}":  t.get("name", ""),
         "{{DATES_LABEL}}":      dates_label,
@@ -286,6 +322,11 @@ def main() -> None:
         "{{CREATED_DATE}}":     today,
         "{{DRIVE_FOLDER_URL}}": "",   # GAS 接続後に手動更新（セットアップガイドに案内）
         "{{GAS_PROJECT_NAME}}": t.get("name", ""),   # GAS プロジェクト名 = 大会名
+        # 日付系プレースホルダー
+        "{{DATE_DAY1}}":        date_day1,
+        "{{DATE_DAY2}}":        date_day2,
+        "{{DATE_DAY1_JA}}":     date_day1_ja,
+        "{{DATE_DAY2_JA}}":     date_day2_ja,
     }
     staff_dir = out_dir / "staff" / staff_path
     if staff_dir.exists():

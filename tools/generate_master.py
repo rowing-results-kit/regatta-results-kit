@@ -48,6 +48,7 @@ import argparse
 import csv
 import json
 import os
+import re
 import sys
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -143,7 +144,8 @@ def parse_schedule(filepath: Path) -> List[dict]:
 def parse_entries(filepath: Path) -> Dict[int, List[dict]]:
     """
     entries.csv を読み込み、{race_no: [エントリー, ...]} の辞書を返す。
-    各エントリー: {lane: int, crew_name: str, affiliation: str}
+    各エントリー: {lane: int, crew_name: str, affiliation: str, age_group: str}
+    age_group 列が無い CSV でも空文字で後方互換を保つ。
     """
     raw = read_csv_as_dicts(filepath)
     entries: Dict[int, List[dict]] = {}
@@ -167,6 +169,7 @@ def parse_entries(filepath: Path) -> Dict[int, List[dict]]:
             "lane":        lane,
             "crew_name":   row.get("crew_name",   ""),
             "affiliation": row.get("affiliation", ""),
+            "age_group":   row.get("age_group",   ""),
         })
 
     total = sum(len(v) for v in entries.values())
@@ -177,6 +180,19 @@ def parse_entries(filepath: Path) -> Dict[int, List[dict]]:
 # master.json 構築
 # ---------------------------------------------------------------------------
 
+def _slugify(name: str) -> str:
+    """大会名を英数ハイフンの slug に変換（tournament.id のデフォルト生成用）。
+    ASCII 英数字のみ残し、空白/アンダースコアをハイフンに変換。
+    日本語など非 ASCII 文字は除去。結果が空の場合は "tournament" を返す。
+    """
+    slug = name.lower()
+    # 非 ASCII 文字を除去
+    slug = slug.encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(r"[^a-z0-9\s-]", "", slug)
+    slug = re.sub(r"[\s_]+", "-", slug).strip("-")
+    return slug or "tournament"
+
+
 def build_master_json(
     tournament_name: str,
     dates: List[str],
@@ -185,13 +201,45 @@ def build_master_json(
     races: List[dict],
     entries: Dict[int, List[dict]],
     measurement_points: Optional[List[str]] = None,
+    # v3 追加フィールド
+    tournament_id: str = "",
+    hub_url: str = "",
+    course_length_m: int = 1000,
+    categories: Optional[List[str]] = None,
 ) -> dict:
     """
     スケジュール・エントリー情報を統合して master.json 用辞書を構築する。
+
+    v3 フィールド（schema_version, tournament.id/hub_url, default_course, categories）を出力。
+    フロント互換チェーンのため v2 キー measurement_points（文字列配列）も並行出力する。
     measurement_points が None の場合はデフォルト ["500m", "1000m"] を使用する。
     """
     if measurement_points is None:
         measurement_points = ["500m", "1000m"]
+
+    # tournament.id: 引数 > 大会名 slug 化
+    tid = tournament_id.strip() if tournament_id else _slugify(tournament_name)
+
+    # categories: 引数 > entries から自動抽出 > デフォルト
+    if categories:
+        cats = categories
+    else:
+        seen: List[str] = []
+        for race in races:
+            cat = race.get("category", "").strip()
+            if cat and cat not in seen:
+                seen.append(cat)
+        cats = seen if seen else ["M", "W", "X"]
+
+    # default_course.measurement_points は整数リスト（SPEC §1）
+    mp_int = []
+    for p in measurement_points:
+        try:
+            mp_int.append(int(str(p).replace("m", "")))
+        except ValueError:
+            pass
+    if not mp_int:
+        mp_int = [500, 1000]
 
     # エントリーをスケジュールにマージ
     for race in races:
@@ -204,12 +252,21 @@ def build_master_json(
     sorted_races = sorted(races, key=lambda r: r["race_no"])
 
     return {
+        "schema_version": 3,
         "tournament": {
+            "id":          tid,
             "name":        tournament_name,
             "dates":       dates,
             "venue":       venue,
             "youtube_url": youtube_url,
+            "hub_url":     hub_url,
         },
+        "default_course": {
+            "length_m":           course_length_m,
+            "measurement_points": mp_int,
+        },
+        "categories": cats,
+        # v2 互換キー（文字列配列）— フロント互換チェーンのフォールバック用
         "measurement_points": measurement_points,
         "schedule": sorted_races,
     }
@@ -217,6 +274,17 @@ def build_master_json(
 # ---------------------------------------------------------------------------
 # メイン処理
 # ---------------------------------------------------------------------------
+
+def _load_config(config_path: Path) -> dict:
+    """tournament.config.json を読み込んで返す。存在しない場合は空辞書を返す。"""
+    if not config_path.is_file():
+        return {}
+    try:
+        return json.loads(config_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as e:
+        log_warn(f"config ファイルの読み込みに失敗しました ({config_path}): {e}")
+        return {}
+
 
 def run(args: argparse.Namespace) -> int:
     print(f"\n{C.BOLD}{C.CYAN}{'='*60}{C.RESET}")
@@ -227,6 +295,47 @@ def run(args: argparse.Namespace) -> int:
     entries_path  = Path(args.entries).resolve()
     output_path   = Path(args.output).resolve()
 
+    # ---- config ファイル読み込み（優先度: --config > 個別 CLI 引数 > デフォルト）--------
+    cfg: dict = {}
+    if args.config:
+        cfg_path = Path(args.config).resolve()
+        cfg = _load_config(cfg_path)
+        if cfg:
+            log_info(f"config ファイル     : {cfg_path}")
+        else:
+            log_warn(f"config ファイルが読めませんでした: {cfg_path}")
+
+    t_cfg   = cfg.get("tournament", {})
+    dc_cfg  = cfg.get("default_course", {})
+
+    # 各値: config > CLI 引数 > デフォルト
+    tournament_name = (
+        t_cfg.get("name") or args.tournament or ""
+    )
+    dates_str = args.dates or ",".join(t_cfg.get("dates", []))
+    venue     = t_cfg.get("venue") or args.venue or ""
+    youtube   = args.youtube  # config にはなし（CLI 引数のみ）
+    tournament_id = t_cfg.get("id") or args.tournament_id or ""
+    hub_url = t_cfg.get("hub_url") or args.hub_url or ""
+
+    # course_length_m: config > デフォルト 1000
+    course_length_m = dc_cfg.get("length_m", 1000)
+    try:
+        course_length_m = int(course_length_m)
+    except (TypeError, ValueError):
+        course_length_m = 1000
+
+    # measurement_points: config（整数配列）> CLI --points（文字列カンマ区切り）> デフォルト
+    if dc_cfg.get("measurement_points"):
+        points_list: Optional[List[str]] = [
+            f"{int(p)}m" for p in dc_cfg["measurement_points"]
+        ]
+    else:
+        points_list = [p.strip() for p in args.points.split(",") if p.strip()] or None
+
+    # categories: config > None（entries から自動抽出）
+    categories: Optional[List[str]] = cfg.get("categories") or None
+
     # ---- 入力ファイル確認 --------------------------------------------------
     for p in [schedule_path, entries_path]:
         if not p.is_file():
@@ -236,10 +345,10 @@ def run(args: argparse.Namespace) -> int:
     log_info(f"スケジュール CSV : {schedule_path}")
     log_info(f"エントリー CSV   : {entries_path}")
     log_info(f"出力先           : {output_path}")
-    log_info(f"大会名           : {args.tournament}")
-    log_info(f"開催日           : {args.dates}")
-    log_info(f"会場             : {args.venue}")
-    log_info(f"計測ポイント     : {args.points}")
+    log_info(f"大会名           : {tournament_name}")
+    log_info(f"開催日           : {dates_str}")
+    log_info(f"会場             : {venue}")
+    log_info(f"計測ポイント     : {points_list}")
     print()
 
     # ---- 上書き確認 --------------------------------------------------------
@@ -263,16 +372,19 @@ def run(args: argparse.Namespace) -> int:
         log_warn(f"エントリーなしのレース: {no_entry_races}")
 
     # ---- master.json 構築 --------------------------------------------------
-    dates_list  = [d.strip() for d in args.dates.split(",")  if d.strip()]
-    points_list = [p.strip() for p in args.points.split(",") if p.strip()] or None
+    dates_list_parsed = [d.strip() for d in dates_str.split(",") if d.strip()]
     master = build_master_json(
-        tournament_name     = args.tournament,
-        dates               = dates_list,
-        venue               = args.venue,
-        youtube_url         = args.youtube,
+        tournament_name     = tournament_name,
+        dates               = dates_list_parsed,
+        venue               = venue,
+        youtube_url         = youtube,
         races               = races,
         entries             = entries,
         measurement_points  = points_list,
+        tournament_id       = tournament_id,
+        hub_url             = hub_url,
+        course_length_m     = course_length_m,
+        categories          = categories,
     )
 
     # ---- 出力 --------------------------------------------------------------
@@ -283,8 +395,11 @@ def run(args: argparse.Namespace) -> int:
     total_entries = sum(len(r["entries"]) for r in master["schedule"])
     print()
     log_ok(f"master.json を出力しました: {output_path}")
-    log_info(f"  レース数    : {len(master['schedule'])}")
-    log_info(f"  エントリー数: {total_entries}")
+    log_info(f"  schema_version : {master['schema_version']}")
+    log_info(f"  tournament.id  : {master['tournament']['id']}")
+    log_info(f"  レース数       : {len(master['schedule'])}")
+    log_info(f"  エントリー数   : {total_entries}")
+    log_info(f"  categories     : {master['categories']}")
     print()
     return 0
 
@@ -294,7 +409,7 @@ def run(args: argparse.Namespace) -> int:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="schedule.csv + entries.csv → data/master.json 変換ツール",
+        description="schedule.csv + entries.csv → site/data/master.json 変換ツール (v3)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
@@ -312,15 +427,35 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--output",
-        default="data/master.json",
+        default="site/data/master.json",
         metavar="JSON",
-        help="出力先JSONファイルのパス（デフォルト: data/master.json）",
+        help="出力先JSONファイルのパス（デフォルト: site/data/master.json）",
+    )
+    parser.add_argument(
+        "--config",
+        default=None,
+        metavar="JSON",
+        help="tournament.config.json のパス。指定時は大会情報をここから取得（CLI 引数より優先）",
     )
     parser.add_argument(
         "--tournament",
         default="",
         metavar="NAME",
-        help="大会名",
+        help="大会名（--config 未指定時に使用）",
+    )
+    parser.add_argument(
+        "--tournament-id",
+        default="",
+        dest="tournament_id",
+        metavar="ID",
+        help="大会ID（英数ハイフン。省略時は大会名から自動生成）",
+    )
+    parser.add_argument(
+        "--hub-url",
+        default="",
+        dest="hub_url",
+        metavar="URL",
+        help="ハブサイトURL（省略可）",
     )
     parser.add_argument(
         "--dates",

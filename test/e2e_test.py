@@ -74,7 +74,7 @@ TEST_RACES = [1, 2, 3]
 MEASUREMENT_POINTS = ["500m", "1000m"]
 
 # master.json パス
-MASTER_JSON_PATH = PROJECT_DIR / "data" / "master.json"
+MASTER_JSON_PATH = PROJECT_DIR / "site" / "data" / "master.json"
 
 # タイムフォーマット正規表現: M:SS.cc（2桁センチ秒）
 TIME_FORMAT_RE = re.compile(r"^\d+:\d{2}\.\d{2}$")
@@ -323,6 +323,14 @@ def test_tie(result: TestResult, generated: dict, verbose: bool) -> None:
     all_ok = True
     for tg, boats in tie_groups.items():
         ranks = [b["rank"] for b in boats]
+        # 同着グループは必ず2艇以上であること
+        if len(boats) < 2:
+            result.fail(
+                f"同着: Race {race_no} tie_group={tg}",
+                f"tie_group に属する艇が1艇のみです（2艇以上必須）: lane={boats[0]['lane']}",
+            )
+            all_ok = False
+            continue
         if len(set(ranks)) == 1:
             result.ok(
                 f"同着: Race {race_no} tie_group={tg} は同順位",
@@ -425,7 +433,7 @@ def test_html_structure(result: TestResult, verbose: bool) -> None:
     - 必須スクリプトが読み込まれているか: js/app.js
     - 必須CSSが読み込まれているか: css/style.css
     """
-    html_path = ROOT_DIR / "index.html"
+    html_path = ROOT_DIR / "site" / "index.html"
 
     if not html_path.exists():
         result.fail("HTML構造: index.html", f"ファイルが存在しません: {html_path}")
@@ -531,14 +539,14 @@ def load_existing_jsons(result: TestResult, verbose: bool) -> dict:
     --skip-pipeline 用: data/results/*.json を読み込んで generated dict を返す。
     1件も存在しない場合は空dictを返す。
     """
-    results_dir = PROJECT_DIR / "data" / "results"
+    results_dir = PROJECT_DIR / "site" / "data" / "results"
     generated: Dict[int, dict] = {}
 
     json_files = sorted(results_dir.glob("race_*.json")) if results_dir.exists() else []
 
     if not json_files:
         print(
-            f"{C.YELLOW}[SKIP]{C.RESET} data/results/*.json が存在しないため"
+            f"{C.YELLOW}[SKIP]{C.RESET} site/data/results/*.json が存在しないため"
             "スキーマ検証をスキップします"
         )
         return generated
@@ -645,7 +653,7 @@ def parse_args() -> argparse.Namespace:
         dest="skip_pipeline",
         help=(
             "CSV→JSON変換（テスト1〜3）をスキップし、"
-            "data/results/*.json を対象にスキーマ・ランキング・"
+            "site/data/results/*.json を対象にスキーマ・ランキング・"
             "フォーマット検証のみ実行する（CI/CD用）"
         ),
     )

@@ -119,8 +119,8 @@ const CONFIG = {
     owner: PropertiesService.getScriptProperties().getProperty('GITHUB_OWNER') || '',
     repo: PropertiesService.getScriptProperties().getProperty('GITHUB_REPO') || '{{GITHUB_REPO}}',
     branch: 'main',
-    resultsPath: 'data/results',
-    masterPath: 'data/master.json',
+    resultsPath: 'site/data/results',
+    masterPath: 'site/data/master.json',
     apiBase: 'https://api.github.com',
   },
   // Google Drive フォルダ名
@@ -1634,7 +1634,7 @@ function createDriveFolderStructure_() {
 function testGitHubConnection_() {
   Logger.log('[testGitHubConnection_] GitHub API 接続テスト開始');
 
-  const testPath = 'data/.setup_test';
+  const testPath = 'site/data/.setup_test';
   const testContent = 'setup test ' + new Date().toISOString();
 
   try {
@@ -1729,7 +1729,7 @@ function clearAllResults() {
   const owner = CONFIG.github.owner;
   const repo = CONFIG.github.repo;
   const branch = CONFIG.github.branch;
-  const resultsPath = CONFIG.github.resultsPath; // 'data/results'
+  const resultsPath = CONFIG.github.resultsPath; // 'site/data/results'
 
   // results/ フォルダの既存ファイルを収集（フォルダが存在しなくても続行）
   const existingRaceNos = [];
@@ -1794,7 +1794,7 @@ function clearAllResults() {
   // Cloudflare Pages を強制再デプロイするためダミーファイルを更新
   try {
     const ts = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy-MM-dd HH:mm:ss');
-    pushToGitHub('data/.cleared_at', ts + '\n');
+    pushToGitHub('site/data/.cleared_at', ts + '\n');
     Logger.log('[clearAllResults] 再デプロイトリガー送信OK');
   } catch (e) {
     Logger.log('[clearAllResults] 再デプロイトリガー失敗（無視）: ' + e.message);

@@ -1,316 +1,369 @@
-# 本番サイト（{{GITHUB_REPO}}-live）セットアップ手順書
+# regatta-results-kit — セットアップ手順書（一般版）
 
-## 概要
-テストサイト（rowing-live-results）をベースに、新しい本番プロジェクト `{{GITHUB_REPO}}-live` を立ち上げる手順です。
-
-**実行者：**
-- リポジトリ管理者（{{GITHUB_OWNER}}）：Cloudflare Pages 作成・リポジトリ管理
-- 大会協会担当者（{{ASSOCIATION_ACCOUNT}}）：GAS 設定・Google Drive 管理
-
-> **前提: Google Drive・スプレッドシート・GAS・GitHub・PAT はすべて利用する協会自身のアカウント上に新規作成します。** キット提供者のアカウント・ストレージを共有する箇所は一切ありません。本書に登場するフォルダ ID・シート ID は、協会自身が作成したものを記入してください。
+> **scaffold 実行後に生成される `docs/SETUP_GUIDE.generated.md` は、
+> この手順書に大会固有の値（フォルダ ID・リポジトリ名等）を自動で埋め込んだものです。**
+> 通常は生成版を使い、何らかの理由で生成版が手元にない場合にこの一般版を参照してください。
 
 ---
 
-## 全体フロー図
+## 対象読者
 
-```mermaid
-graph TD
-    A["龍偉<br/>RYUIYAMADA"] -->|Step 2: 新規プロジェクト作成| B["Cloudflare Pages<br/>{{GITHUB_REPO}}-live"]
-    A -->|Step 3: コードコピー| C["RYUIYAMADA/<br/>{{GITHUB_REPO}}<br/>リポジトリ"]
-    C -->|自動デプロイ| B
-    B -->|Step 7: ドメイン設定| D["本番サイト<br/>{{SITE_URL}}"]
-    
-    E["大会協会担当者<br/>{{ASSOCIATION_ACCOUNT}}"] -->|Step 5: フォルダ確認| F["Google Drive<br/>{{GITHUB_REPO}}"]
-    F -->|Step 6: GAS設定| G["Google Apps Script<br/>自動更新"]
-    G -->|CSV → JSON Push| C
-    
-    H["master.json<br/>schedule.csv<br/>entries.csv"] -->|Step 4: データ準備| C
-    
-    style B fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#000
-    style D fill:#c8e6c9,stroke:#1b5e20,stroke-width:2px,color:#000
-    style F fill:#fff9c4,stroke:#f57f17,stroke-width:2px,color:#000
-    style G fill:#fff9c4,stroke:#f57f17,stroke-width:2px,color:#000
+初めてこのキットを使う協会・大会の技術担当者。
+全ての設定は **自団体のアカウント** で完結します。キット提供者のアカウントを共有・借用する箇所は一切ありません。
+
+---
+
+## 前提
+
+- **Google アカウント**（無料アカウント可）
+- **GitHub アカウント**（無料アカウント可）
+- **Cloudflare アカウント**（無料アカウント可）
+- scaffold 実行後のリポジトリが手元にある（`site/` フォルダが生成済み）
+- インターネット接続がある
+
+以下 4 つのサービスはすべて **自団体自身のアカウント上に新規作成** してください。
+キット提供者の Google Drive・GitHub・Cloudflare を共有・利用する仕組みは一切ありません。
+
+---
+
+## ステップ 1 — GitHub リポジトリの準備
+
+### 1-1 テンプレートから自団体のリポジトリを作成
+
+1. `https://github.com/RYUIYAMADA/regatta-results-kit` を開く
+2. ページ右上の **"Use this template"** → **"Create a new repository"** をクリック
+3. **Owner** を自団体の GitHub アカウントに変更
+4. **Repository name** を入力（例: `sample-regatta-2027`）
+5. **Private** を選択（大会終了後に公開するかは自団体の判断）
+6. **"Create repository"** をクリック
+
+### 1-2 ローカルに clone して scaffold を実行
+
+```bash
+git clone https://github.com/<your-org>/<your-repo>.git
+cd <your-repo>
+
+# 大会設定ファイルを作成
+cp template/tournament.config.example.json tournament.config.json
+# tournament.config.json を開いて大会名・日程・会場などを記入する
+
+# 一発生成（site/ フォルダを生成する）
+python3 tools/scaffold.py --config tournament.config.json
+
+# 生成結果を確認
+ls site/data/
+# → master.json が生成されていれば OK
 ```
 
----
-
-## セットアップ実行順序図
-
-```mermaid
-timeline
-    title 本番サイトセットアップスケジュール
-    
-    section 龍偉（MBP）
-        Step 2 : Cloudflare Pages 新規作成
-        Step 3 : テストサイトからコピー
-        Step 7 : カスタムドメイン設定
-    
-    section 石川県協会
-        Step 1 : 古いプロジェクト削除
-        Step 5 : Google Drive 確認
-        Step 6 : GAS設定・トリガー
-    
-    section 確認
-        Step 8 : 本番サイト動作確認
-```
+scaffold 実行後、`docs/SETUP_GUIDE.generated.md` が生成されます。
+以降の手順はその生成版に記載された大会固有値（フォルダ ID 等）を使って進めてください。
 
 ---
 
-## Google Drive → GitHub 自動更新フロー
+## ステップ 2 — Cloudflare Pages の接続
 
-```mermaid
-graph LR
-    A["Google Drive<br/>race_csv/500m/<br/>race_csv/1000m/"] -->|2分ごとに監視| B["Google Apps Script<br/>Code.gs"]
-    B -->|CSV読み込み| C["全ラップ揃い<br/>チェック"]
-    C -->|CSV → JSON変換| D["race_001.json<br/>race_002.json<br/>..."]
-    D -->|GitHub API| E["RYUIYAMADA/<br/>{{GITHUB_REPO}}<br/>data/results/"]
-    E -->|自動デプロイ| F["Cloudflare Pages<br/>{{GITHUB_REPO}}-live"]
-    F -->|約1分で反映| G["本番サイト<br/>レース結果表示"]
-    
-    style A fill:#fff9c4,stroke:#f57f17,stroke-width:2px,color:#000
-    style B fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#000
-    style E fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#000
-    style G fill:#c8e6c9,stroke:#1b5e20,stroke-width:2px,color:#000
-```
+Cloudflare Pages は **Build output directory = `site`** で設定します。これを誤ると速報サイトが表示されません。
 
----
+### 2-1 Cloudflare にログインしてプロジェクトを作成
 
-## フォルダ構成図
+1. `https://dash.cloudflare.com` を開き、自団体の Cloudflare アカウントでログイン
+2. 左メニューから **Workers & Pages** → **Pages** を開く
+3. **"Create application"** をクリック
+4. **"Connect to Git"** タブをクリック
 
-```mermaid
-graph TD
-    A["{{GITHUB_REPO}}<br/>GitHub リポジトリ"] --> B["data/"]
-    A --> C["css/"]
-    A --> D["js/"]
-    A --> E["docs/"]
-    A --> F["gas/"]
-    A --> G["sample_csv/"]
-    
-    B --> B1["master.json<br/>スケジュール+エントリー"]
-    B --> B2["results/<br/>race_001.json<br/>race_002.json<br/>..."]
-    
-    G --> G1["schedule.csv"]
-    G --> G2["entries.csv"]
-    
-    style B1 fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#000
-    style B2 fill:#fff9c4,stroke:#f57f17,stroke-width:2px,color:#000
-    style G1 fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#000
-    style G2 fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#000
-```
+### 2-2 GitHub との連携
 
----
+1. **"Connect GitHub"** をクリック → GitHub 認可画面で **"Authorize Cloudflare Pages"**
+2. リポジトリ一覧から自団体のリポジトリ（例: `sample-regatta-2027`）を選択
+3. **"Begin setup"** をクリック
 
-## ステップ 1：Cloudflare Pages リセット（石川県協会）
+### 2-3 ビルド設定（必須）
 
-### 1-1 古いプロジェクトの削除
-1. 石川県アカウント（row...@gmail.com）で Cloudflare にログイン
-2. **Workers & Pages** → **Pages** → **{{GITHUB_REPO}}** を開く
-3. **Settings** → **Danger zone** → **"Delete project"**
-4. 確認メッセージで **"Delete"** をクリック
-5. ✅ プロジェクト削除完了
-
----
-
-## ステップ 2：新規プロジェクト作成（龍偉が実行）
-
-### 2-1 Cloudflare Pages で新規作成
-1. リポジトリ管理者のアカウント（{{ADMIN_EMAIL}}）で Cloudflare にログイン
-2. **Workers & Pages** → **Pages** → **Create application**
-3. **"Connect to Git"** をクリック
-4. GitHub の認可ダイアログ → **Authorize** をクリック
-
-### 2-2 リポジトリ選択
-1. **Repository:** `RYUIYAMADA/{{GITHUB_REPO}}` を選択
-2. **"Connect"** をクリック
-
-### 2-3 プロジェクト設定
-| 項目 | 設定値 |
-|------|--------|
-| **Project name** | `{{GITHUB_REPO}}-live` |
-| **Framework preset** | None |
-| **Build command** | （空のまま） |
-| **Build output directory** | `/` （ルート） |
-| **Root directory** | （空のまま） |
-| **Production branch** | `main` |
+| 項目 | 設定値 | 備考 |
+|---|---|---|
+| **Project name** | 任意（例: `sample-regatta-2027`） | URL の一部になる |
+| **Framework preset** | `None` | — |
+| **Build command** | （空欄のまま） | ビルド不要 |
+| **Build output directory** | **`site`** | **← これが最重要。必ず `site` と入力** |
+| **Root directory** | （空欄のまま） | — |
+| **Production branch** | `main` | — |
 
 4. **"Save and Deploy"** をクリック
-5. ✅ デプロイ開始（3-5分待機）
+5. 初回デプロイが完了するまで 2〜5 分待つ
+
+デプロイ完了後、`https://<project-name>.pages.dev` でサイトが表示されれば OK です。
 
 ---
 
-## ステップ 3：テストサイトからのコード準備
+## ステップ 3 — Google Drive フォルダの作成
 
-### 3-1 テストサイトのコードをコピー
-```bash
-# テストサイトリポジトリをクローン
-git clone https://github.com/RYUIYAMADA/rowing-live-results.git /tmp/rowing-live-results
+### 3-1 フォルダ構成を作る
 
-# 必要なファイル・フォルダをコピー
-cp -r /tmp/rowing-live-results/css /Users/ryuiyamada/projects/{{GITHUB_REPO}}/css
-cp -r /tmp/rowing-live-results/js /Users/ryuiyamada/projects/{{GITHUB_REPO}}/js
-cp /tmp/rowing-live-results/index.html /Users/ryuiyamada/projects/{{GITHUB_REPO}}/index.html
+Google Drive（自団体のアカウント）で **ルートフォルダを 1 つ**作成してください。
+内部の `race_csv/`・`master/`・`processed/` は GAS の `setupAll()` が自動生成します。
+
 ```
-
-### 3-2 コミット & プッシュ
-```bash
-cd /Users/ryuiyamada/projects/{{GITHUB_REPO}}
-git add -A
-git commit -m "Copy base code from rowing-live-results (test site)"
-git push origin main
-```
-
-✅ Cloudflare Pages が自動的にビルド・デプロイ開始
-
----
-
-## ステップ 4：本番データ準備
-
-### 4-1 master.json の確認
-- **ファイル:** `data/master.json`
-- **内容確認項目：**
-  - ✅ `schedule[]` に全123レースのデータが含まれているか
-  - ✅ 各レースに `race_num`, `date`, `scheduled_time`, `event_name`, `entries[]` が含まれているか
-  - ✅ entries に `lane`, `affiliation`, `category` が含まれているか
-
-### 4-2 schedule.csv の確認
-- **ファイル:** `sample_csv/schedule.csv`
-- **内容：** race_num, date, scheduled_time, event_name（123レース分）
-- **用途：** Google Drive へアップロード（参考用）
-
-### 4-3 entries.csv の確認
-- **ファイル:** `sample_csv/entries.csv`
-- **内容：** race_no, lane, affiliation, category（539エントリー分）
-- **用途：** Google Drive へアップロード（参考用）
-
----
-
-## ステップ 5：Google Drive セットアップ（石川県協会）
-
-### 5-1 Google Drive フォルダ確認
-- **フォルダID:** `{{DRIVE_ROOT_FOLDER_ID}}`
-- **URL:** https://drive.google.com/drive/folders/{{DRIVE_ROOT_FOLDER_ID}}
-
-### 5-2 フォルダ構成の確認
-```
-{{GITHUB_REPO}}/
-├── master/                  ← スケジュール・エントリーの参考用
-│   ├── schedule.csv
-│   └── entries.csv
+<大会名>/                ← ルートフォルダ（このフォルダの ID を控える）
+├── master/              ← setupAll() が自動生成。schedule.csv・entries.csv を置く
 ├── race_csv/
-│   ├── 500m/               ← GAS が監視（500m ラップデータ）
-│   └── 1000m/              ← GAS が監視（1000m ラップデータ）
-└── results/                ← 確定結果の保管
+│   ├── 500m/            ← setupAll() が自動生成。500m 計測 CSV を置く（GAS が監視）
+│   └── 1000m/           ← setupAll() が自動生成。1000m 計測 CSV を置く（GAS が監視）
+└── processed/           ← setupAll() が自動生成。処理済 CSV の移動先
+    ├── 500m/
+    └── 1000m/
+```
+
+> **計測ポイントについて**: デフォルトは `500m,1000m` の 2 点です。
+> 大会コースが 1 点計測のみ（例: `1000m` ゴールのみ）の場合は
+> スクリプトプロパティ `MEASUREMENT_POINTS` を `1000m` に変更してから `setupAll()` を実行してください。
+
+### 3-2 ルートフォルダ ID を控える
+
+ルートフォルダ（`<大会名>/`）を開いたときのブラウザ URL の末尾がフォルダ ID です。
+
+```
+https://drive.google.com/drive/folders/1AbCdEfGhIjKlMnOpQrStU
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^ ← これがフォルダ ID
+```
+
+後の手順（ステップ 6）で `DRIVE_ROOT_FOLDER_ID` に設定します。
+
+| フォルダ | 対応するスクリプトプロパティ |
+|---|---|
+| `<大会名>/`（ルート） | `DRIVE_ROOT_FOLDER_ID` |
+
+---
+
+## ステップ 4 — スプレッドシートテンプレの準備
+
+PDF の自動生成に使う雛形 Spreadsheet を作成します。
+PDF Publisher GAS と判定員帳票 GAS が使う Spreadsheet は別々に用意してください。
+
+### 4-1 競漕記録テンプレ（PDF Publisher 用）
+
+1. Google スプレッドシートで新規作成
+2. `template/` フォルダ内のサンプルを参考にシート構成を作る（scaffold が具体的な手順を生成版に記載）
+3. Spreadsheet ID を控える（URL の `/d/` と `/edit` の間の文字列）
+
+### 4-2 判定員帳票テンプレ（判定員帳票 GAS 用）
+
+同様に別の Spreadsheet を作成し、ID を控える。
+
+---
+
+## ステップ 5 — GAS 3プロジェクトの作成とコード貼り付け
+
+GAS は以下の 3 プロジェクトを作成します。それぞれ独立した GAS プロジェクトです。
+
+| プロジェクト名（任意） | コードのソース |
+|---|---|
+| A. CSV→JSON Push | `gas/Code.gs` |
+| B. PDF Publisher | `gas/pdf_publisher/Code.gs` + `gas/pdf_publisher/Setup.gs` |
+| C. 判定員帳票 | `gas/judge_form_publisher/Code.gs` + `gas/judge_form_publisher/Setup.gs` |
+
+### 5-1 GAS プロジェクトの作成手順（A の例・B・C も同様）
+
+1. `https://script.google.com` を開く
+2. **"新しいプロジェクト"** をクリック
+3. プロジェクト名を入力（例: `<大会名>-csv-push`）
+4. デフォルトで作られている `コード.gs` を開き、中身を全て削除
+5. `gas/Code.gs` の内容をコピーして貼り付ける
+6. **保存**（Ctrl+S / Cmd+S）
+
+### 5-2 clasp を使う場合（任意・上級者向け）
+
+clasp（GAS の CLI）を使うと、エディタで編集→ push でコードを反映できます。
+
+```bash
+npm install -g @google/clasp
+clasp login
+clasp create --title "<大会名>-csv-push" --rootDir gas/
+clasp push
 ```
 
 ---
 
-## ステップ 6：GAS（Google Apps Script）設定
+## ステップ 6 — Script Properties の投入
 
-### 6-1 GAS プロジェクトの確認
-1. Google Drive で **{{GITHUB_REPO}}** フォルダを開く
-2. **「Apps Script」プロジェクト**を作成（まだない場合）
-3. または既存の GAS プロジェクトを開く
+GAS スクリプトプロパティにキーと値を設定します。これが GAS の唯一の設定箇所です。
 
-### 6-2 GAS スクリプト設定
-**ファイル:** `/Users/ryuiyamada/projects/{{GITHUB_REPO}}/gas/Code.gs`
+### 6-1 setupFromConfig を使う方法（推奨）
 
-**重要な設定値を確認：**
-```javascript
-// GitHub リポジトリ設定
-const GITHUB_REPO = 'RYUIYAMADA/{{GITHUB_REPO}}';  // ← ここを確認
-const GITHUB_TOKEN = '[YOUR_GITHUB_TOKEN]';             // ← GitHub PAT
-const GITHUB_OWNER = 'RYUIYAMADA';
-const GITHUB_BRANCH = 'main';
+scaffold が生成した `docs/SETUP_GUIDE.generated.md` に、`tournament.config.json` の `gas` セクションの JSON が記載されています。
+その JSON を GAS エディタの `setupFromConfig()` に貼り付けて実行すると、必要なプロパティが一括で投入されます。
 
-// Google Drive フォルダ設定
-const MASTER_FOLDER_ID = '{{DRIVE_ROOT_FOLDER_ID}}';
-const CSV_500M_FOLDER_ID = '[500m フォルダID]';  // 実際の ID に変更
-const CSV_1000M_FOLDER_ID = '[1000m フォルダID]'; // 実際の ID に変更
-```
+1. GAS エディタで `setupFromConfig` 関数を選択
+2. **「実行」** ボタンをクリック
+3. 権限確認ダイアログが出たら **"許可"** を選択
+4. ログに「Script Properties を設定しました」と出れば完了
 
-### 6-3 トリガー設定
-1. GAS Editor で **「トリガー」** ボタンをクリック
-2. **新しいトリガーを作成：**
-   - 関数：`checkAndPushResults`
-   - イベントのソース：**時間ベースのトリガー**
-   - トリガーのタイプ：**2分ごと**
-   - 時間帯：**毎日（大会日時に応じて調整）**
-3. **保存** をクリック
+### 6-2 手動で投入する方法
 
-✅ GAS が 2 分ごとに Google Drive を監視し、CSV → JSON → GitHub Push を実行
+GAS エディタ左側の **歯車アイコン（プロジェクトの設定）** → **"スクリプト プロパティ"** → **"スクリプト プロパティを追加"** で1つずつ入力します。
+
+#### A. CSV→JSON Push GAS（`gas/Code.gs`）に必要なプロパティ
+
+`saveSetup()` を実行すると以下の 3 つが自動保存されます。残り 2 つは手動で追加してください。
+
+| プロパティ名 | 設定方法 | 値の説明 | 例 |
+|---|---|---|---|
+| `DRIVE_ROOT_FOLDER_ID` | `saveSetup()` で自動保存 | Drive ルートフォルダ（`<大会名>/`）の ID | `1AbCdEfGh...` |
+| `GITHUB_TOKEN` | `saveSetup()` で自動保存 | GitHub PAT（fine-grained。後述のステップ 7 で取得） | `github_pat_XXXX...` |
+| `MEASUREMENT_POINTS` | `saveSetup()` で自動保存（デフォルト `500m,1000m`） | 計測ポイント（カンマ区切り） | `500m,1000m` |
+| `GITHUB_OWNER` | 手動追加（必須） | GitHub オーナー名（ユーザー名または Organization 名） | `your-org` |
+| `GITHUB_REPO` | 手動追加（必須） | リポジトリ名のみ（オーナー名を**含まない**） | `sample-regatta-2027` |
+
+> **`saveSetup()` の実行方法**: コード先頭の `SETUP_DRIVE_FOLDER_ID` と `SETUP_GITHUB_TOKEN` に値を貼り付けてから、関数選択で `saveSetup` を選んで実行してください。実行後は両変数を空文字に戻してコードを保存してください。
+
+#### B. PDF Publisher GAS（`gas/pdf_publisher/`）に必要なプロパティ
+
+`setupFromConfig()` で一括投入できます（推奨）。`GITHUB_TOKEN` のみ手動設定が必要です。
+
+| プロパティ名 | 値の説明 |
+|---|---|
+| `GITHUB_TOKEN` | 手動設定必須。A の GAS と同じ PAT |
+| `GITHUB_REPO` | `setupFromConfig()` で設定。A の GAS と同じリポジトリ名 |
+| `GITHUB_BRANCH` | `saveSetup()` デフォルト `main` |
+| `TEMPLATE_SHEET_ID` | 競漕記録テンプレの Spreadsheet ID |
+| `PDF_OUTPUT_FOLDER_ID` | PDF 出力先フォルダの ID |
+| `PDF_ARCHIVE_FOLDER_ID` | 削除済 PDF のアーカイブ先フォルダの ID |
+| `PRE_RACE_BOOKLET_FOLDER_ID` | レース前準備資料 PDF の出力先フォルダの ID |
+| `BOOKLET_TEMPLATE_GID` | 結果ブックレット用テンプレートシートの GID |
+
+#### C. 判定員帳票 GAS（`gas/judge_form_publisher/`）に必要なプロパティ
+
+`setupFromConfig()` で一括投入できます（推奨）。`GITHUB_TOKEN` のみ手動設定が必要です。
+
+| プロパティ名 | 値の説明 |
+|---|---|
+| `GITHUB_TOKEN` | 手動設定必須。A の GAS と同じ PAT |
+| `GITHUB_REPO` | `setupFromConfig()` で設定。A の GAS と同じリポジトリ名 |
+| `GITHUB_BRANCH` | `saveSetup()` デフォルト `main` |
+| `TEMPLATE_SHEET_ID` | 判定員帳票テンプレの Spreadsheet ID |
+| `OUTPUT_FOLDER_ID` | 判定員帳票 PDF の出力先フォルダの ID |
 
 ---
 
-## ステップ 7：カスタムドメイン設定（龍偉が実行）
+## ステップ 7 — GitHub PAT の作成
 
-### 7-1 Cloudflare Pages でドメイン設定
-1. Cloudflare Dashboard → **Pages** → **{{GITHUB_REPO}}-live**
-2. **Custom domains** タブを開く
-3. **"Add a custom domain"** をクリック
-4. **ドメイン名：** `{{SITE_URL}}`
-5. **Add domain** をクリック
-6. CNAME レコード設定を確認（自動で設定される場合が多い）
+GAS が GitHub にデータを書き込むための Personal Access Token（PAT）を作成します。
 
-✅ 本番 URL `https://{{SITE_URL}}` にアクセス可能
+### 7-1 PAT の作成手順
+
+1. GitHub にログイン → 右上アバター → **Settings**
+2. 左メニュー最下部 **"Developer settings"** → **"Personal access tokens"** → **"Fine-grained tokens"**
+3. **"Generate new token"** をクリック
+4. 以下のとおり設定する
+
+| 項目 | 設定値 |
+|---|---|
+| **Token name** | 任意（例: `regatta-2027-gas`） |
+| **Expiration** | **90 days**（期限を設ける。無期限は推奨しない） |
+| **Resource owner** | 速報サイトのリポジトリが属する Organization または個人アカウント |
+| **Repository access** | **Only select repositories** → 速報サイトのリポジトリのみを選択 |
+| **Repository permissions → Contents** | **Read and Write** |
+| それ以外の権限 | **No access** のまま変更しない |
+
+5. **"Generate token"** をクリック
+6. 表示されたトークン文字列を**今すぐコピー**（再表示できないため必ずこの場でコピー）
+
+コピーしたトークンをステップ 6 の `GITHUB_TOKEN` に入力します。
 
 ---
 
-## ステップ 8：デプロイ・動作確認
+## ステップ 8 — トリガーの設定
 
-### 8-1 本番サイトへのアクセス
-```
-https://{{SITE_URL}}
-```
+CSV→JSON Push GAS の `onTrigger` 関数を 2 分間隔で自動実行するよう設定します。
 
-### 8-2 確認項目
-- ✅ サイトが表示される
-- ✅ スケジュール表示（123レース）
-- ✅ 時刻・種目名が正しく表示
-- ✅ ラウンド列がない（今回は採用しない）
-- ✅ Race No. が 1～124 で表示
+### 8-1 setupTrigger を実行する（推奨）
 
-### 8-3 GAS の動作確認
-1. Google Drive の `race_csv/500m/` フォルダにテスト CSV をアップロード
-2. GAS 実行ログで「成功」を確認
-3. GitHub の `data/results/race_001.json` が更新されたか確認
-4. 本番サイトに結果が反映されたか確認
+1. CSV→JSON Push GAS のエディタを開く
+2. 関数選択リストから **`setupTrigger`** を選択
+3. **「実行」** をクリック
+4. ログに「トリガーを設定しました: onTrigger (2分間隔)」と出れば完了
+
+### 8-2 手動でトリガーを設定する場合
+
+GAS エディタ左側の **時計アイコン（トリガー）** → **「+ トリガーを追加」** をクリックし、以下のとおり設定します。
+
+| 項目 | 設定値 |
+|---|---|
+| 実行する関数を選択 | `onTrigger` |
+| イベントのソース | **時間ベースのトリガー** |
+| 時間ベースのトリガーのタイプ | **分ベースのタイマー** |
+| 分の間隔を選択 | **2分おき** |
+
+**「保存」** をクリック → 権限確認が出たら **「許可」** を選択。
+
+---
+
+## ステップ 9 — 疎通テスト
+
+設定が正しく動いているかを確認します。
+
+### 9-1 master.json の Push テスト
+
+1. CSV→JSON Push GAS エディタで **`runImportMaster`** を実行
+2. ログに「master.json を Push しました」と出ることを確認
+3. GitHub リポジトリの `site/data/master.json` が更新されていることをブラウザで確認
+4. 数分後、速報サイト（Cloudflare Pages の URL）でスケジュールが表示されることを確認
+
+### 9-2 結果 CSV の Push テスト
+
+1. `template/` フォルダ内のサンプル CSV（`R001_500m.csv` 等）を Google Drive の `race_csv/500m/` にアップロード
+2. 2 分以内に GAS が自動実行される
+3. GAS エディタの **実行ログ** を開き「processPendingCSVs: R001 処理完了」等のログを確認
+4. GitHub の `site/data/results/race_001.json` が作成されていることを確認
+5. 速報サイトで R001 の結果が表示されることを確認
+
+反映所要は **最短 2〜3 分・通常 3〜5 分**（GAS の実行タイミング + Cloudflare のデプロイ約 1 分）。
+
+---
+
+## ステップ 10 — 大会終了後の停止手順
+
+大会終了後は GAS トリガーを停止して不要な実行を防いでください。
+
+### 10-1 トリガーを停止する
+
+1. CSV→JSON Push GAS エディタを開く
+2. 関数選択リストから **`deleteTriggers`** を選択して実行
+3. ログに「すべてのトリガーを削除しました」と出れば完了
+
+### 10-2 Cloudflare Pages の自動デプロイを停止する（任意）
+
+サイトを読み取り専用アーカイブとして残す場合は CI を停止しておくと安心です。
+
+1. Cloudflare Dashboard → Pages → 該当プロジェクト → Settings
+2. **Builds & deployments** → **"Pause deployments"** をクリック
+
+速報サイト自体は停止しなくてよいです。結果がそのまま残り、いつでも参照できます。
 
 ---
 
 ## トラブルシューティング
 
-### Q: Cloudflare Pages でビルドが失敗する
-- ✅ Build log を確認
-- ✅ リポジトリの権限確認（RYUIYAMADA が RYUIYAMADA/{{GITHUB_REPO}} にアクセス可能か）
-- ✅ GitHub webhook が正しく動作しているか確認
-
-### Q: GAS が GitHub に push できない
-- ✅ GitHub Token の有効期限確認
-- ✅ Token に write 権限があるか確認
-- ✅ GAS スクリプトプロパティの設定値を確認
-
-### Q: Google Drive の CSV が反映されない
-- ✅ CSV が正しい場所（race_csv/500m/, race_csv/1000m/）に保存されているか
-- ✅ ファイル名が正しいか確認
-- ✅ GAS が 2 分ごとに実行されているか確認（トリガーログ）
+| 症状 | 確認箇所 | 対処 |
+|---|---|---|
+| サイトが表示されない | Cloudflare Pages の Build output directory | **`site`** に設定されているか確認。`/` やルートのままだと失敗する |
+| スケジュールが出ない | GitHub の `site/data/master.json` | `runImportMaster` を手動実行して Push し直す |
+| 結果が反映されない（5分以上） | GAS トリガー / CSV のフォルダ / ファイル名 | トリガーが有効か確認 → `onTrigger()` を手動実行 → ファイル名の形式を確認（`R001_500m.csv` 形式が必須） |
+| GAS が GitHub に Push できない | スクリプトプロパティ `GITHUB_TOKEN` | PAT の有効期限と Contents RW 権限を確認 |
+| 「Script Properties 未設定」エラー | スクリプトプロパティ | 必須プロパティが全て設定されているか確認 |
 
 ---
 
-## 最終確認チェックリスト
+## 補足 — scaffold が生成する SETUP_GUIDE.generated.md との関係
 
-- [ ] 古い Cloudflare Pages プロジェクト削除
-- [ ] 新規プロジェクト `{{GITHUB_REPO}}-live` 作成完了
-- [ ] RYUIYAMADA/{{GITHUB_REPO}} リポジトリにコードコピー完了
-- [ ] master.json に schedule + entries データ完備
-- [ ] カスタムドメイン設定完了
-- [ ] GAS 設定完了（トリガー有効）
-- [ ] 本番サイト https://{{SITE_URL}} にアクセス確認
-- [ ] スケジュール・結果表示の動作確認
+```
+docs/SETUP_GUIDE.md              ← このファイル（一般手順書・大会非依存）
+docs/SETUP_GUIDE.generated.md   ← scaffold 実行後に自動生成（大会固有値入り）
+```
 
----
+`SETUP_GUIDE.generated.md` には：
+- Drive フォルダ ID の記入欄に実際の値が入っている
+- `setupFromConfig` に渡す JSON がすでに書き込まれている
+- GitHub リポジトリ名・PAT のガイドが大会名を含んだ状態で出力されている
 
-## サポート連絡先
-
-問題が発生した場合：
-- GitHub Issues: https://github.com/RYUIYAMADA/{{GITHUB_REPO}}/issues
-- メール: {{ADMIN_EMAIL}}
+通常の大会セットアップでは `SETUP_GUIDE.generated.md` のみ使えば完結します。
+この `SETUP_GUIDE.md` は、生成版を紛失した場合や、新しい大会でやり直す際の参照用です。

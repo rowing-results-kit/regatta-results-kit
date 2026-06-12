@@ -56,7 +56,8 @@ cd site
 python3 -m http.server 8000
 # ブラウザで http://localhost:8000 を開く
 
-# 6. Cloudflare Pages に接続してデプロイ（詳細は docs/SETUP_GUIDE.generated.md 参照）
+# 6. Cloudflare Pages に接続してデプロイ（Build output directory = site を必ず設定）
+#    詳細は docs/SETUP_GUIDE.generated.md 参照
 ```
 
 ---
@@ -85,10 +86,10 @@ regatta-results-kit/
 │   └── tournament.config.example.json
 ├── tools/                      ← Python CLI ツール群
 │   ├── scaffold.py             ← 一発生成の中枢
-│   ├── generate_master/
-│   ├── simulate_pipeline/
-│   ├── init_tournament/        ← セットアップウィザード
-│   └── build_gas/
+│   ├── generate_master.py
+│   ├── simulate_pipeline.py
+│   ├── init_tournament.py      ← セットアップウィザード
+│   └── build_gas.py
 ├── test/                       ← e2e_test.py + フィクション fixture
 ├── docs/
 │   ├── ARCHITECTURE.md
@@ -124,11 +125,11 @@ regatta-results-kit/
 
 ### セットアップ手順
 
-1. `docs/SETUP_GUIDE.md`（または scaffold 実行後に生成される `docs/SETUP_GUIDE.generated.md`）を開く
+1. `docs/SETUP_GUIDE.md`（一般手順書）または scaffold 実行後に生成される `docs/SETUP_GUIDE.generated.md`（大会固有値入り・scaffold 実行後に生成されます）を開く
 2. GAS プロジェクトを作成し `gas/` 配下のコードを clasp でプッシュする
 3. GAS のスクリプトプロパティに PAT・Drive フォルダ ID・GitHub リポジトリ名を設定する
 4. GAS で `setupFromConfig()` を実行して初期設定を完了する
-5. トリガーを設定（Drive への CSV アップロードを検知して自動処理）
+5. トリガーを設定（2分間隔の時間ベーストリガーで自動処理）
 
 > PAT は **fine-grained** で発行し、対象リポジトリを速報サイトのリポジトリのみに限定してください。
 > Classic token は必要以上に広い権限を持つため推奨しません。
@@ -147,22 +148,22 @@ regatta-results-kit/
 ```json
 {
   "id": "spring-2027",
-  "name": "石川県春季ローイング選手権",
+  "name": "サンプル春季ローイング大会",
   "year": 2027,
   "dates": ["2027-05-08", "2027-05-09"],
-  "venue": "石川県津幡漕艇競技場",
+  "venue": "サンプル漕艇場",
   "status": "upcoming",
-  "url": "https://your-site.pages.dev"
+  "url": "https://<your-site>.pages.dev"
 }
 ```
 
 | フィールド | 値の例 | 説明 |
 |---|---|---|
 | `id` | `"spring-2027"` | 一意な識別子（英数字・ハイフン） |
-| `name` | `"石川県春季..."` | 大会名（表示に使用） |
+| `name` | `"サンプル春季..."` | 大会名（表示に使用） |
 | `year` | `2027` | 年度（年タブの振り分けに使用） |
 | `dates` | `["2027-05-08","2027-05-09"]` | 開催日の配列（ISO 8601形式） |
-| `venue` | `"石川県津幡..."` | 会場名（任意） |
+| `venue` | `"サンプル漕艇場"` | 会場名（任意） |
 | `status` | `"upcoming"` | `upcoming` / `live` / `final` |
 | `url` | `"https://..."` | 速報サイトの URL |
 
@@ -184,7 +185,7 @@ regatta-results-kit/
 ```json
 {
   "tournament": {
-    "hub_url": "https://rowing-ishikawa-hub.pages.dev"
+    "hub_url": "https://<your-hub>.pages.dev"
   }
 }
 ```

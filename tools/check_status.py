@@ -35,10 +35,10 @@ from common import C, log_ok, log_warn, log_info
 # ---------------------------------------------------------------------------
 
 # master.json パス
-MASTER_JSON_PATH = PROJECT_DIR / "data" / "master.json"
+MASTER_JSON_PATH = PROJECT_DIR / "site" / "data" / "master.json"
 
 # レース結果ディレクトリ
-RESULTS_DIR = PROJECT_DIR / "data" / "results"
+RESULTS_DIR = PROJECT_DIR / "site" / "data" / "results"
 
 # 「最近の更新」とみなす閾値（分）
 RECENT_THRESHOLD_MINUTES = 30
@@ -168,7 +168,7 @@ def check_local_files(verbose: bool) -> Tuple[bool, Optional[datetime]]:
 
     # ---- master.json ----
     if not MASTER_JSON_PATH.exists():
-        log_fail(f"data/master.json: ファイルが存在しません")
+        log_fail(f"site/data/master.json: ファイルが存在しません")
         all_ok = False
     else:
         try:
@@ -177,32 +177,32 @@ def check_local_files(verbose: bool) -> Tuple[bool, Optional[datetime]]:
             schedule    = master.get("schedule", [])
             race_count  = len(schedule)
             entry_count = sum(len(race.get("entries", [])) for race in schedule)
-            log_ok(f"data/master.json: {race_count}レース, {entry_count}エントリー")
+            log_ok(f"site/data/master.json: {race_count}レース, {entry_count}エントリー")
 
             # ---- エントリー整合性チェック ----------------------------------------
             check_entry_consistency(schedule)
 
         except json.JSONDecodeError as e:
-            log_fail(f"data/master.json: JSONパースエラー — {e}")
+            log_fail(f"site/data/master.json: JSONパースエラー — {e}")
             all_ok = False
         except Exception as e:
-            log_fail(f"data/master.json: 読み込みエラー — {e}")
+            log_fail(f"site/data/master.json: 読み込みエラー — {e}")
             all_ok = False
 
-    # ---- data/results/ ----
+    # ---- site/data/results/ ----
     if not RESULTS_DIR.is_dir():
-        log_fail(f"data/results/: ディレクトリが存在しません")
+        log_fail(f"site/data/results/: ディレクトリが存在しません")
         all_ok = False
         return all_ok, latest_updated_at
 
     json_files = sorted(RESULTS_DIR.glob("race_*.json"))
 
     if not json_files:
-        log_warn(f"data/results/: JSONファイルが0件です")
+        log_warn(f"site/data/results/: JSONファイルが0件です")
         all_ok = False
         return all_ok, latest_updated_at
 
-    log_ok(f"data/results/: {len(json_files)}ファイル確認")
+    log_ok(f"site/data/results/: {len(json_files)}ファイル確認")
 
     # 各race_XXX.json の詳細確認
     for jf in json_files:
@@ -309,10 +309,10 @@ def check_github(token: str, repo: str, branch: str, verbose: bool) -> bool:
 
     log_ok(f"GitHub: 最新コミット {elapsed}  [{commit_sha}] {commit_message[:50]}")
 
-    # ---- data/results/ のファイル一覧 ----
+    # ---- site/data/results/ のファイル一覧 ----
     if verbose:
         contents_url = (
-            f"https://api.github.com/repos/{repo}/contents/data/results"
+            f"https://api.github.com/repos/{repo}/contents/site/data/results"
             f"?ref={branch}"
         )
         contents = gh_get(contents_url)

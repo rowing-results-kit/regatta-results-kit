@@ -3,12 +3,12 @@ name: JSONバリデーション
 on:
   push:
     paths:
-      - 'data/results/**.json'
-      - 'data/master.json'
+      - 'site/data/results/**.json'
+      - 'site/data/master.json'
   pull_request:
     paths:
-      - 'data/results/**.json'
-      - 'data/master.json'
+      - 'site/data/results/**.json'
+      - 'site/data/master.json'
 
 jobs:
   validate:
