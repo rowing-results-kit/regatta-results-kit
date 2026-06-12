@@ -293,6 +293,8 @@ claude
 
 ```bash
 git clone https://github.com/RYUIYAMADA/regatta-results-kit
+cd regatta-results-kit  # リポジトリをクローンした親ディレクトリから実行
+cd ..  # 親に戻す
 claude --plugin-dir ./regatta-results-kit
 ```
 
