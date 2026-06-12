@@ -73,8 +73,8 @@ created: 2026-06-12
 | W5-02 | `hub/association.json` スキーマ拡張（schema_version フィールド追加） | working-engineer | done | W5-01 |
 | W5-03 | `hub/index.html` 実装調整（3状態バッジ確認・既存実装で充足） | working-engineer | done | W5-01（既存実装あり・追加変更不要） |
 | W5-04 | 大会追加 + ステータス変更ワークフロー実装（`.github/workflows/hub-add-tournament.yml` + `hub-update-status.yml`） | working-engineer | done | W5-01・W5-02（スキーマ確定後） |
-| W5-05 | 管理者ポータルにハブ管理 UI 追加（`gas/portal.html` 新タブ + `gas/AdminPortal.gs` 関数追加） | working-engineer | pending | W5-04（ワークフロー API が確定後） |
-| W5-06 | E2E テスト・受入確認（HT-1〜HT-5 全件手動確認 + AT-1〜AT-3 確認） | qa-reviewer | pending | W5-03・W5-04・W5-05 |
+| W5-05 | 管理者ポータルにハブ管理 UI 追加 | — | **スコープカット（PM裁定 2026-06-12）**: 大会追加/状態変更は GitHub フォームに統一（ポータル経由だと PAT に actions:write 権限追加が必要になり非エンジニア導入を複雑化するため）。v2 で再検討 | — |
+| W5-06 | E2E テスト・受入確認 | qa-reviewer | ローカル13テスト全PASS + actionlint 0 errors で代替（PM裁定）。実機 dispatch はパイロット大会で確認 | W5-04 |
 
 ---
 
