@@ -1,0 +1,1941 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>速報サイト導入ガイド — regatta-results-kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style data-critical>
+:root {
+  --navy-900: #0A1628;
+  --navy:     #152E58;
+  --navy-600: #264E96;
+  --navy-300: #93C5FD;
+  --navy-100: #EFF6FF;
+  --orange:   #EA580C;
+  --orange-bg:#FFF7ED;
+  --text:     #1A1A2E;
+  --muted:    #6B7280;
+  --border:   #E5E7EB;
+  --bg:       #FFFFFF;
+  --bg-sub:   #F5F5F5;
+  --success:  #16A34A;
+  --warning:  #D97706;
+  --error:    #DC2626;
+  --success-bg:#DCFCE7;
+  --warning-bg:#FEF3C7;
+  --error-bg:  #FEE2E2;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-feature-settings: 'palt' 1, 'kern' 1;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: clamp(0.9375rem, 1.4vw, 1rem);
+  font-weight: 400;
+  line-height: 1.8;
+  color: var(--text);
+  background: var(--bg-sub);
+}
+
+p, li, td, th, caption, .ja-text {
+  line-break: strict;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  hanging-punctuation: allow-end;
+}
+
+@supports (word-break: auto-phrase) {
+  h1, h2, h3, .headline { word-break: auto-phrase; }
+}
+
+.kpi-value, .num, em, mark { white-space: nowrap; word-break: keep-all; }
+
+/* ── Layout ── */
+.container {
+  max-width: min(100% - 2rem, 75rem);
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 1.5rem);
+}
+
+/* ── Header ── */
+.site-header {
+  background: var(--navy);
+  color: #fff;
+  padding: 1.25rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+.site-header .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.site-header h1 {
+  font-size: clamp(1rem, 2vw, 1.125rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.site-header .subtitle {
+  font-size: 0.75rem;
+  font-weight: 500;
+  opacity: 0.75;
+  margin-top: 0.125rem;
+}
+
+/* ── Hero ── */
+.hero {
+  background: var(--navy);
+  color: #fff;
+  padding: clamp(2.5rem, 6vw, 4rem) 0 clamp(2rem, 5vw, 3rem);
+  margin-bottom: 0;
+}
+.hero-inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+@media (min-width: 48rem) {
+  .hero-inner { grid-template-columns: 1fr 1fr; align-items: center; }
+}
+.hero-title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.hero-desc {
+  margin-top: 1rem;
+  font-size: clamp(0.9375rem, 1.4vw, 1rem);
+  font-weight: 500;
+  opacity: 0.88;
+  line-height: 1.8;
+}
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  background: var(--orange);
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  padding: 0.75rem 1.75rem;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 44px;
+}
+.hero-cta:hover { filter: brightness(0.85); }
+
+/* ── Overview card ── */
+.overview {
+  background: var(--bg);
+  padding: clamp(1.5rem, 3vw, 2rem);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+}
+.overview-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+.step-overview-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.step-overview-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+}
+.step-num-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  background: var(--navy-100);
+  color: var(--navy-600);
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.total-time {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+/* ── Main content ── */
+.main-content {
+  padding: clamp(2rem, 5vw, 3rem) 0 clamp(3rem, 6vw, 5rem);
+}
+
+/* ── Section heading ── */
+.section-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+.section-title {
+  font-size: clamp(1.375rem, 3vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  color: var(--text);
+  margin-bottom: 2rem;
+}
+
+/* ── Step cards ── */
+.step-card {
+  background: var(--bg);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+.step-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--navy);
+  color: #fff;
+}
+.step-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  background: rgba(255,255,255,0.15);
+  font-size: 1.125rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.step-card-title {
+  font-size: clamp(1rem, 2vw, 1.125rem);
+  font-weight: 700;
+  line-height: 1.3;
+}
+.step-card-time {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 500;
+  opacity: 0.75;
+  white-space: nowrap;
+}
+.step-card-body {
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  display: grid;
+  gap: 1.5rem;
+}
+@media (min-width: 64rem) {
+  .step-card-body { grid-template-columns: 1fr 1fr; }
+  .step-card-body.single-col { grid-template-columns: 1fr; }
+}
+
+/* ── Step instructions ── */
+.ops-section h4 {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.ops-section h4::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 1em;
+  background: var(--navy);
+  border-radius: 2px;
+}
+.ops-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.ops-list li {
+  display: flex;
+  gap: 0.625rem;
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+.ops-list li .ops-num {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 9999px;
+  background: var(--navy-100);
+  color: var(--navy-600);
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+}
+.ops-list li .ops-text { flex: 1; }
+.highlight-action {
+  background: var(--orange-bg);
+  border-left: 3px solid var(--orange);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0 4px 4px 0;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--text);
+  margin: 0.25rem 0;
+}
+
+/* ── Settings table ── */
+.settings-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  margin: 0.75rem 0;
+}
+.settings-table th {
+  background: var(--bg-sub);
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.settings-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.settings-table tr:last-child td { border-bottom: none; }
+.settings-table code {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  background: var(--bg-sub);
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+  color: var(--navy-600);
+}
+.required-badge {
+  display: inline-block;
+  background: var(--error-bg);
+  color: var(--error);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 9999px;
+  margin-left: 0.25rem;
+}
+
+/* ── Screen mock ── */
+.screen-mock {
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  font-size: 0.8125rem;
+}
+.screen-mock-bar {
+  background: var(--bg-sub);
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.screen-mock-bar .dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--border);
+}
+.screen-mock-bar .url {
+  font-size: 0.7rem;
+  color: var(--muted);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.screen-mock-body {
+  background: var(--bg);
+  padding: 1rem;
+}
+/* GitHub mock */
+.gh-repo-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.gh-repo-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--navy-600);
+}
+.gh-use-template-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: var(--success);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.375rem 0.875rem;
+  border-radius: 6px;
+  margin-left: auto;
+  border: none;
+  cursor: pointer;
+  min-height: 32px;
+  position: relative;
+}
+.gh-use-template-btn::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border: 2px dashed var(--orange);
+  border-radius: 8px;
+  pointer-events: none;
+}
+.mock-arrow {
+  position: absolute;
+  right: -1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  color: var(--orange);
+  font-weight: 700;
+}
+.mock-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--orange);
+  background: var(--orange-bg);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 0.5rem;
+}
+/* Cloudflare mock */
+.cf-field {
+  margin-bottom: 0.75rem;
+}
+.cf-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+.cf-input {
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.8rem;
+  color: var(--text);
+  width: 100%;
+  background: var(--bg);
+}
+.cf-input.highlight {
+  border-color: var(--orange);
+  background: var(--orange-bg);
+  font-weight: 700;
+  color: var(--orange);
+}
+/* Actions mock */
+.gh-actions-sidebar {
+  background: var(--bg-sub);
+  border-radius: 4px;
+  padding: 0.625rem;
+  margin-bottom: 0.75rem;
+}
+.gh-actions-wf {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.375rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--navy-600);
+  background: var(--navy-100);
+}
+.gh-run-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: var(--navy);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.375rem 0.875rem;
+  border-radius: 6px;
+  border: none;
+  min-height: 32px;
+  position: relative;
+}
+.gh-run-btn::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border: 2px dashed var(--orange);
+  border-radius: 8px;
+}
+.gh-form-row {
+  margin-bottom: 0.5rem;
+}
+.gh-form-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 0.2rem;
+}
+.gh-form-input {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.78rem;
+  width: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+/* GAS mock */
+.gas-menu {
+  background: var(--bg-sub);
+  border-bottom: 1px solid var(--border);
+  padding: 0.375rem 0.75rem;
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--text);
+  font-weight: 500;
+}
+.gas-menu-item.active {
+  font-weight: 700;
+  color: var(--navy-600);
+  border-bottom: 2px solid var(--navy-600);
+}
+.gas-prop-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  align-items: center;
+}
+.gas-prop-key {
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  background: var(--navy-100);
+  color: var(--navy-600);
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  font-weight: 700;
+  flex: 0 0 auto;
+  min-width: 12rem;
+}
+.gas-prop-val {
+  font-size: 0.78rem;
+  color: var(--muted);
+  flex: 1;
+}
+/* PAT mock */
+.pat-field {
+  margin-bottom: 0.625rem;
+}
+.pat-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 0.2rem;
+}
+.pat-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.pat-token {
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  background: var(--navy-100);
+  color: var(--navy-900);
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  font-weight: 700;
+  border: 1px solid var(--navy-300);
+}
+.copy-btn {
+  background: var(--navy-100);
+  color: var(--navy-600);
+  border: 1px solid var(--navy-300);
+  border-radius: 4px;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 28px;
+}
+/* Portal mock */
+.portal-tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.75rem;
+}
+.portal-tab {
+  padding: 0.5rem 0.875rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+}
+.portal-tab.active {
+  font-weight: 700;
+  color: var(--navy-600);
+  border-bottom: 2px solid var(--navy-600);
+  margin-bottom: -1px;
+}
+.test-result-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background: var(--success-bg);
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+.test-result-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: var(--success);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+}
+.test-result-text {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* ── Checklist ── */
+.checklist {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.checklist li input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.25rem;
+  flex-shrink: 0;
+  accent-color: var(--navy-600);
+  cursor: pointer;
+}
+.checklist li label { cursor: pointer; line-height: 1.6; }
+.checklist li:has(input:checked) label {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+/* ── QA section ── */
+.qa-block {
+  background: var(--bg-sub);
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+}
+.qa-block h4 {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.qa-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 9999px;
+  background: var(--warning-bg);
+  color: var(--warning);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.qa-item {
+  margin-bottom: 0.625rem;
+  padding-bottom: 0.625rem;
+  border-bottom: 1px solid var(--border);
+}
+.qa-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.qa-q {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+}
+.qa-a {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--text);
+  line-height: 1.7;
+}
+.qa-a strong { font-weight: 700; color: var(--navy-600); }
+
+/* ── Alert ── */
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-start;
+  line-height: 1.6;
+}
+.alert-warning {
+  background: var(--warning-bg);
+  border-left: 3px solid var(--warning);
+  color: var(--text);
+}
+.alert-info {
+  background: var(--navy-100);
+  border-left: 3px solid var(--navy-300);
+  color: var(--text);
+}
+
+/* ── GAS link cards ── */
+.gas-links {
+  display: grid;
+  gap: 1rem;
+}
+@media (min-width: 48rem) {
+  .gas-links { grid-template-columns: repeat(3, 1fr); }
+}
+.gas-link-card {
+  background: var(--bg);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.gas-link-card-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.gas-link-card-desc {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  font-weight: 400;
+  line-height: 1.6;
+  flex: 1;
+}
+.gas-tag {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+}
+.gas-tag-required { background: var(--error-bg); color: var(--error); }
+.gas-tag-optional { background: var(--bg-sub); color: var(--muted); }
+.gas-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  background: var(--navy);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  text-decoration: none;
+  min-height: 40px;
+  transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.gas-copy-btn:hover { background: var(--navy-600); }
+.gas-copy-btn.disabled {
+  background: var(--bg-sub);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+/* ── Final checklist ── */
+.final-check-section {
+  background: var(--bg);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  padding: clamp(1.5rem, 3vw, 2rem);
+  margin-top: 3rem;
+}
+.final-check-section h2 {
+  font-size: clamp(1.125rem, 2vw, 1.375rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin-bottom: 1.5rem;
+}
+.progress-bar-wrap {
+  background: var(--bg-sub);
+  border-radius: 9999px;
+  height: 0.5rem;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: var(--success);
+  border-radius: 9999px;
+  width: 0%;
+  transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.progress-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+}
+
+/* ── Footer ── */
+.site-footer {
+  background: var(--navy-900);
+  color: rgba(255,255,255,0.65);
+  padding: 2rem 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+.site-footer a {
+  color: var(--navy-300);
+  text-decoration: none;
+}
+.site-footer a:hover { text-decoration: underline; }
+
+/* ── Utilities ── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+.divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+@media (max-width: 40rem) {
+  .step-card-time { display: none; }
+  .gas-links { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="site-header" role="banner">
+  <div class="container">
+    <div>
+      <h1>速報サイト 導入ガイド</h1>
+      <p class="subtitle">regatta-results-kit — 協会担当者向けセットアップ手順</p>
+    </div>
+    <a href="https://github.com/RYUIYAMADA/regatta-results-kit/generate"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="hero-cta"
+       style="margin-top:0; font-size:0.8125rem; padding:0.5rem 1.125rem;">
+      テンプレートをコピーして始める
+    </a>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="hero" aria-labelledby="hero-title">
+  <div class="container">
+    <div class="hero-inner">
+      <div>
+        <h2 id="hero-title" class="hero-title">
+          GitHubとGoogleがあれば、<br>
+          自力で速報サイトを立ち上げられます。
+        </h2>
+        <p class="hero-desc">
+          このページを見ながら7つのステップを進めるだけで、大会当日に使える速報サイトが完成します。
+          ターミナル操作・プログラミング知識は一切不要です。
+        </p>
+        <a href="https://github.com/RYUIYAMADA/regatta-results-kit/generate"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="hero-cta">
+          Step 1 から始める
+        </a>
+      </div>
+      <div class="overview" role="complementary" aria-label="全体の流れ">
+        <p class="overview-title">全体の流れ — 7ステップ</p>
+        <ul class="step-overview-list" role="list">
+          <li class="step-overview-item">
+            <span class="step-num-badge" aria-hidden="true">1</span>
+            テンプレートをコピー
+            <span style="font-size:0.75rem;color:var(--muted);margin-left:auto">3〜5分</span>
+          </li>
+          <li class="step-overview-item">
+            <span class="step-num-badge" aria-hidden="true">2</span>
+            Cloudflare Pages に接続
+            <span style="font-size:0.75rem;color:var(--muted);margin-left:auto">10〜15分</span>
+          </li>
+          <li class="step-overview-item">
+            <span class="step-num-badge" aria-hidden="true">3</span>
+            大会情報を入力して初期構築
+            <span style="font-size:0.75rem;color:var(--muted);margin-left:auto">2〜5分</span>
+          </li>
+          <li class="step-overview-item">
+            <span class="step-num-badge" aria-hidden="true">4</span>
+            Google Drive フォルダを作成
+            <span style="font-size:0.75rem;color:var(--muted);margin-left:auto">5分</span>
+          </li>
+          <li class="step-overview-item">
+            <span class="step-num-badge" aria-hidden="true">5</span>
+            GAS テンプレートをコピー・設定
+            <span style="font-size:0.75rem;color:var(--muted);margin-left:auto">10〜20分</span>
+          </li>
+          <li class="step-overview-item">
+            <span class="step-num-badge" aria-hidden="true">6</span>
+            GitHub PAT を作成
+            <span style="font-size:0.75rem;color:var(--muted);margin-left:auto">10分</span>
+          </li>
+          <li class="step-overview-item">
+            <span class="step-num-badge" aria-hidden="true">7</span>
+            管理ポータルで接続テスト
+            <span style="font-size:0.75rem;color:var(--muted);margin-left:auto">10分</span>
+          </li>
+        </ul>
+        <p class="total-time">合計：約50〜70分</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Steps -->
+<main class="main-content" id="main">
+  <div class="container">
+
+    <!-- Step 1 -->
+    <article class="step-card" id="step1" aria-labelledby="step1-title">
+      <div class="step-card-header">
+        <span class="step-badge" aria-hidden="true">1</span>
+        <h2 id="step1-title" class="step-card-title">テンプレートリポジトリをコピーする</h2>
+        <span class="step-card-time" aria-label="所要時間">3〜5分</span>
+      </div>
+      <div class="step-card-body">
+        <div>
+          <div class="ops-section">
+            <h4>操作手順</h4>
+            <ol class="ops-list" role="list">
+              <li>
+                <span class="ops-num" aria-hidden="true">1</span>
+                <span class="ops-text">
+                  <a href="https://github.com/RYUIYAMADA/regatta-results-kit" target="_blank" rel="noopener noreferrer">
+                    github.com/RYUIYAMADA/regatta-results-kit
+                  </a> を開く
+                </span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">2</span>
+                <span class="ops-text">右上の <strong>「Use this template」</strong>（緑ボタン）→ <strong>「Create a new repository」</strong>をクリック</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">3</span>
+                <span class="ops-text">Owner（所有者）を<strong>自団体のアカウント</strong>に変更する</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">4</span>
+                <span class="ops-text">Repository name（リポジトリ名）を入力する（例：<code style="font-family:monospace;font-size:0.8rem;background:var(--bg-sub);padding:0.1rem 0.375rem;border-radius:3px">association-regatta-2027</code>）</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">5</span>
+                <span class="ops-text">公開範囲は <strong>「Private」</strong>（非公開）を選ぶ</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">6</span>
+                <span class="ops-text"><strong>「Create repository」</strong>をクリック</span>
+              </li>
+            </ol>
+            <div class="alert alert-info" style="margin-top:0.75rem">
+              <strong>リポジトリ</strong>とは：ファイルをまとめて管理するGitHubのフォルダのことです。テンプレートをコピーすることで、速報サイトの雛形が自分のアカウントに作られます。
+            </div>
+          </div>
+          <hr class="divider">
+          <div class="ops-section">
+            <h4>セルフチェック</h4>
+            <ul class="checklist" role="list" aria-label="Step 1 セルフチェック">
+              <li>
+                <input type="checkbox" id="c1-1">
+                <label for="c1-1"><code style="font-family:monospace;font-size:0.8rem">https://github.com/&lt;あなたのアカウント&gt;/&lt;リポジトリ名&gt;</code> でページが開ける</label>
+              </li>
+              <li>
+                <input type="checkbox" id="c1-2">
+                <label for="c1-2"><code style="font-family:monospace;font-size:0.8rem">.github/workflows/</code> フォルダが存在する</label>
+              </li>
+            </ul>
+          </div>
+          <hr class="divider">
+          <div class="qa-block" aria-label="詰まったときの対処">
+            <h4><span class="qa-icon" aria-hidden="true">Q</span> 詰まったとき</h4>
+            <div class="qa-item">
+              <p class="qa-q">「Use this template」ボタンが見当たらない</p>
+              <p class="qa-a"><strong>原因</strong>：配布者からの招待メールが未承諾の可能性があります。メールボックスを確認して招待を承諾してから再度アクセスしてください。</p>
+            </div>
+            <div class="qa-item">
+              <p class="qa-q">Owner の選択肢に自分のアカウントが出ない</p>
+              <p class="qa-a"><strong>原因</strong>：ブラウザで別のGitHubアカウントでログインしている可能性があります。右上のアバターをクリックしてアカウントを確認してください。</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <!-- Screen mock: GitHub Use this template -->
+          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">画面イメージ</p>
+          <div class="screen-mock" role="img" aria-label="GitHubのUse this templateボタンの画面イメージ">
+            <div class="screen-mock-bar">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+              <span class="url">github.com/RYUIYAMADA/regatta-results-kit</span>
+            </div>
+            <div class="screen-mock-body">
+              <div class="gh-repo-header">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="var(--muted)" aria-hidden="true"><path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5v-9z"/></svg>
+                <span class="gh-repo-name">RYUIYAMADA / regatta-results-kit</span>
+                <button class="gh-use-template-btn" aria-label="Use this template ボタン（ここをクリック）" style="position:relative">
+                  Use this template ▼
+                </button>
+              </div>
+              <div class="mock-label" style="margin-left:auto;display:block;text-align:right">← ここをクリック</div>
+              <hr class="divider" style="margin:0.75rem 0">
+              <p style="font-size:0.78rem;color:var(--muted)">クリック後に表示されるメニュー：</p>
+              <div style="margin-top:0.5rem;background:var(--bg-sub);border-radius:4px;padding:0.5rem;font-size:0.78rem">
+                <div style="padding:0.375rem 0.5rem;font-weight:700;color:var(--navy-600);background:var(--navy-100);border-radius:3px;margin-bottom:0.25rem">
+                  Create a new repository ← 選択
+                </div>
+                <div style="padding:0.375rem 0.5rem;color:var(--muted)">Open in a codespace</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Step 2 -->
+    <article class="step-card" id="step2" aria-labelledby="step2-title">
+      <div class="step-card-header">
+        <span class="step-badge" aria-hidden="true">2</span>
+        <h2 id="step2-title" class="step-card-title">Cloudflare Pages に接続する</h2>
+        <span class="step-card-time" aria-label="所要時間">10〜15分</span>
+      </div>
+      <div class="step-card-body">
+        <div>
+          <div class="ops-section">
+            <h4>操作手順</h4>
+            <ol class="ops-list">
+              <li>
+                <span class="ops-num" aria-hidden="true">1</span>
+                <span class="ops-text">
+                  <a href="https://dash.cloudflare.com" target="_blank" rel="noopener noreferrer">dash.cloudflare.com</a> を開いてログイン（アカウントがなければ無料で新規作成）
+                </span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">2</span>
+                <span class="ops-text">左メニュー → <strong>Workers &amp; Pages</strong> → <strong>Pages</strong> → <strong>「Create application」</strong> → <strong>「Connect to Git」</strong></span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">3</span>
+                <span class="ops-text"><strong>「Connect GitHub」</strong>でGitHubを連携 → Step 1 で作成したリポジトリを選択 → <strong>「Begin setup」</strong></span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">4</span>
+                <span class="ops-text">ビルド設定を右の表のとおりに入力する（特に Build output directory が重要）</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">5</span>
+                <span class="ops-text"><strong>「Save and Deploy」</strong>をクリックして2〜5分待つ</span>
+              </li>
+            </ol>
+            <div class="alert alert-warning" style="margin-top:0.75rem">
+              <strong>Cloudflare</strong>とは：無料で使えるウェブサイト公開サービスです。GitHubのファイルを自動的にウェブサイトとして公開してくれます。
+            </div>
+          </div>
+          <hr class="divider">
+          <div class="ops-section">
+            <h4>セルフチェック</h4>
+            <ul class="checklist" role="list" aria-label="Step 2 セルフチェック">
+              <li>
+                <input type="checkbox" id="c2-1">
+                <label for="c2-1">Deployments 画面でステータスが「Success」になっている</label>
+              </li>
+              <li>
+                <input type="checkbox" id="c2-2">
+                <label for="c2-2"><code style="font-family:monospace;font-size:0.8rem">https://&lt;project-name&gt;.pages.dev</code> でページが表示される</label>
+              </li>
+            </ul>
+          </div>
+          <hr class="divider">
+          <div class="qa-block" aria-label="詰まったときの対処">
+            <h4><span class="qa-icon" aria-hidden="true">Q</span> 詰まったとき</h4>
+            <div class="qa-item">
+              <p class="qa-q">サイトが 404 または真っ白になる</p>
+              <p class="qa-a"><strong>原因</strong>：Build output directory が違います。Cloudflare Pages の Settings → Builds &amp; deployments → Build output directory を <strong>site</strong> に修正して「Save and Deploy」してください。</p>
+            </div>
+            <div class="qa-item">
+              <p class="qa-q">Deployments が「Failed」になる</p>
+              <p class="qa-a"><strong>原因</strong>：Build command に何か入力されています。<strong>Build command を空欄</strong>にして再デプロイしてください。</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">ビルド設定の入力値</p>
+          <div class="screen-mock" role="img" aria-label="Cloudflareのビルド設定画面イメージ">
+            <div class="screen-mock-bar">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+              <span class="url">dash.cloudflare.com — Pages / Begin setup</span>
+            </div>
+            <div class="screen-mock-body">
+              <div class="cf-field">
+                <div class="cf-label">Framework preset</div>
+                <input class="cf-input" value="None" readonly aria-label="Framework preset: None">
+              </div>
+              <div class="cf-field">
+                <div class="cf-label">Build command</div>
+                <input class="cf-input" value="（空欄のまま）" readonly aria-label="Build command: 空欄" style="color:var(--muted)">
+              </div>
+              <div class="cf-field">
+                <div class="cf-label" style="color:var(--orange);font-weight:700">Build output directory ← 最重要</div>
+                <input class="cf-input highlight" value="site" readonly aria-label="Build output directory: site（必ずsiteと入力）">
+                <div class="mock-label">必ず「site」と入力</div>
+              </div>
+              <div class="cf-field">
+                <div class="cf-label">Root directory</div>
+                <input class="cf-input" value="（空欄のまま）" readonly aria-label="Root directory: 空欄" style="color:var(--muted)">
+              </div>
+              <div class="cf-field">
+                <div class="cf-label">Production branch</div>
+                <input class="cf-input" value="main" readonly aria-label="Production branch: main">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Step 3 -->
+    <article class="step-card" id="step3" aria-labelledby="step3-title">
+      <div class="step-card-header">
+        <span class="step-badge" aria-hidden="true">3</span>
+        <h2 id="step3-title" class="step-card-title">GitHub Actions で大会情報を入力して初期構築する</h2>
+        <span class="step-card-time" aria-label="所要時間">2〜5分</span>
+      </div>
+      <div class="step-card-body">
+        <div>
+          <div class="alert alert-info" style="margin-bottom:1rem">
+            <span>ターミナル・Pythonは不要です。GitHubの画面だけで操作できます。</span>
+          </div>
+          <div class="ops-section">
+            <h4>操作手順</h4>
+            <ol class="ops-list">
+              <li>
+                <span class="ops-num" aria-hidden="true">1</span>
+                <span class="ops-text">Step 1 で作成したリポジトリを GitHub で開く</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">2</span>
+                <span class="ops-text">上部タブの <strong>「Actions」</strong> をクリック</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">3</span>
+                <span class="ops-text">左サイドバーの <strong>「大会初期構築」</strong>（setup-tournament）をクリック</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">4</span>
+                <span class="ops-text">右側の <strong>「Run workflow」</strong> ボタンをクリック</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">5</span>
+                <span class="ops-text">フォームに大会名・会場・日付・カラーを入力する（右の入力例を参考に）</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">6</span>
+                <span class="ops-text">青い <strong>「Run workflow」</strong> ボタンをクリックして実行</span>
+              </li>
+            </ol>
+          </div>
+          <hr class="divider">
+          <div class="ops-section">
+            <h4>セルフチェック</h4>
+            <ul class="checklist" role="list" aria-label="Step 3 セルフチェック">
+              <li>
+                <input type="checkbox" id="c3-1">
+                <label for="c3-1">Actions タブでジョブが緑チェック（✓）になっている</label>
+              </li>
+              <li>
+                <input type="checkbox" id="c3-2">
+                <label for="c3-2">リポジトリに <code style="font-family:monospace;font-size:0.8rem">site/data/master.json</code> が作成されている</label>
+              </li>
+              <li>
+                <input type="checkbox" id="c3-3">
+                <label for="c3-3">Cloudflare の速報サイトに大会名が表示されている</label>
+              </li>
+            </ul>
+          </div>
+          <hr class="divider">
+          <div class="qa-block" aria-label="詰まったときの対処">
+            <h4><span class="qa-icon" aria-hidden="true">Q</span> 詰まったとき</h4>
+            <div class="qa-item">
+              <p class="qa-q">「大会初期構築」が Actions の左側に出てこない</p>
+              <p class="qa-a"><strong>対処</strong>：テンプレートのコピーが古い可能性があります。Step 1 からやり直してください。</p>
+            </div>
+            <div class="qa-item">
+              <p class="qa-q">ジョブが赤バツ（✗）になる</p>
+              <p class="qa-a">
+                <strong>エラーの詳細を見る手順：</strong><br>
+                Actions タブの赤バツのジョブ行をクリック → 左の「scaffold 実行」等の行をクリック → ログが展開されて<strong>日本語のエラー理由</strong>が表示されます。<br>
+                <span style="display:block;margin-top:0.375rem">よくある原因：日付の形式が違う（<strong>YYYY-MM-DD 形式</strong>、例: 2027-06-14）、またはカラーコードが違う（<strong>「#」から始まる7文字</strong>、例: #1a3a5c）。修正してから「Run workflow」を再実行してください。</span>
+              </p>
+              <!-- Failure log mock -->
+              <div class="screen-mock" style="margin-top:0.625rem" role="img" aria-label="赤バツジョブの詳細ログ確認画面イメージ">
+                <div class="screen-mock-bar">
+                  <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                  <span class="url">github.com/&lt;org&gt;/&lt;repo&gt;/actions/runs/...</span>
+                </div>
+                <div class="screen-mock-body" style="padding:0.625rem">
+                  <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
+                    <span style="color:var(--error);font-size:1rem;font-weight:700" aria-hidden="true">✗</span>
+                    <span style="font-size:0.8rem;font-weight:700;color:var(--text)">大会初期構築 — 失敗</span>
+                  </div>
+                  <div style="background:var(--bg-sub);border-radius:4px;padding:0.5rem">
+                    <div style="display:flex;align-items:center;gap:0.5rem;padding:0.375rem;cursor:pointer;border-radius:3px;background:var(--error-bg);border:1px solid #FCA5A5">
+                      <span style="color:var(--error);font-size:0.9rem" aria-hidden="true">✗</span>
+                      <span style="font-size:0.78rem;font-weight:700;color:var(--error)">scaffold 実行</span>
+                      <span style="font-size:0.7rem;color:var(--muted);margin-left:auto">← ここをクリックでログ表示</span>
+                    </div>
+                    <div style="margin-top:0.375rem;padding:0.375rem 0.5rem;background:#1e1e2e;border-radius:3px;font-family:monospace;font-size:0.72rem;color:#f87171">
+                      Error: 開始日の形式が正しくありません。YYYY-MM-DD 形式で入力してください（例: 2027-06-14）
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="qa-item">
+              <p class="qa-q"><code style="font-family:monospace;font-size:0.8rem">site/data/master.json</code> が作られない</p>
+              <p class="qa-a"><strong>対処</strong>：リポジトリの Settings → Actions → General → Workflow permissions を <strong>「Read and write permissions」</strong> に変更してから再実行してください。</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">Actions の3段階操作（画面イメージ）</p>
+
+          <!-- Step①: Actions タブ -->
+          <p style="font-size:0.7rem;font-weight:700;color:var(--navy-600);margin-bottom:0.25rem">手順1：「Actions」タブをクリック</p>
+          <div class="screen-mock" style="margin-bottom:0.875rem" role="img" aria-label="GitHubのActionsタブをクリックする画面イメージ">
+            <div class="screen-mock-bar">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+              <span class="url">github.com/&lt;org&gt;/&lt;repo&gt;</span>
+            </div>
+            <div class="screen-mock-body" style="padding:0.5rem 0.75rem">
+              <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:0;overflow:hidden">
+                <span style="padding:0.4rem 0.75rem;font-size:0.75rem;color:var(--muted);font-weight:500">Code</span>
+                <span style="padding:0.4rem 0.75rem;font-size:0.75rem;color:var(--muted);font-weight:500">Issues</span>
+                <span style="padding:0.4rem 0.75rem;font-size:0.75rem;color:var(--muted);font-weight:500">Pull requests</span>
+                <span style="padding:0.4rem 0.75rem;font-size:0.75rem;color:var(--navy-600);font-weight:700;border-bottom:2px solid var(--navy-600);position:relative;top:1px;background:var(--navy-100)">Actions ← ここをクリック</span>
+                <span style="padding:0.4rem 0.75rem;font-size:0.75rem;color:var(--muted);font-weight:500">Settings</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step②: 左サイドバーで選択 -->
+          <p style="font-size:0.7rem;font-weight:700;color:var(--navy-600);margin-bottom:0.25rem">手順2：左サイドバーの「大会初期構築」をクリック</p>
+          <div class="screen-mock" style="margin-bottom:0.875rem" role="img" aria-label="左サイドバーの大会初期構築を選択する画面イメージ">
+            <div class="screen-mock-bar">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+              <span class="url">github.com/&lt;org&gt;/&lt;repo&gt;/actions</span>
+            </div>
+            <div class="screen-mock-body" style="display:grid;grid-template-columns:10rem 1fr;gap:0.75rem;padding:0.75rem">
+              <div>
+                <p style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.375rem">Workflows</p>
+                <div style="padding:0.375rem 0.625rem;font-size:0.78rem;font-weight:700;color:var(--navy-600);background:var(--navy-100);border-radius:4px;border-left:3px solid var(--navy-600)">
+                  大会初期構築 ← 選択
+                </div>
+                <div style="padding:0.375rem 0.625rem;font-size:0.78rem;color:var(--muted);margin-top:0.25rem">heartbeat-watchdog</div>
+                <div style="padding:0.375rem 0.625rem;font-size:0.78rem;color:var(--muted)">validate</div>
+              </div>
+              <div style="font-size:0.78rem;color:var(--muted);display:flex;align-items:center">
+                選択すると右側に「Run workflow」ボタンが出ます
+              </div>
+            </div>
+          </div>
+
+          <!-- Step③: Run workflow + フォーム -->
+          <p style="font-size:0.7rem;font-weight:700;color:var(--navy-600);margin-bottom:0.25rem">手順3：「Run workflow」をクリック → フォームに入力 → 実行</p>
+          <div class="screen-mock" role="img" aria-label="Run workflowボタンとフォームの画面イメージ">
+            <div class="screen-mock-bar">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+              <span class="url">github.com/&lt;org&gt;/&lt;repo&gt;/actions/workflows/setup-tournament.yml</span>
+            </div>
+            <div class="screen-mock-body">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.625rem">
+                <span style="font-size:0.8rem;font-weight:700;color:var(--text)">大会初期構築（setup-tournament）</span>
+                <button class="gh-run-btn" aria-label="Run workflow ボタン（ここをクリック）" style="position:relative">
+                  Run workflow
+                </button>
+              </div>
+              <div class="mock-label" style="display:block;text-align:right;margin-bottom:0.625rem">← まずここをクリック</div>
+              <div style="background:var(--bg-sub);border-radius:4px;padding:0.75rem;border:1px solid var(--border)">
+                <p style="font-size:0.7rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem">フォームに入力してから下の「Run workflow」を押す</p>
+                <div class="gh-form-row">
+                  <div class="gh-form-label">大会名</div>
+                  <input class="gh-form-input" value="第01回○○マスターズレガッタ" readonly aria-label="大会名の入力例">
+                </div>
+                <div class="gh-form-row">
+                  <div class="gh-form-label">会場</div>
+                  <input class="gh-form-input" value="○○漕艇競技場" readonly aria-label="会場の入力例">
+                </div>
+                <div class="gh-form-row">
+                  <div class="gh-form-label">開始日（YYYY-MM-DD）</div>
+                  <input class="gh-form-input" value="2027-06-14" readonly aria-label="開始日の入力例">
+                </div>
+                <div class="gh-form-row">
+                  <div class="gh-form-label">終了日（YYYY-MM-DD）</div>
+                  <input class="gh-form-input" value="2027-06-15" readonly aria-label="終了日の入力例">
+                </div>
+                <div class="gh-form-row">
+                  <div class="gh-form-label">メインカラー（#RRGGBB）</div>
+                  <input class="gh-form-input" value="#1a3a5c" readonly aria-label="メインカラーの入力例" style="color:var(--navy-600);font-weight:700">
+                </div>
+                <button style="background:var(--navy);color:#fff;font-size:0.8rem;font-weight:700;padding:0.375rem 0.875rem;border-radius:4px;border:none;width:100%;margin-top:0.5rem;min-height:32px" aria-label="Run workflowを実行するボタン">
+                  Run workflow
+                </button>
+              </div>
+              <div class="alert alert-info" style="margin-top:0.625rem;font-size:0.8rem">
+                同じ内容で2回押しても安全です。2回目はファイルの差分がなければコミットをスキップして正常終了します。
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Step 4 -->
+    <article class="step-card" id="step4" aria-labelledby="step4-title">
+      <div class="step-card-header">
+        <span class="step-badge" aria-hidden="true">4</span>
+        <h2 id="step4-title" class="step-card-title">Google Drive にフォルダを作成する</h2>
+        <span class="step-card-time" aria-label="所要時間">5分</span>
+      </div>
+      <div class="step-card-body">
+        <div>
+          <div class="ops-section">
+            <h4>操作手順</h4>
+            <ol class="ops-list">
+              <li>
+                <span class="ops-num" aria-hidden="true">1</span>
+                <span class="ops-text">
+                  <a href="https://drive.google.com" target="_blank" rel="noopener noreferrer">Google Drive</a>（自団体のGoogleアカウント）を開く
+                </span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">2</span>
+                <span class="ops-text">「新規」→「フォルダ」でルートフォルダを1つ作成（名前は任意。例：<code style="font-family:monospace;font-size:0.8rem">○○レガッタ2027</code>）</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">3</span>
+                <span class="ops-text">作成したフォルダをダブルクリックして開く</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">4</span>
+                <span class="ops-text">ブラウザのアドレスバー（URL）を確認し、末尾の英数字（フォルダID）をコピーする</span>
+              </li>
+            </ol>
+          </div>
+          <div class="alert alert-info" style="margin-top:0.75rem">
+            <div>
+              <strong>フォルダIDとは</strong>：Google Drive のURLの末尾にある英数字の文字列です。次のステップで使います。
+              <div style="margin-top:0.5rem;font-family:monospace;font-size:0.78rem;background:var(--navy-100);padding:0.5rem;border-radius:4px;word-break:break-all">
+                https://drive.google.com/drive/folders/<strong style="color:var(--orange)">1AbCdEfGhIjKlMnOpQrStU</strong><br>
+                <span style="color:var(--muted)">← この部分（太字の英数字）をコピー</span>
+              </div>
+            </div>
+          </div>
+          <div class="alert alert-info" style="margin-top:0.75rem">
+            サブフォルダは GAS の初回実行時に自動で作成されます。今は作らなくて大丈夫です。
+          </div>
+          <hr class="divider">
+          <div class="ops-section">
+            <h4>セルフチェック</h4>
+            <ul class="checklist" role="list" aria-label="Step 4 セルフチェック">
+              <li>
+                <input type="checkbox" id="c4-1">
+                <label for="c4-1">URL末尾の英数字（20〜30文字）をコピーできた</label>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">フォルダIDの確認方法</p>
+          <div class="screen-mock" role="img" aria-label="Google DriveのフォルダIDの確認方法画面イメージ">
+            <div class="screen-mock-bar">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+              <span class="url" style="color:var(--text)">
+                drive.google.com/drive/folders/<strong style="color:var(--orange)">1AbCdEfGhIjKlMnOpQrStU</strong>
+              </span>
+            </div>
+            <div class="screen-mock-body">
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--warning)" aria-hidden="true"><path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.097.903 2 2 2h16c1.097 0 2-.903 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/></svg>
+                <span style="font-size:0.875rem;font-weight:700">○○レガッタ2027</span>
+              </div>
+              <div style="background:var(--navy-100);border-radius:4px;padding:0.625rem;font-size:0.8rem">
+                <p style="font-weight:700;color:var(--navy-600);margin-bottom:0.25rem">URLの末尾がフォルダIDです</p>
+                <p style="font-family:monospace;font-size:0.75rem;word-break:break-all;color:var(--orange);font-weight:700">1AbCdEfGhIjKlMnOpQrStU</p>
+                <p style="font-size:0.7rem;color:var(--muted);margin-top:0.25rem">この文字列をコピーして Step 5 で使います</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Step 5 -->
+    <article class="step-card" id="step5" aria-labelledby="step5-title">
+      <div class="step-card-header">
+        <span class="step-badge" aria-hidden="true">5</span>
+        <h2 id="step5-title" class="step-card-title">GAS テンプレートをコピーしてプロパティを設定する</h2>
+        <span class="step-card-time" aria-label="所要時間">10〜20分</span>
+      </div>
+      <div class="step-card-body">
+        <div>
+          <div class="alert alert-info" style="margin-bottom:1rem">
+            <span><strong>GAS</strong>（Google Apps Script）とは：Googleが提供する無料の自動化ツールです。今回はCSVデータを速報サイトに自動送信する役割を担います。コードの貼り付けは不要です。</span>
+          </div>
+          <div class="ops-section">
+            <h4>GAS-A（必須）の操作手順</h4>
+            <ol class="ops-list">
+              <li>
+                <span class="ops-num" aria-hidden="true">1</span>
+                <span class="ops-text">下の「GAS-A をコピー」ボタンをクリック（GAS テンプレートが開きます）</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">2</span>
+                <span class="ops-text">メニュー <strong>「ファイル」→「コピーを作成」</strong> → 名前を入力 → <strong>「コピーを作成」</strong></span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">3</span>
+                <span class="ops-text">コピーされた GAS プロジェクトが開いたら、左側の <strong>歯車アイコン（プロジェクトの設定）</strong> をクリック</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">4</span>
+                <span class="ops-text"><strong>「スクリプトプロパティ」</strong> セクションで以下の4つのプロパティを入力する</span>
+              </li>
+            </ol>
+          </div>
+          <table class="settings-table" aria-label="GAS-A スクリプトプロパティの設定値">
+            <thead>
+              <tr>
+                <th scope="col">プロパティ名（キー）</th>
+                <th scope="col">設定する値</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>DRIVE_ROOT_FOLDER_ID</code><span class="required-badge">必須</span></td>
+                <td>Step 4 でコピーしたフォルダID</td>
+              </tr>
+              <tr>
+                <td><code>GITHUB_OWNER</code><span class="required-badge">必須</span></td>
+                <td>自分の GitHub アカウント名（例: your-org）</td>
+              </tr>
+              <tr>
+                <td><code>GITHUB_REPO</code><span class="required-badge">必須</span></td>
+                <td>Step 1 で作ったリポジトリ名（例: association-regatta-2027）</td>
+              </tr>
+              <tr>
+                <td><code>MEASUREMENT_POINTS</code></td>
+                <td><code>500m,1000m</code>（変更不要）</td>
+              </tr>
+              <tr>
+                <td><code>GITHUB_TOKEN</code></td>
+                <td>Step 6 が完了してから入力（後でOK）</td>
+              </tr>
+            </tbody>
+          </table>
+          <hr class="divider">
+          <div class="ops-section">
+            <h4>セルフチェック</h4>
+            <ul class="checklist" role="list" aria-label="Step 5 セルフチェック">
+              <li>
+                <input type="checkbox" id="c5-1">
+                <label for="c5-1">GAS エディタのスクリプトプロパティ一覧に設定した全キーが表示されている</label>
+              </li>
+            </ul>
+          </div>
+          <hr class="divider">
+          <div class="qa-block" aria-label="詰まったときの対処">
+            <h4><span class="qa-icon" aria-hidden="true">Q</span> 詰まったとき</h4>
+            <div class="qa-item">
+              <p class="qa-q">「コピーを作成」が見当たらない</p>
+              <p class="qa-a"><strong>対処</strong>：Google アカウントにログインしているか確認してください。ログインしてからリンクを再度開いてください。</p>
+            </div>
+            <div class="qa-item">
+              <p class="qa-q">プロパティが保存されない</p>
+              <p class="qa-a"><strong>原因</strong>：プロパティ名のスペルが違います。上の表と一文字ずつ照合して入力してください（コピー&amp;ペーストが確実です）。</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <!-- GAS link cards -->
+          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em">GAS テンプレート（コピーして使う）</p>
+          <div class="gas-links">
+            <div class="gas-link-card">
+              <div>
+                <span class="gas-tag gas-tag-required">必須</span>
+                <p class="gas-link-card-title" style="margin-top:0.375rem">GAS-A</p>
+              </div>
+              <p class="gas-link-card-desc">CSV→JSON Push + 管理者ポータル。速報データの送信と管理画面の中核です。</p>
+              <a href="https://script.google.com/home" target="_blank" rel="noopener noreferrer" class="gas-copy-btn" aria-label="GAS-A テンプレートを開く（準備中）">
+                GAS-A をコピー（準備中）
+              </a>
+            </div>
+            <div class="gas-link-card">
+              <div>
+                <span class="gas-tag gas-tag-optional">任意</span>
+                <p class="gas-link-card-title" style="margin-top:0.375rem">GAS-B</p>
+              </div>
+              <p class="gas-link-card-desc">PDF Publisher。PDF帳票の自動生成が必要な場合のみ使います。</p>
+              <a href="https://script.google.com/home" target="_blank" rel="noopener noreferrer" class="gas-copy-btn" aria-label="GAS-B テンプレートを開く（準備中）">
+                GAS-B をコピー（準備中）
+              </a>
+            </div>
+            <div class="gas-link-card">
+              <div>
+                <span class="gas-tag gas-tag-optional">任意</span>
+                <p class="gas-link-card-title" style="margin-top:0.375rem">GAS-C</p>
+              </div>
+              <p class="gas-link-card-desc">判定員帳票。判定員向け帳票の自動生成が必要な場合のみ使います。</p>
+              <a href="https://script.google.com/home" target="_blank" rel="noopener noreferrer" class="gas-copy-btn" aria-label="GAS-C テンプレートを開く（準備中）">
+                GAS-C をコピー（準備中）
+              </a>
+            </div>
+          </div>
+          <hr class="divider">
+          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">スクリプトプロパティ設定画面</p>
+          <div class="screen-mock" role="img" aria-label="GASのスクリプトプロパティ設定画面イメージ">
+            <div class="screen-mock-bar">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+              <span class="url">script.google.com — ○○レガッタ2027-csv-push</span>
+            </div>
+            <div class="screen-mock-body">
+              <div class="gas-menu" aria-hidden="true">
+                <span>ファイル</span>
+                <span>編集</span>
+                <span>表示</span>
+                <span class="gas-menu-item active">プロジェクトの設定</span>
+                <span>実行</span>
+              </div>
+              <p style="font-size:0.78rem;font-weight:700;color:var(--text);margin-bottom:0.625rem">スクリプトプロパティ</p>
+              <div class="gas-prop-row">
+                <span class="gas-prop-key">DRIVE_ROOT_FOLDER_ID</span>
+                <span class="gas-prop-val">1AbCdEfGhIjKl...</span>
+              </div>
+              <div class="gas-prop-row">
+                <span class="gas-prop-key">GITHUB_OWNER</span>
+                <span class="gas-prop-val">your-org</span>
+              </div>
+              <div class="gas-prop-row">
+                <span class="gas-prop-key">GITHUB_REPO</span>
+                <span class="gas-prop-val">association-regatta-2027</span>
+              </div>
+              <div class="gas-prop-row">
+                <span class="gas-prop-key">MEASUREMENT_POINTS</span>
+                <span class="gas-prop-val">500m,1000m</span>
+              </div>
+              <div class="gas-prop-row" style="opacity:0.5">
+                <span class="gas-prop-key">GITHUB_TOKEN</span>
+                <span class="gas-prop-val" style="color:var(--warning)">← Step 6 の後で設定</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Step 6 -->
+    <article class="step-card" id="step6" aria-labelledby="step6-title">
+      <div class="step-card-header">
+        <span class="step-badge" aria-hidden="true">6</span>
+        <h2 id="step6-title" class="step-card-title">GitHub PAT（アクセストークン）を作成して設定する</h2>
+        <span class="step-card-time" aria-label="所要時間">10分</span>
+      </div>
+      <div class="step-card-body">
+        <div>
+          <div class="alert alert-warning" style="margin-bottom:1rem">
+            <strong>重要：</strong>PAT（Personal Access Token）は一度しか表示されません。必ずコピーしてから画面を閉じてください。
+          </div>
+          <div class="alert alert-info" style="margin-bottom:1rem">
+            <span><strong>PAT</strong>（Personal Access Token）とは：GAS から GitHub に書き込みをするための「鍵」です。パスワードの代わりに使う文字列で、90日間有効です。</span>
+          </div>
+          <div class="ops-section">
+            <h4>操作手順</h4>
+            <ol class="ops-list">
+              <li>
+                <span class="ops-num" aria-hidden="true">1</span>
+                <span class="ops-text">GitHub にログイン → 右上アバター → <strong>「Settings」</strong></span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">2</span>
+                <span class="ops-text">左メニュー最下部の <strong>「Developer settings」</strong> → <strong>「Personal access tokens」</strong> → <strong>「Fine-grained tokens」</strong> → <strong>「Generate new token」</strong></span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">3</span>
+                <span class="ops-text">設定を右の表のとおりに入力する</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">4</span>
+                <span class="ops-text"><strong>「Generate token」</strong>をクリック → 表示された <code style="font-family:monospace;font-size:0.8rem">github_pat_...</code> で始まる文字列を<strong>今すぐコピー</strong></span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">5</span>
+                <span class="ops-text">GAS-A のスクリプトプロパティ → <code style="font-family:monospace;font-size:0.8rem">GITHUB_TOKEN</code> にペーストして保存</span>
+              </li>
+            </ol>
+          </div>
+          <table class="settings-table" aria-label="GitHub PAT の設定値">
+            <thead>
+              <tr>
+                <th scope="col">項目</th>
+                <th scope="col">設定値</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Token name</td>
+                <td>任意（例: regatta-2027-gas）</td>
+              </tr>
+              <tr>
+                <td>Expiration</td>
+                <td><strong>90 days</strong></td>
+              </tr>
+              <tr>
+                <td>Repository access</td>
+                <td>Only select repositories → Step 1 のリポジトリのみ選択</td>
+              </tr>
+              <tr>
+                <td>Repository permissions → Contents</td>
+                <td><strong>Read and Write</strong><span class="required-badge">必須</span></td>
+              </tr>
+              <tr>
+                <td>それ以外の権限</td>
+                <td>No access のまま（触らない）</td>
+              </tr>
+            </tbody>
+          </table>
+          <hr class="divider">
+          <div class="ops-section">
+            <h4>セルフチェック</h4>
+            <ul class="checklist" role="list" aria-label="Step 6 セルフチェック">
+              <li>
+                <input type="checkbox" id="c6-1">
+                <label for="c6-1">GAS のスクリプトプロパティに <code style="font-family:monospace;font-size:0.8rem">GITHUB_TOKEN</code> が設定されている</label>
+              </li>
+            </ul>
+          </div>
+          <hr class="divider">
+          <div class="qa-block" aria-label="詰まったときの対処">
+            <h4><span class="qa-icon" aria-hidden="true">Q</span> 詰まったとき</h4>
+            <div class="qa-item">
+              <p class="qa-q">トークンを表示中に画面を閉じてしまった</p>
+              <p class="qa-a"><strong>対処</strong>：再表示できません。同じ手順で新しいトークンを生成してプロパティに上書きしてください。</p>
+            </div>
+            <div class="qa-item">
+              <p class="qa-q">管理ポータルに「PAT期限切れ」の赤バッジが出る</p>
+              <p class="qa-a"><strong>対処</strong>：90日が経過しています。同手順でトークンを再生成して <code style="font-family:monospace;font-size:0.8rem">GITHUB_TOKEN</code> を上書きしてください。</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">PAT 生成後の画面イメージ</p>
+          <div class="screen-mock" role="img" aria-label="GitHub PATの生成後画面イメージ">
+            <div class="screen-mock-bar">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+              <span class="url">github.com/settings/personal-access-tokens</span>
+            </div>
+            <div class="screen-mock-body">
+              <div class="alert" style="background:var(--success-bg);border-left:3px solid var(--success);margin-bottom:0.75rem;padding:0.625rem 0.875rem">
+                <strong style="color:var(--success)">トークンが生成されました。今すぐコピーしてください（再表示できません）</strong>
+              </div>
+              <div class="pat-field">
+                <div class="pat-label">Personal access token（Fine-grained）</div>
+                <div class="pat-row">
+                  <span class="pat-token">github_pat_11ABC***（全文が表示されます）</span>
+                  <button class="copy-btn" aria-label="トークンをコピーするボタン">コピー</button>
+                </div>
+              </div>
+              <div class="mock-label">← 全文をコピーして GAS の GITHUB_TOKEN プロパティに貼り付ける</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Step 7 -->
+    <article class="step-card" id="step7" aria-labelledby="step7-title">
+      <div class="step-card-header" style="background:var(--success)">
+        <span class="step-badge" aria-hidden="true">7</span>
+        <h2 id="step7-title" class="step-card-title">管理者ポータルを公開して接続テストをする</h2>
+        <span class="step-card-time" aria-label="所要時間">10分</span>
+      </div>
+      <div class="step-card-body">
+        <div>
+          <div class="ops-section">
+            <h4>操作手順</h4>
+            <ol class="ops-list">
+              <li>
+                <span class="ops-num" aria-hidden="true">1</span>
+                <span class="ops-text">GAS-A エディタを開く → 右上 <strong>「デプロイ」</strong> → <strong>「新しいデプロイ」</strong></span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">2</span>
+                <span class="ops-text">歯車アイコン → <strong>「ウェブアプリ」</strong> を選択</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">3</span>
+                <span class="ops-text">「次のユーザーとして実行」→ <strong>自分</strong>、「アクセスできるユーザー」→ <strong>自分のみ</strong> に設定</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">4</span>
+                <span class="ops-text"><strong>「デプロイ」</strong> → 権限確認 → <strong>「許可」</strong></span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">5</span>
+                <span class="ops-text">表示された <strong>ウェブアプリURL</strong> をブックマーク</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">6</span>
+                <span class="ops-text">URLを開く → 管理者ポータルが表示される</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">7</span>
+                <span class="ops-text">「接続設定」タブ → <strong>「GitHub 接続テスト」</strong> をクリック → 緑バッジが出れば OK</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">8</span>
+                <span class="ops-text">続けて <strong>「Drive 接続テスト」</strong> をクリック → フォルダ名が表示されれば OK</span>
+              </li>
+            </ol>
+          </div>
+          <hr class="divider">
+          <div class="ops-section">
+            <h4>セルフチェック（導入完了基準）</h4>
+            <ul class="checklist" role="list" aria-label="Step 7 導入完了チェック">
+              <li>
+                <input type="checkbox" id="c7-1">
+                <label for="c7-1">管理者ポータルが開ける</label>
+              </li>
+              <li>
+                <input type="checkbox" id="c7-2">
+                <label for="c7-2">GitHub 接続テストが緑バッジ</label>
+              </li>
+              <li>
+                <input type="checkbox" id="c7-3">
+                <label for="c7-3">Drive 接続テストでフォルダ名が表示される</label>
+              </li>
+              <li>
+                <input type="checkbox" id="c7-4">
+                <label for="c7-4">速報サイト（pages.dev）に大会名・会場・日程が表示されている</label>
+              </li>
+            </ul>
+          </div>
+          <hr class="divider">
+          <div class="qa-block" aria-label="詰まったときの対処">
+            <h4><span class="qa-icon" aria-hidden="true">Q</span> 詰まったとき</h4>
+            <div class="qa-item">
+              <p class="qa-q">GitHub 接続テストが赤バッジになる</p>
+              <p class="qa-a"><strong>対処</strong>：「接続設定」タブで <code style="font-family:monospace;font-size:0.8rem">GITHUB_TOKEN</code> / <code style="font-family:monospace;font-size:0.8rem">GITHUB_OWNER</code> / <code style="font-family:monospace;font-size:0.8rem">GITHUB_REPO</code> のどれかが間違っています。それぞれ確認・修正してから再テストしてください。</p>
+            </div>
+            <div class="qa-item">
+              <p class="qa-q">Drive テストが「DRIVE_ROOT_FOLDER_ID が未設定」と表示される</p>
+              <p class="qa-a"><strong>対処</strong>：「接続設定」タブから Drive フォルダIDを入力して保存 → 再テストしてください。</p>
+            </div>
+            <div class="qa-item">
+              <p class="qa-q">「You need permission」と表示される</p>
+              <p class="qa-a"><strong>原因</strong>：アクセス設定を「自分のみ」にしているため、別のGoogleアカウントではアクセスできません。正しいアカウントでアクセスしてください。</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">管理者ポータルの接続テスト画面</p>
+          <div class="screen-mock" role="img" aria-label="管理者ポータルの接続テスト画面イメージ">
+            <div class="screen-mock-bar">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+              <span class="url">script.google.com/macros/s/...exec</span>
+            </div>
+            <div class="screen-mock-body">
+              <div class="portal-tab-bar" aria-label="管理者ポータルのタブ">
+                <button class="portal-tab" aria-label="状態タブ">状態</button>
+                <button class="portal-tab active" aria-label="接続設定タブ（現在選択中）">接続設定</button>
+                <button class="portal-tab" aria-label="データ投入タブ">データ投入</button>
+              </div>
+              <div class="test-result-row" role="status" aria-label="GitHub接続テスト成功">
+                <span class="test-result-badge" aria-hidden="true">✓ OK</span>
+                <span class="test-result-text">GitHub 接続テスト — <strong>成功</strong>（your-org/association-regatta-2027）</span>
+              </div>
+              <div class="test-result-row" role="status" aria-label="Drive接続テスト成功">
+                <span class="test-result-badge" aria-hidden="true">✓ OK</span>
+                <span class="test-result-text">Drive 接続テスト — <strong>○○レガッタ2027</strong></span>
+              </div>
+              <div class="mock-label" style="display:block;margin-top:0.5rem">全て緑なら導入完了です</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Final checklist -->
+    <section class="final-check-section" aria-labelledby="final-title">
+      <h2 id="final-title">総合セルフチェックリスト</h2>
+      <div class="progress-bar-wrap" role="progressbar" aria-label="完了チェック進捗" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="progress-bar-region">
+        <div class="progress-bar-fill" id="total-progress-bar"></div>
+      </div>
+      <p class="progress-label" id="progress-label" aria-live="polite" aria-atomic="true">0 / 9 完了</p>
+      <ul class="checklist" role="list" aria-label="導入完了の総合チェックリスト">
+        <li>
+          <input type="checkbox" id="f1" class="final-check">
+          <label for="f1">オンボーディングサイトの URL だけを受け取った状態から、Step 1〜7 の手順書だけで完了できた</label>
+        </li>
+        <li>
+          <input type="checkbox" id="f2" class="final-check">
+          <label for="f2">Step 3（Run workflow）で <code style="font-family:monospace;font-size:0.8rem">site/data/master.json</code> が自動コミットされた</label>
+        </li>
+        <li>
+          <input type="checkbox" id="f3" class="final-check">
+          <label for="f3">Cloudflare Pages に自動デプロイされた</label>
+        </li>
+        <li>
+          <input type="checkbox" id="f4" class="final-check">
+          <label for="f4"><code style="font-family:monospace;font-size:0.8rem">https://&lt;project&gt;.pages.dev</code> で速報サイトが表示される</label>
+        </li>
+        <li>
+          <input type="checkbox" id="f5" class="final-check">
+          <label for="f5">速報サイトのヘッダーに大会名が表示されている</label>
+        </li>
+        <li>
+          <input type="checkbox" id="f6" class="final-check">
+          <label for="f6">管理者ポータルが開ける</label>
+        </li>
+        <li>
+          <input type="checkbox" id="f7" class="final-check">
+          <label for="f7">管理者ポータルの「GitHub 接続テスト」が緑バッジ</label>
+        </li>
+        <li>
+          <input type="checkbox" id="f8" class="final-check">
+          <label for="f8">管理者ポータルの「Drive 接続テスト」がフォルダ名表示</label>
+        </li>
+        <li>
+          <input type="checkbox" id="f9" class="final-check">
+          <label for="f9">GAS のスクリプトプロパティ <code style="font-family:monospace;font-size:0.8rem">GITHUB_TOKEN</code> が設定されている</label>
+        </li>
+      </ul>
+      <div id="complete-banner" role="status" aria-live="polite" style="display:none;margin-top:1.5rem;padding:1rem 1.25rem;background:var(--success-bg);border-left:4px solid var(--success);border-radius:4px">
+        <p style="font-size:1rem;font-weight:700;color:var(--success)">導入完了です。大会当日にお使いください。</p>
+        <p style="font-size:0.875rem;color:var(--text);margin-top:0.25rem">問題が発生した場合は配布者にご連絡ください。</p>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="site-footer" role="contentinfo">
+  <div class="container">
+    <p>
+      <a href="https://github.com/RYUIYAMADA/regatta-results-kit" target="_blank" rel="noopener noreferrer">regatta-results-kit</a>
+      &nbsp;—&nbsp; 速報サイト導入ガイド
+    </p>
+    <p style="margin-top:0.375rem">困ったことがあれば配布者にご連絡ください。</p>
+  </div>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  // Progress tracking for all checkboxes
+  function updateProgress() {
+    var allChecks = document.querySelectorAll('.final-check');
+    var checked = 0;
+    allChecks.forEach(function(cb) {
+      if (cb.checked) checked++;
+    });
+    var total = allChecks.length;
+    var pct = total > 0 ? Math.round(checked / total * 100) : 0;
+
+    var bar = document.getElementById('total-progress-bar');
+    var label = document.getElementById('progress-label');
+    var region = document.getElementById('progress-bar-region');
+    var banner = document.getElementById('complete-banner');
+
+    if (bar) bar.style.width = pct + '%';
+    if (label) label.textContent = checked + ' / ' + total + ' 完了';
+    if (region) region.setAttribute('aria-valuenow', pct);
+    if (banner) banner.style.display = (checked === total && total > 0) ? 'block' : 'none';
+  }
+
+  document.querySelectorAll('.final-check').forEach(function(cb) {
+    cb.addEventListener('change', updateProgress);
+  });
+  updateProgress();
+})();
+</script>
+</body>
+</html>
