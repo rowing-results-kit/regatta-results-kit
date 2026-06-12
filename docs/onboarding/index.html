@@ -259,6 +259,7 @@ p, li, td, th, caption, .ja-text {
   display: grid;
   gap: 1.5rem;
 }
+.step-card-body > * { min-width: 0; }
 @media (min-width: 64rem) {
   .step-card-body { grid-template-columns: 1fr 1fr; }
   .step-card-body.single-col { grid-template-columns: 1fr; }
@@ -369,6 +370,10 @@ p, li, td, th, caption, .ja-text {
   border-radius: 6px;
   overflow: hidden;
   font-size: 0.8125rem;
+  overflow-x: auto;
+}
+@media (max-width: 40rem) {
+  .screen-mock { font-size: 0.72rem; }
 }
 .screen-mock-bar {
   background: var(--bg-sub);
@@ -395,6 +400,7 @@ p, li, td, th, caption, .ja-text {
 .screen-mock-body {
   background: var(--bg);
   padding: 1rem;
+  overflow-wrap: anywhere;
 }
 /* GitHub mock */
 .gh-repo-header {
@@ -431,15 +437,6 @@ p, li, td, th, caption, .ja-text {
   border: 2px dashed var(--orange);
   border-radius: 8px;
   pointer-events: none;
-}
-.mock-arrow {
-  position: absolute;
-  right: -1.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 1rem;
-  color: var(--orange);
-  font-weight: 700;
 }
 .mock-label {
   font-size: 0.7rem;
@@ -738,6 +735,10 @@ p, li, td, th, caption, .ja-text {
   align-items: flex-start;
   line-height: 1.6;
 }
+.alert p, .alert span {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
 .alert-warning {
   background: var(--warning-bg);
   border-left: 3px solid var(--warning);
@@ -876,6 +877,12 @@ p, li, td, th, caption, .ja-text {
 @media (max-width: 40rem) {
   .step-card-time { display: none; }
   .gas-links { grid-template-columns: 1fr; }
+  .site-header .hero-cta { display: none; }
+}
+
+/* scroll-margin-top for anchor targets (sticky header offset) */
+#step1, #step2, #step3, #step4, #step5, #step6, #step7 {
+  scroll-margin-top: 5rem;
 }
 </style>
 </head>
@@ -1008,7 +1015,10 @@ p, li, td, th, caption, .ja-text {
                 <span class="ops-text"><strong>「Create repository」</strong>をクリック</span>
               </li>
             </ol>
-            <div class="alert alert-info" style="margin-top:0.75rem">
+            <div class="alert alert-warning" style="margin-top:0.75rem">
+              <strong>先に GitHub にログインしてから「Use this template」を押してください。</strong>未ログインのままボタンを押すとログイン画面に飛ばされます。
+            </div>
+            <div class="alert alert-info" style="margin-top:0.625rem">
               <strong>リポジトリ</strong>とは：ファイルをまとめて管理するGitHubのフォルダのことです。テンプレートをコピーすることで、速報サイトの雛形が自分のアカウントに作られます。
             </div>
           </div>
@@ -1758,19 +1768,23 @@ p, li, td, th, caption, .ja-text {
               </li>
               <li>
                 <span class="ops-num" aria-hidden="true">5</span>
-                <span class="ops-text">表示された <strong>ウェブアプリURL</strong> をブックマーク</span>
+                <span class="ops-text">表示された <strong>ウェブアプリURL</strong> をブックマークして開く → 管理者ポータルが表示される</span>
               </li>
               <li>
                 <span class="ops-num" aria-hidden="true">6</span>
-                <span class="ops-text">URLを開く → 管理者ポータルが表示される</span>
+                <span class="ops-text"><strong>「初期セットアップ実行」</strong>ボタンを押す（書類フォルダの自動作成と2分ごとの自動更新が開始されます。何度押しても安全です）</span>
               </li>
               <li>
                 <span class="ops-num" aria-hidden="true">7</span>
-                <span class="ops-text">「接続設定」タブ → <strong>「GitHub 接続テスト」</strong> をクリック → 緑バッジが出れば OK</span>
+                <span class="ops-text"><strong>「GitHub 接続テスト」</strong> をクリック → 緑バッジが出れば OK</span>
               </li>
               <li>
                 <span class="ops-num" aria-hidden="true">8</span>
-                <span class="ops-text">続けて <strong>「Drive 接続テスト」</strong> をクリック → フォルダ名が表示されれば OK</span>
+                <span class="ops-text"><strong>「Drive 接続テスト」</strong> をクリック → フォルダ名が表示されれば OK</span>
+              </li>
+              <li>
+                <span class="ops-num" aria-hidden="true">9</span>
+                <span class="ops-text">状態が全て緑（<strong>自動更新: 🟢稼働中</strong> を含む）になったら導入完了です</span>
               </li>
             </ol>
           </div>
@@ -1784,15 +1798,23 @@ p, li, td, th, caption, .ja-text {
               </li>
               <li>
                 <input type="checkbox" id="c7-2">
-                <label for="c7-2">GitHub 接続テストが緑バッジ</label>
+                <label for="c7-2">「初期セットアップ実行」を押した（書類フォルダが作成された）</label>
               </li>
               <li>
                 <input type="checkbox" id="c7-3">
-                <label for="c7-3">Drive 接続テストでフォルダ名が表示される</label>
+                <label for="c7-3">GitHub 接続テストが緑バッジ</label>
               </li>
               <li>
                 <input type="checkbox" id="c7-4">
-                <label for="c7-4">速報サイト（pages.dev）に大会名・会場・日程が表示されている</label>
+                <label for="c7-4">Drive 接続テストでフォルダ名が表示される</label>
+              </li>
+              <li>
+                <input type="checkbox" id="c7-5">
+                <label for="c7-5">自動更新の状態が「🟢稼働中」になっている</label>
+              </li>
+              <li>
+                <input type="checkbox" id="c7-6">
+                <label for="c7-6">速報サイト（pages.dev）に大会名・会場・日程が表示されている</label>
               </li>
             </ul>
           </div>
@@ -1800,12 +1822,16 @@ p, li, td, th, caption, .ja-text {
           <div class="qa-block" aria-label="詰まったときの対処">
             <h4><span class="qa-icon" aria-hidden="true">Q</span> 詰まったとき</h4>
             <div class="qa-item">
+              <p class="qa-q">「初期セットアップ実行」ボタンが見当たらない</p>
+              <p class="qa-a"><strong>対処</strong>：GAS-A のバージョンが古い可能性があります。Step 5 からやり直してください。</p>
+            </div>
+            <div class="qa-item">
               <p class="qa-q">GitHub 接続テストが赤バッジになる</p>
-              <p class="qa-a"><strong>対処</strong>：「接続設定」タブで <code style="font-family:monospace;font-size:0.8rem">GITHUB_TOKEN</code> / <code style="font-family:monospace;font-size:0.8rem">GITHUB_OWNER</code> / <code style="font-family:monospace;font-size:0.8rem">GITHUB_REPO</code> のどれかが間違っています。それぞれ確認・修正してから再テストしてください。</p>
+              <p class="qa-a"><strong>対処</strong>：<code style="font-family:monospace;font-size:0.8rem">GITHUB_TOKEN</code> / <code style="font-family:monospace;font-size:0.8rem">GITHUB_OWNER</code> / <code style="font-family:monospace;font-size:0.8rem">GITHUB_REPO</code> のどれかが間違っています。それぞれ確認・修正してから再テストしてください。</p>
             </div>
             <div class="qa-item">
               <p class="qa-q">Drive テストが「DRIVE_ROOT_FOLDER_ID が未設定」と表示される</p>
-              <p class="qa-a"><strong>対処</strong>：「接続設定」タブから Drive フォルダIDを入力して保存 → 再テストしてください。</p>
+              <p class="qa-a"><strong>対処</strong>：Drive フォルダIDを確認して再入力 → 再テストしてください。</p>
             </div>
             <div class="qa-item">
               <p class="qa-q">「You need permission」と表示される</p>
@@ -1814,17 +1840,26 @@ p, li, td, th, caption, .ja-text {
           </div>
         </div>
         <div>
-          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">管理者ポータルの接続テスト画面</p>
-          <div class="screen-mock" role="img" aria-label="管理者ポータルの接続テスト画面イメージ">
+          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">管理者ポータルの完了状態</p>
+          <div class="screen-mock" role="img" aria-label="管理者ポータルの導入完了状態画面イメージ">
             <div class="screen-mock-bar">
               <span class="dot"></span><span class="dot"></span><span class="dot"></span>
               <span class="url">script.google.com/macros/s/...exec</span>
             </div>
             <div class="screen-mock-body">
               <div class="portal-tab-bar" aria-label="管理者ポータルのタブ">
-                <button class="portal-tab" aria-label="状態タブ">状態</button>
-                <button class="portal-tab active" aria-label="接続設定タブ（現在選択中）">接続設定</button>
+                <button class="portal-tab active" aria-label="状態タブ（現在選択中）">状態</button>
+                <button class="portal-tab" aria-label="接続設定タブ">接続設定</button>
                 <button class="portal-tab" aria-label="データ投入タブ">データ投入</button>
+              </div>
+              <div style="margin-bottom:0.625rem">
+                <button style="background:var(--navy);color:#fff;font-size:0.8rem;font-weight:700;padding:0.375rem 0.875rem;border-radius:4px;border:none;min-height:32px;width:100%">
+                  初期セットアップ実行（何度押しても安全）
+                </button>
+              </div>
+              <div class="test-result-row" role="status" aria-label="自動更新稼働中">
+                <span class="test-result-badge" aria-hidden="true">🟢</span>
+                <span class="test-result-text">自動更新 — <strong>稼働中</strong>（2分ごとに自動送信）</span>
               </div>
               <div class="test-result-row" role="status" aria-label="GitHub接続テスト成功">
                 <span class="test-result-badge" aria-hidden="true">✓ OK</span>
@@ -1834,7 +1869,7 @@ p, li, td, th, caption, .ja-text {
                 <span class="test-result-badge" aria-hidden="true">✓ OK</span>
                 <span class="test-result-text">Drive 接続テスト — <strong>○○レガッタ2027</strong></span>
               </div>
-              <div class="mock-label" style="display:block;margin-top:0.5rem">全て緑なら導入完了です</div>
+              <div class="mock-label" style="display:block;margin-top:0.5rem">全て緑（🟢稼働中を含む）で導入完了</div>
             </div>
           </div>
         </div>
