@@ -104,6 +104,37 @@ def _rand_hex(n: int) -> str:
 
 
 # ---------------------------------------------------------------------------
+# 既存パスの検出（冪等性サポート）
+# ---------------------------------------------------------------------------
+def _detect_existing_paths(out_dir: Path) -> tuple[str | None, str | None]:
+    """既にスキャフォールド済みの admin/staff パスを検出して返す。
+
+    検出方法:
+      - site/admin/ 配下に __ADMIN_PATH__ 以外のディレクトリがあればそれが admin_path
+      - staff/ 配下に __STAFF_PATH__ 以外のディレクトリがあればそれが staff_path
+    どちらも見つからなければ None を返す（初回実行）。
+    """
+    admin_path: str | None = None
+    staff_path: str | None = None
+
+    admin_base = out_dir / "site" / "admin"
+    if admin_base.is_dir():
+        for d in admin_base.iterdir():
+            if d.is_dir() and d.name != "__ADMIN_PATH__":
+                admin_path = d.name
+                break
+
+    staff_base = out_dir / "staff"
+    if staff_base.is_dir():
+        for d in staff_base.iterdir():
+            if d.is_dir() and d.name != "__STAFF_PATH__":
+                staff_path = d.name
+                break
+
+    return admin_path, staff_path
+
+
+# ---------------------------------------------------------------------------
 # ファイル内文字列置換（再帰）
 # ---------------------------------------------------------------------------
 def _replace_in_file(path: Path, mapping: dict[str, str]) -> None:
@@ -326,8 +357,16 @@ def main() -> None:
     print("  OK")
 
     out_dir = Path(args.out).resolve()
-    admin_path = _rand_hex(8)
-    staff_path = _rand_hex(6)
+
+    # 冪等性チェック: 既にスキャフォールド済みのパスを再利用する
+    existing_admin, existing_staff = _detect_existing_paths(out_dir)
+    if existing_admin and existing_staff:
+        admin_path = existing_admin
+        staff_path = existing_staff
+        print(f"  reuse existing paths: admin/{admin_path}/ staff/{staff_path}/")
+    else:
+        admin_path = existing_admin or _rand_hex(8)
+        staff_path = existing_staff or _rand_hex(6)
 
     # 2. ディレクトリ名のリネーム
     print(f"\n{C.CYAN}[2/7] Renaming placeholder directories...{C.RESET}")
@@ -359,6 +398,7 @@ def main() -> None:
     date_day1_ja = _format_ja(date_day1)
     date_day2_ja = _format_ja(date_day2)
 
+    brand = cfg.get("brand", {})
     mapping = {
         "{{TOURNAMENT_NAME}}":  t.get("name", ""),
         "{{DATES_LABEL}}":      dates_label,
@@ -369,6 +409,9 @@ def main() -> None:
         "{{HUB_URL}}":          t.get("hub_url", ""),
         "{{ADMIN_PATH}}":       admin_path,
         "{{STAFF_PATH}}":       staff_path,
+        # brand カラー（index.html の theme-color meta など）
+        "{{PRIMARY_COLOR}}":    brand.get("primary_color", ""),
+        "{{ACCENT_COLOR}}":     brand.get("accent_color", ""),
         # 追加プレースホルダー（staff テンプレで使用）
         "{{YEAR}}":             year,
         "{{CREATED_DATE}}":     today,

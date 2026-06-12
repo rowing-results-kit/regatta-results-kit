@@ -13,11 +13,14 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    # scaffold: コミット（setup-tournament.yml の自動コミット）はスキップ
+    if: ${{ !startsWith(github.event.head_commit.message, 'scaffold:') }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
       - name: E2Eテスト実行
         run: python3 test/e2e_test.py --skip-pipeline
         # --skip-pipeline オプション: CSV→JSON変換をスキップしてJSONのみ検証
+        # 雛形状態（schedule が空配列）の場合は test/e2e_test.py 内でスキップ扱いになる
