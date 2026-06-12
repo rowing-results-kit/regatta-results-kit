@@ -249,6 +249,12 @@ regatta-results-kit/
 
 ---
 
+## 配布する方へ
+
+約20協会への配布運用手順（招待方法・初期構築3パターン・アップデートポリシー・チェックリスト）: [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md)
+
+---
+
 ## ライセンス
 
 MIT License — 詳細は [LICENSE](LICENSE) を参照してください。
