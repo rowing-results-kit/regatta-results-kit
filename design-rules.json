@@ -1,0 +1,183 @@
+{
+  "version": "1.0.0",
+  "project": "regatta-results-kit",
+  "updated": "2026-06-12",
+  "inherits": "ryuiyamada-design-system/rules.json",
+
+  "forbidden": [
+    {
+      "id": "no-hex-direct",
+      "rule": "セマンティックトークン以外のHEX直打ち禁止",
+      "example_bad": "color: #0E4D5C",
+      "example_good": "color: var(--color-primary)"
+    },
+    {
+      "id": "no-generic-gradient",
+      "rule": "グラデーション全面禁止（背景・ボタン・カードいずれも）",
+      "note": "AI生成UI典型。linear-gradient / radial-gradient / background: gradient() 禁止"
+    },
+    {
+      "id": "no-purple-blue-gradient-pair",
+      "rule": "紫・水色系のグラデーション対色禁止（#7C3AED + #60A5FA 等の組み合わせ）",
+      "note": "SaaSサービス・AI生成サイトの最典型パターン。漕艇競技の公的トーンに反する"
+    },
+    {
+      "id": "no-emoji-icons",
+      "rule": "UIラベル・ステップ番号・見出し・ボタン内の絵文字使用禁止",
+      "example_bad": "🎉 導入完了！ / ✅ ステップ1 / 🚀 今すぐ始める",
+      "example_good": "stroke 1.5px のインラインSVGアイコンに置き換え"
+    },
+    {
+      "id": "no-full-radius-button",
+      "rule": "ボタンに border-radius: 9999px（radius-full）使用禁止",
+      "example_bad": "border-radius: 9999px; /* ボタンに */",
+      "example_good": "border-radius: var(--radius-md); /* 4px */",
+      "note": "radius-fullはバッジ・ステータスチップのみ許可"
+    },
+    {
+      "id": "no-box-shadow-overuse",
+      "rule": "box-shadowは tokens.json shadow.subtle の1種のみ許可。複数層・大きな影禁止",
+      "example_bad": "box-shadow: 0 4px 16px rgba(21,46,88,0.35)",
+      "example_good": "box-shadow: var(--shadow-subtle)",
+      "note": "「影で浮かせる」AI的質感の禁止。区切りは罫線で行う"
+    },
+    {
+      "id": "no-center-aligned-sections",
+      "rule": "セクション単位での text-align: center 禁止。左揃え基調",
+      "example_bad": ".section { text-align: center; } /* セクション全体へのcenter禁止 */",
+      "example_good": "見出しのみ個別にcenter指定（必要な場合は理由を明記）",
+      "note": "「全部中央揃え」はAI生成LPの典型。協会資料・公的文書は左揃え"
+    },
+    {
+      "id": "no-uniform-3col-cards",
+      "rule": "等幅3カラムカード羅列禁止",
+      "example_bad": "grid-template-columns: repeat(3, 1fr); /* カード並べるだけ */",
+      "example_good": "情報の重み付けに応じた非対称グリッド（例: 2:1 / 左リスト+右詳細）",
+      "note": "「AI が自動生成したっぽい感」の最大要因"
+    },
+    {
+      "id": "no-same-structure-sections",
+      "rule": "同一構造のセクション3つ以上連続禁止",
+      "note": "eyebrow→見出し→説明→CTAの繰り返しはAI生成感。構造を変えて流れを作る"
+    },
+    {
+      "id": "no-celebration-tone",
+      "rule": "「〜完了！」「簡単に」「手軽に」「誰でも」「〜できます」を見出し・キャッチコピーで連発禁止",
+      "example_bad": "🎉 導入完了！ / 誰でも簡単に使えます / 手軽に始められます",
+      "example_good": "「計測CSVを置くだけ」「7ステップ・約2分」（具体的数値で伝える）",
+      "note": "協会・競技団体向けトーン。過剰な感嘆符・体験語り口禁止"
+    },
+    {
+      "id": "no-font-weight-300-400",
+      "rule": "font-weight 300以下禁止。onboarding の body font-weight: 400 も禁止（500以上必須）",
+      "note": "現状 onboarding/index.html body { font-weight: 400 } が違反中"
+    },
+    {
+      "id": "no-heading-weight-not-700",
+      "rule": "見出し（h1〜h3）は font-weight: 700 固定。600・500禁止"
+    },
+    {
+      "id": "no-glassmorphism",
+      "rule": "backdrop-filter: blur / rgba背景の半透明カード禁止"
+    },
+    {
+      "id": "no-nested-cards",
+      "rule": "カード2層超禁止（.card 内に .card を入れない）"
+    },
+    {
+      "id": "no-low-contrast",
+      "rule": "コントラスト比 4.5:1 未満禁止（WCAG 2.1 AA）",
+      "note": "muted色（#6B7280）を白背景で使う場合はbg-sub上で確認必須"
+    },
+    {
+      "id": "no-transition-all",
+      "rule": "transition: all 禁止。対象プロパティ明示必須",
+      "example_bad": "transition: all 200ms ease",
+      "example_good": "transition: background-color 200ms cubic-bezier(0.4,0,0.2,1)"
+    },
+    {
+      "id": "no-lane-motif-overuse",
+      "rule": "レーンモチーフ（水平罫線・ブイ点列・進行バー）を装飾目的で多用禁止",
+      "note": "レーン表現は構造の意味を持つ箇所のみ（ステップ進行・セクション区切り・結果表ヘッダー）"
+    }
+  ],
+
+  "required": [
+    {
+      "id": "wcag-aa",
+      "rule": "全成果物でWCAG 2.1 AA準拠"
+    },
+    {
+      "id": "noto-sans-jp",
+      "rule": "フォントは Noto Sans JP のみ。weight: 500 / 700 の2種のみ使用"
+    },
+    {
+      "id": "responsive-breakpoints",
+      "rule": "375px・768px・1280px の3点でレイアウト崩れゼロを確認"
+    },
+    {
+      "id": "japanese-typography",
+      "rule": "line-break: strict / word-break: auto-phrase（@supports）/ hanging-punctuation: first / font-feature-settings: 'palt' 1 必須"
+    },
+    {
+      "id": "tabular-nums",
+      "rule": "数値（タイム・順位・所要時間・ステップ番号）は font-variant-numeric: tabular-nums 必須"
+    },
+    {
+      "id": "svg-icons",
+      "rule": "アイコンはインラインSVG（stroke-width: 1.5px・currentColor）のみ。絵文字・画像アイコン禁止"
+    },
+    {
+      "id": "semantic-token",
+      "rule": "カラーはすべて tokens.json のCSS変数経由"
+    },
+    {
+      "id": "8px-grid",
+      "rule": "余白は8の倍数（0.5rem単位）グリッド準拠"
+    },
+    {
+      "id": "tap-target",
+      "rule": "タップターゲット最小 44×44px"
+    },
+    {
+      "id": "focus-visible",
+      "rule": "focus-visible リング必須。outline: 2px solid var(--color-primary); outline-offset: 2px"
+    },
+    {
+      "id": "viewport-meta",
+      "rule": "<meta name='viewport' content='width=device-width, initial-scale=1.0'> 必須"
+    },
+    {
+      "id": "lang-ja",
+      "rule": "<html lang='ja'> 必須"
+    }
+  ],
+
+  "qa_criteria": {
+    "breakpoints": ["375px", "768px", "1280px"],
+    "overlap_check": "全ブレークポイントで要素重なりゼロ",
+    "contrast_min": 4.5,
+    "font_weight_allowed": [500, 700],
+    "radius_allowed": ["2px", "4px", "9999px（バッジのみ）"],
+    "shadow_allowed": ["var(--shadow-subtle)"],
+    "icons": "inline SVG only, stroke-width 1.5px",
+    "gradient_allowed": false,
+    "emoji_allowed": false
+  },
+
+  "lane_motif_rules": {
+    "where_allowed": [
+      "ステップ進行バー（水平）",
+      "セクション区切り罫線（水平）",
+      "結果テーブルのヘッダー下線",
+      "ステップ番号の左縦罫線アクセント"
+    ],
+    "where_forbidden": [
+      "装飾目的のランダム配置",
+      "3箇所超の連続使用",
+      "フッター・ナビゲーションへの適用"
+    ],
+    "buoy_pattern": "水平線上に 6px 円を等間隔（8px）で並べる",
+    "progress_bar": "4px 高さの水平バー。color: var(--color-primary-100) → var(--color-primary)"
+  }
+}

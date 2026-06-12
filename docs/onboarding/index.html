@@ -1277,7 +1277,7 @@ p, li, td, th, caption, .ja-text {
               <p class="qa-a">
                 <strong>エラーの詳細を見る手順：</strong><br>
                 Actions タブの赤バツのジョブ行をクリック → 左の「scaffold 実行」等の行をクリック → ログが展開されて<strong>日本語のエラー理由</strong>が表示されます。<br>
-                <span style="display:block;margin-top:0.375rem">よくある原因：日付の形式が違う（<strong>YYYY-MM-DD 形式</strong>、例: 2027-06-14）、またはカラーコードが違う（<strong>「#」から始まる7文字</strong>、例: #1a3a5c）。修正してから「Run workflow」を再実行してください。</span>
+                <span style="display:block;margin-top:0.375rem">よくある原因：日付の形式が違う（<strong>スラッシュ区切り推奨</strong>、例: 2026/06/14。ハイフン区切り 2026-06-14 も可）、またはカラーコードが違う（<strong>「#」から始まる7文字</strong>、例: #1a3a5c）。修正してから「Run workflow」を再実行してください。</span>
               </p>
               <!-- Failure log mock -->
               <div class="screen-mock" style="margin-top:0.625rem" role="img" aria-label="赤バツジョブの詳細ログ確認画面イメージ">
@@ -1297,7 +1297,7 @@ p, li, td, th, caption, .ja-text {
                       <span style="font-size:0.7rem;color:var(--muted);margin-left:auto">← ここをクリックでログ表示</span>
                     </div>
                     <div style="margin-top:0.375rem;padding:0.375rem 0.5rem;background:#1e1e2e;border-radius:3px;font-family:monospace;font-size:0.72rem;color:#f87171">
-                      Error: 開始日の形式が正しくありません。YYYY-MM-DD 形式で入力してください（例: 2027-06-14）
+                      Error: 開始日の形式が正しくありません。例: 2026/06/14（ハイフン 2026-06-14 も可）
                     </div>
                   </div>
                 </div>
@@ -1378,12 +1378,12 @@ p, li, td, th, caption, .ja-text {
                   <input class="gh-form-input" value="○○漕艇競技場" readonly aria-label="会場の入力例">
                 </div>
                 <div class="gh-form-row">
-                  <div class="gh-form-label">開始日（YYYY-MM-DD）</div>
-                  <input class="gh-form-input" value="2027-06-14" readonly aria-label="開始日の入力例">
+                  <div class="gh-form-label">開始日（例: 2027/06/14 または 2027-06-14）</div>
+                  <input class="gh-form-input" value="2027/06/14" readonly aria-label="開始日の入力例">
                 </div>
                 <div class="gh-form-row">
-                  <div class="gh-form-label">終了日（YYYY-MM-DD）</div>
-                  <input class="gh-form-input" value="2027-06-15" readonly aria-label="終了日の入力例">
+                  <div class="gh-form-label">終了日（例: 2027/06/15 または 2027-06-15）</div>
+                  <input class="gh-form-input" value="2027/06/15" readonly aria-label="終了日の入力例">
                 </div>
                 <div class="gh-form-row">
                   <div class="gh-form-label">メインカラー（#RRGGBB）</div>
