@@ -255,6 +255,49 @@ regatta-results-kit/
 
 ---
 
+## Claude Code プラグインとして導入する方法
+
+> **注意**: プラグインとしての `/plugin install` による導入は、リポジトリが **public** 公開後に有効になります。現在は private のため、テンプレート配布（クローン方式）または `--plugin-dir` によるローカルテストのみ利用可能です。
+
+### テンプレート配布（推奨・現在有効）
+
+```bash
+# 1. GitHub の "Use this template" ボタンで新規リポジトリを作成
+# 2. ローカルに clone して Claude Code を起動
+git clone https://github.com/<your-org>/<your-repo>
+cd <your-repo>
+claude
+
+# 3. ウィザードを起動
+/regatta-setup
+```
+
+### プラグインとして導入する（public 公開後に有効）
+
+```bash
+# マーケットプレイスを登録
+/plugin marketplace add RYUIYAMADA/regatta-results-kit
+
+# プラグインをインストール
+/plugin install regatta-results-kit@regatta-results-kit
+```
+
+インストール後、コマンドは名前空間付きで利用可能になります:
+
+```bash
+/regatta-results-kit:regatta-setup
+/regatta-results-kit:progression-add
+```
+
+### ローカルテスト（plugin-dir フラグ）
+
+```bash
+git clone https://github.com/RYUIYAMADA/regatta-results-kit
+claude --plugin-dir ./regatta-results-kit
+```
+
+---
+
 ## ライセンス
 
 MIT License — 詳細は [LICENSE](LICENSE) を参照してください。
