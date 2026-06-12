@@ -16,6 +16,7 @@ scaffold.py — 大会設定を元にサイト・GAS をワンショット生成
 """
 
 import argparse
+import datetime
 import json
 import os
 import re
@@ -143,7 +144,7 @@ def _generate_master_json(out_dir: Path, cfg: dict) -> None:
             "measurement_points": course.get("measurement_points", [500, 1000]),
         },
         "categories": categories,
-        "races": [],
+        "schedule": [],
     }
     data_dir = out_dir / "site" / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
@@ -207,7 +208,9 @@ def _generate_setup_guide(out_dir: Path, cfg: dict, admin_path: str, staff_path:
 # ---------------------------------------------------------------------------
 # 置換漏れ検査
 # ---------------------------------------------------------------------------
-PLACEHOLDER_RE = re.compile(r'\{\{[A-Z_]+\}\}')
+# バッククオートで囲まれた {{...}} はドキュメント記述（辞書・説明）なのでマッチ除外。
+# 例: `{{DATE_DAY1}}` — README や仕様書中の変数名一覧は検査対象外。
+PLACEHOLDER_RE = re.compile(r'(?<!`)\{\{[A-Z_]+\}\}(?!`)')
 
 
 def _check_leftovers(out_dir: Path, exclude_dirs: list[str]) -> list[str]:
@@ -265,16 +268,24 @@ def main() -> None:
     dep = cfg.get("deploy", {})
     dates = t.get("dates", [])
     dates_label = " / ".join(dates) if dates else ""
+    # 開催年（dates[0] から抽出。未設定時は空文字）
+    year = dates[0][:4] if dates else ""
+    today = datetime.date.today().isoformat()
     mapping = {
-        "{{TOURNAMENT_NAME}}": t.get("name", ""),
-        "{{DATES_LABEL}}":     dates_label,
-        "{{VENUE}}":           t.get("venue", ""),
-        "{{TOURNAMENT_ID}}":   t.get("id", ""),
-        "{{GITHUB_REPO}}":     dep.get("github_repo", ""),
-        "{{SITE_URL}}":        dep.get("pages_url", ""),
-        "{{HUB_URL}}":         t.get("hub_url", ""),
-        "{{ADMIN_PATH}}":      admin_path,
-        "{{STAFF_PATH}}":      staff_path,
+        "{{TOURNAMENT_NAME}}":  t.get("name", ""),
+        "{{DATES_LABEL}}":      dates_label,
+        "{{VENUE}}":            t.get("venue", ""),
+        "{{TOURNAMENT_ID}}":    t.get("id", ""),
+        "{{GITHUB_REPO}}":      dep.get("github_repo", ""),
+        "{{SITE_URL}}":         dep.get("pages_url", ""),
+        "{{HUB_URL}}":          t.get("hub_url", ""),
+        "{{ADMIN_PATH}}":       admin_path,
+        "{{STAFF_PATH}}":       staff_path,
+        # 追加プレースホルダー（staff テンプレで使用）
+        "{{YEAR}}":             year,
+        "{{CREATED_DATE}}":     today,
+        "{{DRIVE_FOLDER_URL}}": "",   # GAS 接続後に手動更新（セットアップガイドに案内）
+        "{{GAS_PROJECT_NAME}}": t.get("name", ""),   # GAS プロジェクト名 = 大会名
     }
     staff_dir = out_dir / "staff" / staff_path
     if staff_dir.exists():
@@ -299,7 +310,8 @@ def main() -> None:
 
     # 7. 置換漏れ検査
     print(f"\n{C.CYAN}[7/7] Checking for leftover placeholders...{C.RESET}")
-    exclude = ["template", "test", "docs", ".git", "__pycache__"]
+    # tools/ と gas/ はソースコード自体にプレースホルダー文字列を含むため除外
+    exclude = ["template", "test", "docs", ".git", "__pycache__", "tools", "gas"]
     leftovers = _check_leftovers(out_dir, exclude)
     if leftovers:
         print(f"{C.RED}Placeholder check FAILED — remaining placeholders:{C.RESET}")
