@@ -89,14 +89,26 @@ with open(dest, 'w', encoding='utf-8') as f:
   "id": "<採番した id>",
   "label": "<label>",
   "lanes": <lanes>,
-  "entries_range": [<min>, <max>],   // templates の patterns から実際に集約
+  "supported_entries": [<min>, <max>],   // templates の patterns から自動集約（手動入力不要）
   "description": "<説明>",
   "source": "<提供元>",
   "added": "<YYYY-MM-DD>"
 }
 ```
 
-`entries_range` は `python3 -c` でテンプレートの全 patterns を読み min/max を計算する。
+`supported_entries` は `python3 -c` でテンプレートの全 patterns を読み min/max を自動計算する。**ユーザーに範囲の入力を求めてはいけない。**
+
+```bash
+python3 -c "
+import json
+with open('/tmp/progression_candidate.json') as f:
+    t = json.load(f)
+patterns = t.get('patterns', [])
+all_min = min(p['entries_min'] for p in patterns)
+all_max = max(p['entries_max'] for p in patterns)
+print(f'supported_entries: [{all_min}, {all_max}]')
+"
+```
 
 ---
 

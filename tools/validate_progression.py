@@ -16,6 +16,9 @@ Validation rules:
      identifier grammar:  N.ROUND  or  N.M.ROUND
      where N, M are positive integers and ROUND matches [A-Z][A-Z0-9]*
   6. Lane numbers (bn) are within 1..lanes (inclusive)
+  W. Coverage gap check (WARNING only, does not FAIL):
+     Lists crew-count values in 1..60 not covered by any pattern.
+     Gaps indicate the model cannot handle those crew counts.
 """
 
 import json
@@ -59,8 +62,25 @@ def collect_lane_rules(rounds: list) -> list[tuple[str, list]]:
     return result
 
 
-def validate(path: str) -> tuple[bool, list[str]]:
+COVERAGE_CHECK_MAX = 60  # ギャップ検出の上限（1〜60 の範囲で未カバーを検出）
+
+
+def check_coverage_gaps(ranges: list[tuple[int, int, int]]) -> list[int]:
+    """Return list of crew counts in 1..COVERAGE_CHECK_MAX not covered by any pattern range."""
+    if not ranges:
+        return list(range(1, COVERAGE_CHECK_MAX + 1))
+    covered = set()
+    for emin, emax, _ in ranges:
+        for n in range(emin, emax + 1):
+            if 1 <= n <= COVERAGE_CHECK_MAX:
+                covered.add(n)
+    return [n for n in range(1, COVERAGE_CHECK_MAX + 1) if n not in covered]
+
+
+def validate(path: str) -> tuple[bool, list[str], list[str]]:
+    """Returns (passed, errors, warnings). Exit code is based on errors only."""
     errors = []
+    warnings = []
 
     # Rule 1: JSON validity
     try:
@@ -68,10 +88,10 @@ def validate(path: str) -> tuple[bool, list[str]]:
             template = json.load(f)
     except json.JSONDecodeError as e:
         errors.append(f"JSON parse error: {e}")
-        return False, errors
+        return False, errors, warnings
     except FileNotFoundError:
         errors.append(f"File not found: {path}")
-        return False, errors
+        return False, errors, warnings
 
     # Rule 2: Required top-level keys
     template_id = template.get('id') or template.get('template_id')
@@ -93,7 +113,7 @@ def validate(path: str) -> tuple[bool, list[str]]:
         patterns = None
 
     if errors:
-        return False, errors
+        return False, errors, warnings
 
     # Rule 3: entries_min <= entries_max per pattern
     ranges = []
@@ -144,7 +164,27 @@ def validate(path: str) -> tuple[bool, list[str]]:
                             f"bn={bn} is outside valid range 1..{lanes}"
                         )
 
-    return len(errors) == 0, errors
+    # Warning W: Coverage gap check (1..COVERAGE_CHECK_MAX)
+    if not errors:  # only run when structurally valid
+        gaps = check_coverage_gaps(ranges)
+        if gaps:
+            # Group consecutive gaps for readability
+            gap_groups = []
+            start = gaps[0]
+            prev = gaps[0]
+            for n in gaps[1:]:
+                if n == prev + 1:
+                    prev = n
+                else:
+                    gap_groups.append(f"{start}-{prev}" if start != prev else str(start))
+                    start = prev = n
+            gap_groups.append(f"{start}-{prev}" if start != prev else str(start))
+            warnings.append(
+                f"Coverage gap: crew counts not covered by any pattern "
+                f"(1..{COVERAGE_CHECK_MAX}): {', '.join(gap_groups)}"
+            )
+
+    return len(errors) == 0, errors, warnings
 
 
 def main():
@@ -153,10 +193,12 @@ def main():
         sys.exit(1)
 
     path = sys.argv[1]
-    passed, errors = validate(path)
+    passed, errors, warnings = validate(path)
 
     if passed:
         print(f"PASS: {path}")
+        for w in warnings:
+            print(f"  WARNING: {w}")
         sys.exit(0)
     else:
         print(f"FAIL: {path}")

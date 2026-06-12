@@ -25,7 +25,8 @@ progression/
     { "id": "alljapan-a",            // templates/<id>.json と一致
       "label": "全日本モデル A",       // ポータルの選択肢表示名（無名モデルは "汎用モデル 001" を自動付与）
       "lanes": 6,
-      "entries_range": [7, 18],       // 対応エントリー数（テンプレの min/max を集約）
+      "supported_entries": [1, 42],  // 対応クルー数（能力メタ情報。選択基準ではない）
+                                     // テンプレート全 patterns の entries_min 最小値〜entries_max 最大値を集約
       "description": "予選→準決→決勝。タイム拾い上げあり",
       "source": "JARA 全日本選手権 2026 要項",   // 任意。無名モデルは "運営者提供" 等
       "added": "2026-06-12" }
@@ -33,7 +34,13 @@ progression/
 }
 ```
 
+**キー説明**:
+- `supported_entries`: そのモデルが内部で対応可能なクルー数の最小〜最大。大会側が「このクルー数なら使えるか」を判断するためのメタ情報であり、**大会がモデルを選ぶ基準ではない**（選択は管理者ポータルで任意に行う）。
+- モデルが実際にどのクルー数範囲をカバーするかは templates/<id>.json の patterns を確認。validate_progression.py がギャップを警告する。
+
 ## 3. 大会への適用（選択）
+
+**概念（必読）**: 進行モデルは「クルー数ごとのパターンを統合した1バンドル」。大会は1モデルを選んで採用するだけでよく、種目ごとのクルー数に応じてどのパターンを使うかはエンジンの `selectPattern` が内部で自動判断する。管理者が「エントリー数 N クルーのときはパターン X を使う」と明示的に選ぶ必要はない。
 
 - 保存場所: 大会サイトの `site/data/master.json` に `"progression": { "template_id": "<id>" }`（未選択は省略 = 進行計算なし）
 - 選択 UI: **管理者ポータル「接続設定」タブに「進行モデル」セレクト**を追加。選択肢 = 自リポジトリの `progression/registry.json` を GitHub API で読んで生成（「使用しない」含む）。保存 = master.json の progression フィールドのみを GET→PUT（他フィールドは触らない）
@@ -45,8 +52,10 @@ progression/
 - `.claude/commands/progression-add.md` を新設。`/progression-add` で起動し Claude が以下を実行:
   1. 龍偉から定義を受領（JSON 貼り付け / ファイルパス / 口頭ルールから Claude が ProgressionTemplate を起こす、の3方式）
   2. `python3 tools/validate_progression.py <file>` で検証（JSON 妥当性・必須キー・entries_min/max の重複なし・lane_assignment の識別子が `N.M.R` / `N.RT` 文法に合致・レーン数整合）
-  3. 命名: 全日本など特別な場合のみ label 指定。**無名は `model-NNN`（registry の最大番号+1）を自動採番し label「汎用モデル NNN」**
-  4. templates/ へ保存 + registry.json へ追記 + コミット & push（kit リポジトリ）
+  3. **カバレッジ確認**: モデルは想定される全クルー数に対応していること。validate がパターンのギャップ（1〜60 の範囲で未カバーのクルー数）を WARNING 列挙する。WARNING がある場合は龍偉に報告し、意図的なギャップか確認してから登録を判断する。
+  4. 命名: 全日本など特別な場合のみ label 指定。**無名は `model-NNN`（registry の最大番号+1）を自動採番し label「汎用モデル NNN」**
+     - **ユーザーに entries_range（対応クルー数の範囲）を選ばせない**: `supported_entries` はテンプレートの patterns から自動計算する。手動入力不要。
+  5. templates/ へ保存 + registry.json へ追記 + コミット & push（kit リポジトリ）
 - 大会運営者から定義を預かった場合も同フローで龍偉が登録（source に提供元をメモ）
 
 ## 5. エンジン同梱
