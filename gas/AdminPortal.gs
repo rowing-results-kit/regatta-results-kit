@@ -182,7 +182,16 @@ function portalSaveSettings(obj) {
     if (Object.prototype.hasOwnProperty.call(obj, 'measurementPoints')) {
       var mp = obj.measurementPoints;
       if (mp !== null && mp !== undefined && String(mp).trim() !== '') {
-        props.setProperty(CONFIG.props.measurementPoints, String(mp).trim());
+        var mpStr = String(mp).trim();
+        /* 許可トークン: 500m / 1000m / 1500m / 2000m のカンマ結合のみ受理 */
+        var ALLOWED_MP_ = { '500m': 1, '1000m': 1, '1500m': 1, '2000m': 1 };
+        var mpTokens = mpStr.split(',').map(function(s) { return s.trim(); });
+        for (var mi = 0; mi < mpTokens.length; mi++) {
+          if (!ALLOWED_MP_[mpTokens[mi]]) {
+            throw new Error('MEASUREMENT_POINTS に不正な値が含まれています: ' + mpTokens[mi]);
+          }
+        }
+        props.setProperty(CONFIG.props.measurementPoints, mpStr);
         saved.push('MEASUREMENT_POINTS');
       }
     }

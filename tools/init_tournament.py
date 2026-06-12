@@ -73,14 +73,16 @@ ENTRIES_SAMPLE  = PROJECT_DIR / "test" / "csv" / "entries_sample.csv"
 #   Q20: gas.prep_folder_id
 # ---------------------------------------------------------------------------
 
+VALID_DISTANCES = [500, 1000, 1500, 2000]
+
 DEFAULTS = {
     "tournament_id":              "",
     "tournament_name":            "",
     "tournament_venue":           "",
     "tournament_dates":           "",
     "tournament_hub_url":         "",
-    "course_length_m":            "1000",
-    "measurement_points":         "500,1000",
+    "course_length_m":            1000,       # int（4択）
+    "measurement_points":         [500, 1000], # int list（4択の部分集合）
     "categories":                 "M,W,X",
     "brand_primary_color":        "#2D4F2C",
     "brand_accent_color":         "#C9A227",
@@ -108,6 +110,49 @@ def prompt(label: str, default: str) -> str:
         print()
         sys.exit(0)
     return value if value else default
+
+
+def prompt_choice(label: str, choices: list, default_index: int = 0) -> int:
+    """番号選択式プロンプト。不正入力は再入力ループ。戻り値は選択された値（int）。"""
+    print(f"{label}")
+    for i, c in enumerate(choices, 1):
+        marker = " ← デフォルト" if i == default_index + 1 else ""
+        print(f"  {i}) {c}m{marker}")
+    while True:
+        try:
+            raw = input(f"  番号を入力 [1-{len(choices)}]: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            sys.exit(0)
+        if raw == "":
+            return choices[default_index]
+        if raw.isdigit() and 1 <= int(raw) <= len(choices):
+            return choices[int(raw) - 1]
+        print(f"  {C.RED}[ERROR]{C.RESET} 1〜{len(choices)} の番号を入力してください。")
+
+
+def prompt_multi_choice(label: str, choices: list, defaults: list) -> list[int]:
+    """複数番号選択式プロンプト（例: 1,2）。不正入力は再入力ループ。
+    戻り値は選択された値のリスト（昇順・最終要素 == length_m は呼び出し側で検証）。
+    """
+    print(f"{label}")
+    for i, c in enumerate(choices, 1):
+        marker = " ← デフォルト" if c in defaults else ""
+        print(f"  {i}) {c}m{marker}")
+    default_nums = ",".join(str(choices.index(d) + 1) for d in defaults if d in choices)
+    while True:
+        try:
+            raw = input(f"  番号をカンマ区切りで入力 (例: {default_nums}) [{default_nums}]: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            sys.exit(0)
+        if raw == "":
+            return sorted(defaults)
+        parts = [p.strip() for p in raw.split(",") if p.strip()]
+        if all(p.isdigit() and 1 <= int(p) <= len(choices) for p in parts):
+            selected = sorted({choices[int(p) - 1] for p in parts})
+            return selected
+        print(f"  {C.RED}[ERROR]{C.RESET} 1〜{len(choices)} の番号をカンマ区切りで入力してください。")
 
 
 def confirm(label: str, default_yes: bool = True) -> bool:
@@ -142,8 +187,22 @@ def collect_answers(non_interactive: bool) -> dict:
     ans["tournament_hub_url"] = prompt("Q04b ハブサイトURL (空欄可)", D["tournament_hub_url"])
 
     print(f"\n{C.BOLD}▶ コース設定{C.RESET}")
-    ans["course_length_m"]       = prompt("Q05 コース距離 (m)", D["course_length_m"])
-    ans["measurement_points"]    = prompt("Q06 計測ポイント (m カンマ区切り・昇順)", D["measurement_points"])
+    print("  ※ 距離は 500 / 1000 / 1500 / 2000 の4択です。")
+    length_m = prompt_choice("Q05 コース距離を選んでください:", VALID_DISTANCES, default_index=VALID_DISTANCES.index(D["course_length_m"]))
+    ans["course_length_m"] = length_m
+
+    # 計測点: 選択した距離以下の値のみ選択肢として提示し、複数番号選択
+    valid_points = [d for d in VALID_DISTANCES if d <= length_m]
+    default_points = [p for p in D["measurement_points"] if p <= length_m]
+    if not default_points:
+        default_points = valid_points  # fallback
+    print(f"  ※ 計測点は {length_m}m 以下の値から選択（最終要素は {length_m}m にする必要があります）。")
+    while True:
+        points = prompt_multi_choice("Q06 計測ポイントを選んでください（複数可）:", valid_points, default_points)
+        if points and points[-1] == length_m:
+            break
+        print(f"  {C.RED}[ERROR]{C.RESET} 最終計測点は {length_m}m でなければなりません。もう一度選んでください。")
+    ans["measurement_points"] = points
 
     print(f"\n{C.BOLD}▶ カテゴリ{C.RESET}")
     ans["categories"] = prompt("Q07 カテゴリ (カンマ区切り)", D["categories"])
@@ -179,24 +238,50 @@ def collect_answers(non_interactive: bool) -> dict:
 def build_config(ans: dict) -> dict:
     """回答を SPEC §5 スキーマに変換する。"""
     dates = [d.strip() for d in ans["tournament_dates"].split(",") if d.strip()]
-    measurement_points_raw = [p.strip() for p in ans["measurement_points"].split(",") if p.strip()]
-    try:
-        measurement_points = [int(p) for p in measurement_points_raw]
-    except ValueError:
-        print(
-            f"{C.RED}[ERROR]{C.RESET} 計測ポイントは整数で入力してください: {ans['measurement_points']!r}",
-            file=sys.stderr,
-        )
-        sys.exit(1)
 
-    try:
-        length_m = int(ans["course_length_m"].strip())
-    except ValueError:
+    # measurement_points: 対話モードでは int list 直渡し、--non-interactive では list のまま
+    raw_points = ans["measurement_points"]
+    if isinstance(raw_points, list):
+        measurement_points = [int(p) for p in raw_points]
+    else:
+        measurement_points_raw = [p.strip() for p in str(raw_points).split(",") if p.strip()]
+        try:
+            measurement_points = [int(p) for p in measurement_points_raw]
+        except ValueError:
+            print(
+                f"{C.RED}[ERROR]{C.RESET} 計測ポイントは整数で入力してください: {raw_points!r}",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+    # course_length_m: 対話モードでは int 直渡し、--non-interactive では int のまま
+    raw_length = ans["course_length_m"]
+    if isinstance(raw_length, int):
+        length_m = raw_length
+    else:
+        try:
+            length_m = int(str(raw_length).strip())
+        except ValueError:
+            print(
+                f"{C.RED}[ERROR]{C.RESET} コース距離は整数で入力してください: {raw_length!r}",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+    # 4択制約の検証（build_config でも二重確認）
+    if length_m not in VALID_DISTANCES:
         print(
-            f"{C.RED}[ERROR]{C.RESET} コース距離は整数で入力してください: {ans['course_length_m']!r}",
+            f"{C.RED}[ERROR]{C.RESET} コース距離は 500/1000/1500/2000 のいずれかでなければなりません: {length_m}",
             file=sys.stderr,
         )
         sys.exit(1)
+    for pt in measurement_points:
+        if pt not in VALID_DISTANCES:
+            print(
+                f"{C.RED}[ERROR]{C.RESET} 計測点は 500/1000/1500/2000 のいずれかでなければなりません: {pt}",
+                file=sys.stderr,
+            )
+            sys.exit(1)
 
     categories = [c.strip() for c in ans["categories"].split(",") if c.strip()]
 

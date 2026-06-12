@@ -5,7 +5,7 @@
       "id": "alljapan-a",
       "label": "全日本モデル A",
       "lanes": 6,
-      "entries_range": [
+      "supported_entries": [
         1,
         42
       ],
@@ -17,7 +17,7 @@
       "id": "alljapan-b",
       "label": "全日本モデル B",
       "lanes": 6,
-      "entries_range": [
+      "supported_entries": [
         1,
         42
       ],

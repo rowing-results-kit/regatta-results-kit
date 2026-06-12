@@ -5,6 +5,8 @@
 各大会の管理者が「予選→準決→決勝」の組分けルール（進行モデル）を選択できるようにするライブラリ。
 全日本選手権モデルを標準搭載し、龍偉が追加登録することで選択肢を拡充する。
 
+**進行モデルの概念**: モデルは「クルー数ごとのパターンを統合した1バンドル」。大会は1モデルを選んで採用するだけでよく、種目ごとのクルー数に応じてどのパターンを使うかはエンジンの `selectPattern` が内部で自動判断する。管理者が「エントリー数 N クルーのときはパターン X を使う」と明示的に選ぶ必要はない。
+
 v1 の範囲: モデルの登録・選択・保存・表示。**進行計算の自動実行は次フェーズ**（engine/README の作業リスト参照）。
 
 ---
@@ -37,10 +39,12 @@ progression/
   "registry_version": 1,
   "models": [
     {
-      "id": "alljapan-a",        // templates/<id>.json と一致
-      "label": "全日本モデル A",   // ポータルの選択肢表示名
+      "id": "alljapan-a",             // templates/<id>.json と一致
+      "label": "全日本モデル A",        // ポータルの選択肢表示名
       "lanes": 6,
-      "entries_range": [1, 42],  // 対応エントリー数の min/max
+      "supported_entries": [1, 42],   // 対応クルー数（能力メタ情報。選択基準ではない）
+                                      // templates/<id>.json の全 patterns の
+                                      // entries_min 最小値〜entries_max 最大値を自動集約
       "description": "...",
       "source": "JARA 全日本選手権 2026 要項",
       "added": "2026-06-12"
@@ -48,6 +52,8 @@ progression/
   ]
 }
 ```
+
+**`supported_entries` について**: これはモデルが「内部でカバーできるクルー数の範囲」を示す能力メタ情報。大会側がモデルを選ぶ選択基準ではない。登録時にユーザーがこの値を手入力する必要はなく、`/progression-add` が templates/<id>.json の patterns から自動計算して設定する。
 
 無名モデルの label は `/progression-add` が自動で `"汎用モデル NNN"` を付与する。
 

@@ -46,6 +46,8 @@ REQUIRED_FIELDS = [
 
 COLOR_RE = re.compile(r'^#[0-9A-Fa-f]{6}$')
 
+VALID_DISTANCES = {500, 1000, 1500, 2000}
+
 
 def _validate_config(cfg: dict) -> list[str]:
     errors = []
@@ -57,6 +59,40 @@ def _validate_config(cfg: dict) -> list[str]:
         val = cfg.get("brand", {}).get(color_key, "")
         if val and not COLOR_RE.match(val):
             errors.append(f"  invalid color format (must be #RRGGBB): brand.{color_key} = {val!r}")
+
+    # Distance 4-value constraint: length_m ∈ {500,1000,1500,2000}
+    # measurement_points ⊂ same set, ascending, last element == length_m
+    course = cfg.get("default_course", {})
+    length_m = course.get("length_m")
+    measurement_points = course.get("measurement_points", [])
+
+    if length_m is not None:
+        if length_m not in VALID_DISTANCES:
+            errors.append(
+                f"  invalid default_course.length_m={length_m!r}: "
+                f"must be one of {sorted(VALID_DISTANCES)}"
+            )
+        if measurement_points:
+            invalid_pts = [p for p in measurement_points if p not in VALID_DISTANCES]
+            if invalid_pts:
+                errors.append(
+                    f"  invalid default_course.measurement_points: {invalid_pts} "
+                    f"— each point must be one of {sorted(VALID_DISTANCES)}"
+                )
+            else:
+                sorted_pts = sorted(measurement_points)
+                if measurement_points != sorted_pts:
+                    errors.append(
+                        "  default_course.measurement_points must be in ascending order"
+                    )
+                elif length_m not in VALID_DISTANCES:
+                    pass  # already reported above
+                elif sorted_pts[-1] != length_m:
+                    errors.append(
+                        f"  default_course.measurement_points last element must equal "
+                        f"length_m ({length_m}), got {sorted_pts[-1]}"
+                    )
+
     return errors
 
 

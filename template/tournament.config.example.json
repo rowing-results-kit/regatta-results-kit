@@ -10,7 +10,9 @@
   },
   "default_course": {
     "length_m": 1000,
-    "measurement_points": [500, 1000]
+    "_length_m_spec": "500/1000/1500/2000 から選択。自由入力不可。",
+    "measurement_points": [500, 1000],
+    "_measurement_points_spec": "500/1000/1500/2000 の部分集合。昇順。最終要素==length_m。"
   },
   "categories": ["M", "W", "X"],
   "brand": {
