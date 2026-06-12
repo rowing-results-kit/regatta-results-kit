@@ -724,10 +724,10 @@
         <div class="step-num">4</div>
         <div class="step-content">
           <h3 class="step-title">Google スプレッドシートと<br>GAS を手順書どおりに接続</h3>
-          <span class="step-time">⏱ 約30分 — 画面コピー付き手順書が自動生成</span>
+          <span class="step-time">⏱ 約30分 — 大会固有値入りの手順書が自動生成</span>
           <p class="step-body">
             scaffold 実行時に手順書が自動生成されます。
-            スクリーンショット付きの手順書どおりに操作すれば、
+            設定値が埋め込み済みの手順書どおりに操作すれば、
             エンジニアでなくても設定できます。
           </p>
         </div>
@@ -760,6 +760,7 @@
   "name": "春季ローイング選手権",
   "year": 2026,
   "dates": ["2026-05-10"],
+  "status": "upcoming",
   "url": "https://spring-2026.pages.dev"
 }</div>
       </div>
@@ -768,7 +769,7 @@
       <div class="link-card">
         <h3 class="link-card-title">↩️ 大会サイトからハブへ戻る</h3>
         <p class="link-card-sub">
-          <code style="background:rgba(45,79,44,0.08);padding:1px 5px;border-radius:3px;font-size:0.85em;">master.json</code> の <code style="background:rgba(45,79,44,0.08);padding:1px 5px;border-radius:3px;font-size:0.85em;">hub_url</code> にハブのURLを入れるだけ。
+          <code style="background:rgba(45,79,44,0.08);padding:1px 5px;border-radius:3px;font-size:0.85em;">tournament.config.json</code> の <code style="background:rgba(45,79,44,0.08);padding:1px 5px;border-radius:3px;font-size:0.85em;">hub_url</code> にハブのURLを入れるだけ。
         </p>
         <div class="code-block" style="position:relative;">
           <button class="code-copy-btn" onclick="copyCode(this)">コピー</button>{
@@ -779,8 +780,8 @@
 
     <div class="link-section-note">
       <strong>指定の場所に URL を貼るだけで、お互いのページがつながります。</strong><br>
-      大会ページのナビに「協会一覧へ戻る」リンクが自動的に表示され、<br>
-      ハブには大会のサムネイルとステータスが自動反映されます。
+      大会サイトのヘッダーに「◀ 大会一覧へ」リンクが自動的に表示され、<br>
+      ハブには大会カードとステータスバッジ（開催予定・速報中・結果確定）が表示されます。
     </div>
   </div>
 </section>
@@ -812,7 +813,7 @@
         </summary>
         <p class="faq-a">
           初期構築（テンプレート複製・Cloudflare 接続・GAS 設定）は、
-          スクリーンショット付きの手順書どおりに操作するだけでできます。
+          設定値が埋め込み済みの手順書どおりに、コピー&ペースト中心の操作だけでできます。
           大会当日の運用は、計測 CSV を Google Drive の指定フォルダにドラッグ&amp;ドロップするだけです。
           コードを書く必要はありません。
         </p>
