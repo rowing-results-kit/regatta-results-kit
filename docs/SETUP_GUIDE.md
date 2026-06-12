@@ -7,6 +7,8 @@
 - リポジトリ管理者（{{GITHUB_OWNER}}）：Cloudflare Pages 作成・リポジトリ管理
 - 大会協会担当者（{{ASSOCIATION_ACCOUNT}}）：GAS 設定・Google Drive 管理
 
+> **前提: Google Drive・スプレッドシート・GAS・GitHub・PAT はすべて利用する協会自身のアカウント上に新規作成します。** キット提供者のアカウント・ストレージを共有する箇所は一切ありません。本書に登場するフォルダ ID・シート ID は、協会自身が作成したものを記入してください。
+
 ---
 
 ## 全体フロー図
