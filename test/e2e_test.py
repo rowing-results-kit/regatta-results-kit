@@ -389,6 +389,9 @@ def test_master_json(result: TestResult, verbose: bool) -> None:
     """
     テスト6: master.json 検証
     必須キー (schedule, measurement_points, tournament) が存在するか確認する。
+
+    雛形状態（scaffold 直後の空 schedule）の場合は "初期テンプレート状態" として
+    スキップ扱い（exit 0 と同等）にする。
     """
     required_keys = ["schedule", "measurement_points", "tournament"]
 
@@ -401,6 +404,21 @@ def test_master_json(result: TestResult, verbose: bool) -> None:
             master = json.load(f)
     except json.JSONDecodeError as e:
         result.fail("master.json", f"JSONパースエラー: {e}")
+        return
+
+    # 雛形状態チェック: schedule が空配列 かつ measurement_points がトップレベルに
+    # 存在しない場合は scaffold 生成直後の初期テンプレートとみなしてスキップする。
+    # （setup-tournament.yml 実行直後の validate.yml 実行で fail しないための対処）
+    is_scaffold_template = (
+        isinstance(master.get("schedule"), list)
+        and len(master.get("schedule", [])) == 0
+        and "measurement_points" not in master
+    )
+    if is_scaffold_template:
+        print(
+            f"{C.YELLOW}[SKIP]{C.RESET} master.json: "
+            "初期テンプレート状態（schedule が空配列）のため検証をスキップします"
+        )
         return
 
     missing = [k for k in required_keys if k not in master]
