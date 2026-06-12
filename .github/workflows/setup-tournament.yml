@@ -12,11 +12,11 @@ on:
         required: true
         type: string
       start_date:
-        description: '開始日（YYYY-MM-DD）'
+        description: '開始日（例: 2026/06/14 または 2026-06-14）'
         required: true
         type: string
       end_date:
-        description: '終了日（YYYY-MM-DD）'
+        description: '終了日（例: 2026/06/15 または 2026-06-15）'
         required: true
         type: string
       primary_color:
@@ -55,30 +55,70 @@ jobs:
           ERROR_MESSAGES=""
           HAS_ERROR=false
 
-          # 開始日フォーマットチェック（YYYY-MM-DD）
-          if echo "$INPUT_START_DATE" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'; then
-            echo "start_date_ok=true" >> "$GITHUB_OUTPUT"
+          # 日付を正規化する関数（YYYY/M/D・YYYY/MM/DD・YYYY-MM-DD → YYYY-MM-DD）
+          # 正規化できない場合は空文字を返す
+          normalize_date() {
+            local raw="$1"
+            local year month day normalized
+
+            # スラッシュ区切り: YYYY/M/D または YYYY/MM/DD
+            if echo "$raw" | grep -qE '^[0-9]{4}/[0-9]{1,2}/[0-9]{1,2}$'; then
+              year=$(echo "$raw" | cut -d'/' -f1)
+              month=$(echo "$raw" | cut -d'/' -f2)
+              day=$(echo "$raw" | cut -d'/' -f3)
+            # ハイフン区切り: YYYY-M-D または YYYY-MM-DD
+            elif echo "$raw" | grep -qE '^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}$'; then
+              year=$(echo "$raw" | cut -d'-' -f1)
+              month=$(echo "$raw" | cut -d'-' -f2)
+              day=$(echo "$raw" | cut -d'-' -f3)
+            else
+              echo ""
+              return
+            fi
+
+            # 範囲チェック（月: 1-12 / 日: 1-31）
+            if [ "$month" -lt 1 ] || [ "$month" -gt 12 ]; then
+              echo ""
+              return
+            fi
+            if [ "$day" -lt 1 ] || [ "$day" -gt 31 ]; then
+              echo ""
+              return
+            fi
+
+            # ゼロ埋め正規化
+            normalized=$(printf "%04d-%02d-%02d" "$year" "$month" "$day")
+            echo "$normalized"
+          }
+
+          # 開始日: 正規化
+          NORMALIZED_START=$(normalize_date "$INPUT_START_DATE")
+          if [ -n "$NORMALIZED_START" ]; then
+            echo "start_date=${NORMALIZED_START}" >> "$GITHUB_OUTPUT"
           else
             ERROR_MESSAGES="${ERROR_MESSAGES}
           ### 開始日の形式が正しくありません
 
           入力値: 確認してください
 
-          **正しい形式**: \`2027-06-14\` のように **YYYY-MM-DD** 形式（年4桁-月2桁-日2桁）で入力してください。
+          **正しい形式**: \`2026/06/14\` のように **スラッシュ区切り（YYYY/MM/DD）** で入力してください。
+          ハイフン区切り（2026-06-14）も使えます。月・日は1桁でも構いません（例: 2026/6/1）。
           "
             HAS_ERROR=true
           fi
 
-          # 終了日フォーマットチェック（YYYY-MM-DD）
-          if echo "$INPUT_END_DATE" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'; then
-            echo "end_date_ok=true" >> "$GITHUB_OUTPUT"
+          # 終了日: 正規化
+          NORMALIZED_END=$(normalize_date "$INPUT_END_DATE")
+          if [ -n "$NORMALIZED_END" ]; then
+            echo "end_date=${NORMALIZED_END}" >> "$GITHUB_OUTPUT"
           else
             ERROR_MESSAGES="${ERROR_MESSAGES}
           ### 終了日の形式が正しくありません
 
           入力値: 確認してください
 
-          **正しい形式**: \`2027-06-15\` のように **YYYY-MM-DD** 形式（年4桁-月2桁-日2桁）で入力してください。
+          **正しい形式**: \`2026/06/15\` のように **スラッシュ区切り（YYYY/MM/DD）** で入力してください。
+          ハイフン区切り（2026-06-15）も使えます。月・日は1桁でも構いません（例: 2026/6/2）。
           "
             HAS_ERROR=true
           fi
@@ -139,8 +179,8 @@ jobs:
         env:
           TOURNAMENT_NAME: ${{ inputs.tournament_name }}
           VENUE: ${{ inputs.venue }}
-          START_DATE: ${{ inputs.start_date }}
-          END_DATE: ${{ inputs.end_date }}
+          START_DATE: ${{ steps.validate.outputs.start_date }}
+          END_DATE: ${{ steps.validate.outputs.end_date }}
           PRIMARY_COLOR: ${{ steps.validate.outputs.primary_color }}
           GITHUB_REPO_FULL: ${{ github.repository }}
         run: |
@@ -214,8 +254,8 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           TOURNAMENT_NAME: ${{ inputs.tournament_name }}
           VALIDATED_COLOR: ${{ steps.validate.outputs.primary_color }}
-          START_DATE: ${{ inputs.start_date }}
-          END_DATE: ${{ inputs.end_date }}
+          START_DATE: ${{ steps.validate.outputs.start_date }}
+          END_DATE: ${{ steps.validate.outputs.end_date }}
           VENUE: ${{ inputs.venue }}
         run: |
           set -euo pipefail
