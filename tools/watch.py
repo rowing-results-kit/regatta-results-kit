@@ -384,7 +384,7 @@ def parse_args() -> argparse.Namespace:
         "--repo",
         default=None,
         metavar="OWNER/REPO",
-        help="GitHub リポジトリ（例: RYUIYAMADA/rowing-live-results）",
+        help="GitHub リポジトリ（例: your-org/your-repo）",
     )
     parser.add_argument(
         "--branch",

@@ -28,9 +28,10 @@ Google Apps Script（A. CSV→JSON Push GAS）
     │  GitHub API で Push
     ▼
 GitHub リポジトリ
-  site/data/master.json
+  site/data/master.json          ← progression.template_id を持つ（進行モデル選択時）
   site/data/results/race_NNN.json
-  site/data/theme.json          ← 管理者ポータル「デザイン」タブが生成・コミット
+  site/data/theme.json           ← 管理者ポータル「デザイン」タブが生成・コミット
+  progression/registry.json      ← 進行モデル台帳（ポータル「接続設定」タブが参照）
     │
     │  Cloudflare Pages が自動デプロイ
     ▼
@@ -43,10 +44,12 @@ GitHub リポジトリ
 
 管理者ポータル（GAS Web アプリ）
     │
-    ├─ タブ1: 大会管理 → hub/association.json を GitHub にコミット
-    ├─ タブ2: 接続設定 → Script Properties を読み書き
-    ├─ タブ3: デザイン → site/data/theme.json を GitHub にコミット
-    └─ タブ4: 状態    → props / ログ参照
+    ├─ タブ1: 大会管理   → hub/association.json を GitHub にコミット
+    ├─ タブ2: 接続設定   → Script Properties を読み書き
+    │         └─ 進行モデル → progression/registry.json を GET し選択肢を生成
+    │                         → master.json の progression フィールドのみ PUT
+    ├─ タブ3: デザイン   → site/data/theme.json を GitHub にコミット
+    └─ タブ4: 状態       → props / ログ参照
 ```
 
 ### 主要コンポーネント一覧
@@ -56,7 +59,8 @@ GitHub リポジトリ
 | 速報サイト | `site/index.html`, `site/js/app.js`, `site/css/style.css` | Cloudflare Pages 上で公開される大会速報 UI。`master.json` と `race_NNN.json` を読み込み、レース情報・着順・区分を表示する。 |
 | Admin Portal | `gas/AdminPortal.gs`, `gas/portal.html` | GAS Web アプリとして動作する管理者ポータル。大会の登録・年度管理・Drive 接続設定・デザイン変更をブラウザだけで完結させる（4タブ: 大会管理・接続設定・デザイン・状態）。 |
 | テーマ設定 | `site/data/theme.json` | 管理者ポータルの「デザイン」タブが GitHub にコミットするブランド色設定ファイル。速報サイト起動時に `shared.js applyTheme()` が fetch し `--color-primary` / `--color-accent` CSS 変数を上書きする（ファイルがなければ既定色を維持）。 |
-| 大会マスタ | Drive `master/`, GitHub `site/data/master.json` | `schedule.csv`, `entries.csv` を元に生成される大会全体の基礎データ。 |
+| 進行モデルライブラリ | `progression/registry.json`, `progression/templates/`, `progression/engine/` | 予選→準決→決勝の組分けルール集。registry.json がポータル選択肢の正本。管理者ポータルから大会の master.json に template_id を保存する。モデル追加は `/progression-add` スラッシュコマンドで行う。v1 は選択・保存まで。進行計算の自動実行は次フェーズ。 |
+| 大会マスタ | Drive `master/`, GitHub `site/data/master.json` | `schedule.csv`, `entries.csv` を元に生成される大会全体の基礎データ。`progression` フィールド（任意）に選択した進行モデルの template_id を持つ。 |
 | 結果 JSON | GitHub `site/data/results/race_NNN.json` | 500m / 1000m CSV から生成されるレース別結果データ。速報サイト表示と PDF 自動生成のトリガーになる。 |
 | CSV→JSON Push GAS | `gas/Code.gs` | Drive 上の CSV を解析し、GitHub の JSON データを更新する GAS。Admin Portal はこの GAS プロジェクトに同居する。 |
 | PDF Publisher GAS | `gas/pdf_publisher/Code.gs`, `gas/pdf_publisher/Setup.gs` | GitHub の結果 JSON を監視し、競漕記録 PDF と準備資料 PDF を生成する GAS。 |
@@ -270,7 +274,10 @@ GitHub リポジトリ
 | `gas/pdf_publisher/` | PDF Publisher GAS。競漕記録 PDF と準備資料 PDF を生成する。 |
 | `gas/judge_form_publisher/` | 判定員帳票 GAS。 |
 | `tools/scaffold.py` | 一発生成の中枢。`tournament.config.json` から `site/` 以下を生成する。brand 色は `site/data/theme.json` として出力（CSS ファイル直書きは廃止）。 |
-| `template/tournament.config.example.json` | 大会設定ファイルのテンプレート。 |
+| `template/tournament.config.example.json` | 大会設定ファイルのテンプレート。`tournament.progression_template_id` フィールドを含む。 |
+| `progression/registry.json` | 進行モデル台帳。管理者ポータルの「接続設定」タブがこのファイルを GitHub API で GET して選択肢を生成する。 |
+| `progression/templates/` | 進行モデル定義 JSON（全日本モデル A/B など）。 |
+| `progression/engine/` | 進行計算エンジン（TypeScript）。次フェーズで GAS アダプタと連携する。 |
 | `docs/` | プロジェクトドキュメント。 |
 
 ---

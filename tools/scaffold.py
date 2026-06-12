@@ -156,6 +156,12 @@ def _generate_master_json(out_dir: Path, cfg: dict) -> None:
         "categories": categories,
         "schedule": [],
     }
+
+    # config に progression_template_id が指定されていれば progression フィールドを追加
+    prog_id = t.get("progression_template_id", "").strip()
+    if prog_id:
+        master["progression"] = {"template_id": prog_id}
+
     data_dir = out_dir / "site" / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
     dest = data_dir / "master.json"

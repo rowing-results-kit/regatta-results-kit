@@ -95,6 +95,7 @@ DEFAULTS = {
     "gas_booklet_template_gid":   "",
     "gas_judge_template_sheet_id": "",
     "gas_prep_folder_id":         "",
+    "progression_template_id":    "",
 }
 
 
@@ -167,6 +168,11 @@ def collect_answers(non_interactive: bool) -> dict:
     ans["gas_judge_template_sheet_id"] = prompt("Q19 judge_template_sheet_id", D["gas_judge_template_sheet_id"])
     ans["gas_prep_folder_id"]          = prompt("Q20 prep_folder_id", D["gas_prep_folder_id"])
 
+    print(f"\n{C.BOLD}▶ 進行モデル設定 (空欄可){C.RESET}")
+    print("  ※ 予選→準決→決勝の組分けルールを設定します。後でポータルから選ぶこともできます。")
+    print(f"  ※ 利用可能なモデルは {C.CYAN}progression/registry.json{C.RESET} を参照してください（例: alljapan-a）。")
+    ans["progression_template_id"] = prompt("Q21 進行モデル ID (空欄可 — 後でポータルから選べます)", D["progression_template_id"])
+
     return ans
 
 
@@ -197,11 +203,12 @@ def build_config(ans: dict) -> dict:
     return {
         "_spec": "tournament.config.json — SPEC §5 (docs/SPEC_phase3_config.md v1.1). このファイルは .gitignore 対象。example は tournament.config.example.json を参照。",
         "tournament": {
-            "id":      ans["tournament_id"],
-            "name":    ans["tournament_name"],
-            "venue":   ans["tournament_venue"],
-            "dates":   dates,
-            "hub_url": ans.get("tournament_hub_url", ""),
+            "id":                    ans["tournament_id"],
+            "name":                  ans["tournament_name"],
+            "venue":                 ans["tournament_venue"],
+            "dates":                 dates,
+            "hub_url":               ans.get("tournament_hub_url", ""),
+            "progression_template_id": ans.get("progression_template_id", ""),
         },
         "default_course": {
             "length_m":            length_m,

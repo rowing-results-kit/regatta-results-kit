@@ -1,0 +1,29 @@
+{
+  "registry_version": 1,
+  "models": [
+    {
+      "id": "alljapan-a",
+      "label": "全日本モデル A",
+      "lanes": 6,
+      "entries_range": [
+        1,
+        42
+      ],
+      "description": "予選→準決→決勝。タイム拾い上げあり。順位上がり変更版（2026/4/17）",
+      "source": "JARA 全日本選手権 2026 要項",
+      "added": "2026-06-12"
+    },
+    {
+      "id": "alljapan-b",
+      "label": "全日本モデル B",
+      "lanes": 6,
+      "entries_range": [
+        1,
+        42
+      ],
+      "description": "予選→準決→決勝。タイム拾い上げあり。標準版（2026/4/19）",
+      "source": "JARA 全日本選手権 2026 要項",
+      "added": "2026-06-12"
+    }
+  ]
+}

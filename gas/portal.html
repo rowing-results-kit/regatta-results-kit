@@ -48,7 +48,19 @@ if (typeof google === 'undefined') {
             rateLimited: false, rateLimitedAt: '', lastError: '', resultCount: 42 } },
           portalConfigJson: { ok: true, data: { json: JSON.stringify({
             GITHUB_OWNER:'', GITHUB_REPO:'', GITHUB_TOKEN:'',
-            DRIVE_ROOT_FOLDER_ID:'', MEASUREMENT_POINTS:'' }, null, 2) } }
+            DRIVE_ROOT_FOLDER_ID:'', MEASUREMENT_POINTS:'' }, null, 2) } },
+          portalGetProgression: { ok: true, data: {
+            models: [
+              { id: 'alljapan-a', label: '全日本モデル A', lanes: 6,
+                entries_range: [7, 18], description: '予選→準決→決勝。タイム拾い上げあり' },
+              { id: 'alljapan-b', label: '全日本モデル B', lanes: 6,
+                entries_range: [4, 6], description: '予選→決勝のみ（少エントリー向け）' },
+              { id: 'model-001', label: '汎用モデル 001', lanes: 4,
+                entries_range: [3, 8], description: '予選→決勝。4レーン対応' }
+            ],
+            current_template_id: 'alljapan-a'
+          }},
+          portalSaveProgression: { ok: true, data: { template_id: 'alljapan-a' } }
         };
         function makeRunner(success, failure) {
           var handler = {};
@@ -282,7 +294,7 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
         <div class="field">
           <label>GITHUB_OWNER</label>
           <div class="mask" id="curOwner">—</div>
-          <input type="text" id="inOwner" placeholder="例: rowingishikawadev-del">
+          <input type="text" id="inOwner" placeholder="例: your-association">
         </div>
         <div class="field">
           <label>GITHUB_REPO</label>
@@ -301,6 +313,22 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
         <button class="btn secondary" id="btnTestDrive">Drive 接続テスト</button>
       </div>
       <div id="settingsMsg" class="msg"></div>
+    </div>
+
+    <div class="card">
+      <h2>進行モデル</h2>
+      <p class="sub">予選→準決→決勝の組分けルールを大会に設定します。モデルは <code>progression/registry.json</code> から読み込みます。</p>
+      <div class="field">
+        <label>進行モデルを選択</label>
+        <select id="selProgression">
+          <option value="">使用しない</option>
+        </select>
+        <div class="hint" id="progressionDesc" style="margin-top:6px;font-size:12px;color:var(--text-sub);min-height:1.4em;"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="btnSaveProgression">進行モデルを保存</button>
+      </div>
+      <div id="progressionMsg" class="msg"></div>
     </div>
 
     <div class="card">
@@ -674,6 +702,72 @@ $('btnTestDrive').addEventListener('click',testDrive);
 $('btnCopyConfig').addEventListener('click',copyConfig);
 
 /* =========================================================
+   タブ2: 進行モデル
+   ========================================================= */
+var PROGRESSION_MODELS = [];
+
+function loadProgression() {
+  run().withSuccessHandler(function(res) {
+    if (!res || !res.ok) {
+      showMsg($('progressionMsg'), (res && res.error) || '読み込み失敗', 'err');
+      return;
+    }
+    PROGRESSION_MODELS = (res.data && res.data.models) || [];
+    var sel = $('selProgression');
+    // オプションをリセット
+    sel.textContent = '';
+    var noneOpt = document.createElement('option');
+    noneOpt.value = '';
+    noneOpt.textContent = '使用しない';
+    sel.appendChild(noneOpt);
+    PROGRESSION_MODELS.forEach(function(m) {
+      var opt = document.createElement('option');
+      opt.value = esc(m.id);
+      opt.textContent = esc(m.label) + (m.entries_range ? ' （' + m.entries_range[0] + '〜' + m.entries_range[1] + ' エントリー）' : '');
+      sel.appendChild(opt);
+    });
+    // 現在値をセット
+    var current = (res.data && res.data.current_template_id) || '';
+    sel.value = current;
+    updateProgressionDesc();
+  }).withFailureHandler(function(e) {
+    showMsg($('progressionMsg'), '通信エラー: ' + esc(e && e.message), 'err');
+  }).portalGetProgression();
+}
+
+function updateProgressionDesc() {
+  var sel = $('selProgression');
+  var id = sel.value;
+  var desc = '';
+  if (id) {
+    PROGRESSION_MODELS.forEach(function(m) {
+      if (m.id === id) desc = m.description || '';
+    });
+  }
+  $('progressionDesc').textContent = desc;
+}
+
+function saveProgression() {
+  var tid = $('selProgression').value;
+  showMsg($('progressionMsg'), '保存中 …', 'info');
+  run().withSuccessHandler(function(res) {
+    if (!res || !res.ok) {
+      showMsg($('progressionMsg'), (res && res.error) || '保存失敗', 'err');
+      return;
+    }
+    var msg = res.data && res.data.template_id
+      ? ('進行モデルを設定しました: ' + esc(res.data.template_id))
+      : '進行モデルを解除しました';
+    showMsg($('progressionMsg'), msg, 'ok');
+  }).withFailureHandler(function(e) {
+    showMsg($('progressionMsg'), '通信エラー: ' + esc(e && e.message), 'err');
+  }).portalSaveProgression(tid);
+}
+
+$('selProgression').addEventListener('change', updateProgressionDesc);
+$('btnSaveProgression').addEventListener('click', saveProgression);
+
+/* =========================================================
    タブ3: デザイン
    ========================================================= */
 var HEX_RE=/^#[0-9A-Fa-f]{6}$/;
@@ -794,6 +888,7 @@ $('btnReloadStatus').addEventListener('click',loadStatus);
 /* ===== 初期ロード ===== */
 loadAssociation();
 loadSettings();
+loadProgression();
 loadConfigJson();
 loadTheme();
 loadStatus();
