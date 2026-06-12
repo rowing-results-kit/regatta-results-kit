@@ -91,12 +91,22 @@ with open(dest, 'w', encoding='utf-8') as f:
   "lanes": <lanes>,
   "supported_entries": [<min>, <max>],   // templates の patterns から自動集約（手動入力不要）
   "description": "<説明>",
+  "explanation": "<モデル解説（必須）>",  // ラウンド構成・進出ルールを \n 区切りで整形
   "source": "<提供元>",
   "added": "<YYYY-MM-DD>"
 }
 ```
 
 `supported_entries` は `python3 -c` でテンプレートの全 patterns を読み min/max を自動計算する。**ユーザーに範囲の入力を求めてはいけない。**
+
+**explanation（モデル解説）の作成は必須**:
+提供されたルール文（`advance_rules_text`・`notes`）から以下の形式で整形する。
+- ラウンド構成: クルー数範囲ごとのラウンド構成（予選→準決→決勝 等）
+- 進出ルール: 各ラウンドで何位が上がるか（`advance_rules_text` の要点）
+- 他モデルとの違い（同一 id 体系の別バリアントがある場合）
+- 原典に無い情報は創作しない。不明点は「テンプレート定義参照」と記載する
+
+explanation が提供されない場合（ルール文が不明確・複雑な場合）は**龍偉に1回確認してから登録する**。
 
 ```bash
 python3 -c "

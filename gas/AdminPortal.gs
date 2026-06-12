@@ -404,6 +404,7 @@ function portalGetProgression() {
             lanes:         m.lanes       || null,
             entries_range: m.entries_range || null,
             description:   m.description || '',
+            explanation:   m.explanation  || '',
           };
         });
       }

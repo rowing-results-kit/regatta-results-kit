@@ -46,6 +46,7 @@ progression/
                                       // templates/<id>.json の全 patterns の
                                       // entries_min 最小値〜entries_max 最大値を自動集約
       "description": "...",
+      "explanation": "【ラウンド構成】\n...",   // ポータル解説文。\n で改行。advance_rules_text から整形
       "source": "JARA 全日本選手権 2026 要項",
       "added": "2026-06-12"
     }
@@ -54,6 +55,8 @@ progression/
 ```
 
 **`supported_entries` について**: これはモデルが「内部でカバーできるクルー数の範囲」を示す能力メタ情報。大会側がモデルを選ぶ選択基準ではない。登録時にユーザーがこの値を手入力する必要はなく、`/progression-add` が templates/<id>.json の patterns から自動計算して設定する。
+
+**`explanation` について**: 管理者ポータルの「このモデルの解説」に表示する説明文。`advance_rules_text` の要点を `\n` 区切りで整形して記述する。登録時に作成を強く推奨。
 
 無名モデルの label は `/progression-add` が自動で `"汎用モデル NNN"` を付与する。
 
