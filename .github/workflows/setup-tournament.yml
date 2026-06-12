@@ -1,0 +1,239 @@
+name: 大会初期構築
+
+on:
+  workflow_dispatch:
+    inputs:
+      tournament_name:
+        description: '大会名（例: 第01回○○マスターズレガッタ）'
+        required: true
+        type: string
+      venue:
+        description: '会場（例: ○○漕艇競技場）'
+        required: true
+        type: string
+      start_date:
+        description: '開始日（YYYY-MM-DD）'
+        required: true
+        type: string
+      end_date:
+        description: '終了日（YYYY-MM-DD）'
+        required: true
+        type: string
+      primary_color:
+        description: 'メインカラー（例: #1a3a5c）'
+        required: false
+        default: '#2D4F2C'
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: チェックアウト
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 入力バリデーション
+        id: validate
+        run: |
+          set -euo pipefail
+
+          ERROR_MESSAGES=""
+          HAS_ERROR=false
+
+          # 開始日フォーマットチェック（YYYY-MM-DD）
+          if echo "${{ inputs.start_date }}" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'; then
+            echo "start_date_ok=true" >> "$GITHUB_OUTPUT"
+          else
+            ERROR_MESSAGES="${ERROR_MESSAGES}
+          ### 開始日の形式が正しくありません
+
+          入力値: \`${{ inputs.start_date }}\`
+
+          **正しい形式**: \`2027-06-14\` のように **YYYY-MM-DD** 形式（年4桁-月2桁-日2桁）で入力してください。
+          "
+            HAS_ERROR=true
+          fi
+
+          # 終了日フォーマットチェック（YYYY-MM-DD）
+          if echo "${{ inputs.end_date }}" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'; then
+            echo "end_date_ok=true" >> "$GITHUB_OUTPUT"
+          else
+            ERROR_MESSAGES="${ERROR_MESSAGES}
+          ### 終了日の形式が正しくありません
+
+          入力値: \`${{ inputs.end_date }}\`
+
+          **正しい形式**: \`2027-06-15\` のように **YYYY-MM-DD** 形式（年4桁-月2桁-日2桁）で入力してください。
+          "
+            HAS_ERROR=true
+          fi
+
+          # メインカラーのフォーマットチェック（#RRGGBB）
+          # NG の場合はデフォルト値にフォールバック（失敗扱いにしない）
+          if echo "${{ inputs.primary_color }}" | grep -qE '^#[0-9A-Fa-f]{6}$'; then
+            PRIMARY_COLOR="${{ inputs.primary_color }}"
+            echo "color_fallback=false" >> "$GITHUB_OUTPUT"
+          else
+            PRIMARY_COLOR="#2D4F2C"
+            echo "color_fallback=true" >> "$GITHUB_OUTPUT"
+            echo "color_input=${{ inputs.primary_color }}" >> "$GITHUB_OUTPUT"
+          fi
+          echo "primary_color=${PRIMARY_COLOR}" >> "$GITHUB_OUTPUT"
+
+          if [ "$HAS_ERROR" = "true" ]; then
+            # Actions Summary に日本語でエラー理由と直し方を表示
+            cat >> "$GITHUB_STEP_SUMMARY" << 'SUMMARY_EOF'
+          ## 大会初期構築 — 入力エラー
+
+          入力内容に問題があったため、処理を中止しました。
+          以下の内容を確認して、もう一度 **Run workflow** を実行してください。
+
+          SUMMARY_EOF
+            echo "$ERROR_MESSAGES" >> "$GITHUB_STEP_SUMMARY"
+            cat >> "$GITHUB_STEP_SUMMARY" << 'SUMMARY_EOF2'
+
+          ---
+
+          ### やり直し方
+
+          1. 右上の **Run workflow** ボタンをクリック
+          2. 各項目を上の説明に従って修正
+          3. **Run workflow** をクリックして再実行
+
+          SUMMARY_EOF2
+            exit 1
+          fi
+
+      - name: カラーフォールバック通知
+        if: steps.validate.outputs.color_fallback == 'true'
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" << 'SUMMARY_EOF'
+          ## メインカラーの注意
+
+          入力されたカラーコード `${{ inputs.primary_color }}` の形式が正しくないため、
+          デフォルト値 `#2D4F2C` を使用しました。
+
+          カラーコードは `#1a3a5c` のように **# から始まる6桁の英数字**で指定してください。
+          変更したい場合は、再度 Run workflow でカラーコードを修正してください。
+
+          SUMMARY_EOF
+
+      - name: tournament.config.json 生成
+        run: |
+          set -euo pipefail
+
+          PRIMARY_COLOR="${{ steps.validate.outputs.primary_color }}"
+          REPO_NAME="${{ github.repository }}"  # owner/repo 形式
+          GITHUB_REPO="${REPO_NAME##*/}"          # repo 部分のみ
+          TOURNAMENT_ID="tournament-$(echo '${{ inputs.start_date }}' | tr -d '-')"
+
+          python3 - << PYEOF
+          import json
+
+          config = {
+              "tournament": {
+                  "id": "${TOURNAMENT_ID}",
+                  "name": "${{ inputs.tournament_name }}",
+                  "venue": "${{ inputs.venue }}",
+                  "dates": ["${{ inputs.start_date }}", "${{ inputs.end_date }}"],
+                  "hub_url": "",
+              },
+              "brand": {
+                  "primary_color": "${PRIMARY_COLOR}",
+                  "accent_color": "#ffffff",
+                  "font_family": "Noto Sans JP",
+              },
+              "default_course": {
+                  "length_m": 1000,
+                  "measurement_points": [500, 1000],
+              },
+              "categories": ["M", "W", "X"],
+              "deploy": {
+                  "github_repo": "${GITHUB_REPO}",
+                  "pages_url": "",
+                  "test_pages_url": "",
+              },
+              "gas": {},
+          }
+
+          with open("/tmp/tournament.config.json", "w", encoding="utf-8") as f:
+              json.dump(config, f, ensure_ascii=False, indent=2)
+
+          print("tournament.config.json を生成しました")
+          print(f"  大会名: {config['tournament']['name']}")
+          print(f"  会場: {config['tournament']['venue']}")
+          print(f"  開催日: {', '.join(config['tournament']['dates'])}")
+          print(f"  メインカラー: {config['brand']['primary_color']}")
+          PYEOF
+
+      - name: scaffold 実行
+        run: |
+          python3 tools/scaffold.py --config /tmp/tournament.config.json
+
+      - name: tournament.config.json をリポジトリにコピー
+        run: |
+          cp /tmp/tournament.config.json tournament.config.json
+          echo "tournament.config.json をリポジトリルートにコピーしました"
+
+      - name: 生成ファイルをコミット
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add site/ tournament.config.json docs/SETUP_GUIDE.generated.md 2>/dev/null || true
+
+          if git diff --cached --quiet; then
+            echo "変更なし、コミットをスキップします（2回目以降の実行）"
+            SKIPPED=true
+          else
+            git commit -m "scaffold: 大会初期構築 [${{ inputs.tournament_name }}]"
+            git push
+            SKIPPED=false
+          fi
+
+          # Actions Summary に結果を表示
+          if [ "$SKIPPED" = "true" ]; then
+            cat >> "$GITHUB_STEP_SUMMARY" << 'SUMMARY_EOF'
+          ## 大会初期構築 — 完了（変更なし）
+
+          前回の実行から内容に変化がないため、コミットをスキップしました（正常です）。
+
+          速報サイトはすでに設定済みです。
+          SUMMARY_EOF
+          else
+            cat >> "$GITHUB_STEP_SUMMARY" << SUMMARY_EOF
+          ## 大会初期構築 — 完了
+
+          以下の設定で速報サイトの初期構築が完了しました。
+
+          | 項目 | 設定値 |
+          |---|---|
+          | 大会名 | ${{ inputs.tournament_name }} |
+          | 会場 | ${{ inputs.venue }} |
+          | 開始日 | ${{ inputs.start_date }} |
+          | 終了日 | ${{ inputs.end_date }} |
+          | メインカラー | ${{ steps.validate.outputs.primary_color }} |
+
+          ### 次のステップ
+
+          1. **Cloudflare Pages** が自動デプロイされるまで 2〜5 分待つ
+          2. 速報サイトの URL を開いて大会名・会場・日程が表示されることを確認する
+          3. Google Drive フォルダの作成（Step 4）に進む
+
+          SUMMARY_EOF
+          fi
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

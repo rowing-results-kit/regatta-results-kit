@@ -1,6 +1,12 @@
 /**
- * ボート競技ライブリザルト - Google Apps Script (メイン)
+ * ボート競技ライブリザルト - Google Apps Script (メイン) — GAS-A
  * Google Drive のCSVを監視し、GitHub にレース結果JSONをPushする
+ *
+ * 【配布方法】このファイルをコードとしてコピー&ペーストする必要はありません。
+ * オンボーディングサイトの GAS-A テンプレートリンクから「コピーを作成」してください。
+ * 【初期設定】コピー後、プロジェクト設定 → スクリプトプロパティ に以下の5項目を追加:
+ *   DRIVE_ROOT_FOLDER_ID / GITHUB_OWNER / GITHUB_REPO / GITHUB_TOKEN / MEASUREMENT_POINTS
+ * 【確認方法】管理者ポータル（デプロイ後の URL）→「接続設定」→「GitHub 接続テスト」で OK を確認。
  *
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  *  バージョン: v1.3.1 (2026/05/25)
@@ -31,48 +37,22 @@
 const GAS_MAIN_VERSION = '1.3.1 (2026/05/25)';
 
 // ============================================================
-// ▼▼▼ はじめにここだけ入力してください ▼▼▼
+// 初期設定はコードへの直書きではなく「スクリプトプロパティ」で行います
+// ============================================================
+// プロジェクト設定（歯車アイコン）→「スクリプト プロパティ」→「スクリプト プロパティを追加」
+// で以下の5項目を入力してください（コードを編集する必要はありません）:
+//
+//   DRIVE_ROOT_FOLDER_ID   : Google Drive ルートフォルダの ID
+//   GITHUB_OWNER           : GitHub アカウント名（例: your-org）
+//   GITHUB_REPO            : リポジトリ名（例: association-regatta-2027）
+//   GITHUB_TOKEN           : GitHub PAT（github_pat_... から始まる文字列）
+//   MEASUREMENT_POINTS     : 500m,1000m（変更不要）
+//
+// 設定後は管理者ポータル → 接続設定 → GitHub 接続テスト で ✅ を確認してください。
 // ============================================================
 
-// 1. Google Drive のルートフォルダID
-//    （DriveでフォルダURLの末尾の文字列 例: https://drive.google.com/drive/folders/★ここ★）
-const SETUP_DRIVE_FOLDER_ID = '';  // ← ここに貼り付け（saveSetup()実行後は空に戻してください）
-
-// 2. GitHub Personal Access Token
-//    （https://github.com/settings/tokens で取得）
-const SETUP_GITHUB_TOKEN = '';  // ← ここに貼り付け例: 'ghp_xxxxxxxxxxxx'
-
-// 3. 計測ポイント（カンマ区切り、変更不要）
-const SETUP_MEASUREMENT_POINTS = '500m,1000m';
-
-// ============================================================
-// ▲▲▲ 入力ここまで ▲▲▲
-// ============================================================
-
-/**
- * 上記の値をスクリプトプロパティに保存する
- * ★最初に1回だけこの関数を実行してください★
- */
-function saveSetup() {
-  if (!SETUP_GITHUB_TOKEN || SETUP_GITHUB_TOKEN.trim() === '') {
-    Logger.log('[エラー] SETUP_GITHUB_TOKEN が空です。コード上部に GitHub Token を入力してください。');
-    return;
-  }
-  if (!SETUP_DRIVE_FOLDER_ID || SETUP_DRIVE_FOLDER_ID.trim() === '') {
-    Logger.log('[エラー] SETUP_DRIVE_FOLDER_ID が空です。コード上部にフォルダIDを入力してください。');
-    return;
-  }
-  const props = PropertiesService.getScriptProperties();
-  props.setProperty('DRIVE_ROOT_FOLDER_ID', SETUP_DRIVE_FOLDER_ID.trim());
-  props.setProperty('GITHUB_TOKEN', SETUP_GITHUB_TOKEN.trim());
-  props.setProperty('MEASUREMENT_POINTS', SETUP_MEASUREMENT_POINTS.trim());
-  Logger.log('[OK] スクリプトプロパティを保存しました');
-  Logger.log('  DRIVE_ROOT_FOLDER_ID = ' + SETUP_DRIVE_FOLDER_ID);
-  Logger.log('  GITHUB_TOKEN = ' + SETUP_GITHUB_TOKEN.substring(0, 6) + '***');
-  Logger.log('  MEASUREMENT_POINTS = ' + SETUP_MEASUREMENT_POINTS);
-  Logger.log('');
-  Logger.log('次のステップ: setupAll() を実行してください');
-}
+// 旧方式（saveSetup / SETUP_DRIVE_FOLDER_ID / SETUP_GITHUB_TOKEN への直書き）は
+// セキュリティリスクのため v2 で廃止しました。スクリプトプロパティを使用してください。
 
 // ============================================================
 // ▼▼▼ テスト実行用ショートカット（ドロップダウンから選んで実行） ▼▼▼
