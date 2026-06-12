@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+<title>大会一覧</title>
+<meta name="description" content="ボート競技大会 速報・結果一覧">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚣</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===== CSS 変数（scaffold が上書きできるよう site/ と同形式） ===== */
+:root {
+  --color-primary: #24602A;
+  --color-accent:  #C9A227;
+
+  --bg:         #F4F1EB;
+  --card:       #FFFFFF;
+  --border:     #DDD8CE;
+  --text:       #252220;
+  --text-sub:   #6B6560;
+  --text-muted: #A8A19A;
+  --accent:     var(--color-primary);
+  --radius:     6px;
+  --radius-lg:  10px;
+  --shadow-sm:  0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:  0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+
+  /* ステータスバッジ色 */
+  --badge-upcoming-bg:  #EEF6EF;
+  --badge-upcoming-fg:  #1D5C23;
+  --badge-live-bg:      #FDE8E6;
+  --badge-live-fg:      #B91C1C;
+  --badge-final-bg:     #F0F0F0;
+  --badge-final-fg:     #52514E;
+}
+
+/* ===== リセット ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* ===== ヘッダー ===== */
+.hub-header {
+  background: var(--color-primary);
+  color: #fff;
+  padding: 28px 20px 24px;
+}
+.hub-header-inner { max-width: 720px; margin: 0 auto; }
+.hub-header-label {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  opacity: 0.75;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.hub-header-title {
+  font-size: clamp(18px, 4vw, 24px);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* ===== メインコンテンツ ===== */
+.hub-main { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
+
+/* ===== 年タブ ===== */
+.year-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.year-tab {
+  flex-shrink: 0;
+  padding: 7px 18px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--card);
+  color: var(--text-sub);
+  border: 1.5px solid var(--border);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  user-select: none;
+}
+.year-tab.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.year-tab:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ===== セクションラベル ===== */
+.section-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin: 20px 0 10px;
+}
+
+/* ===== 大会カード ===== */
+.tournament-card {
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 18px 20px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.card-name {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+  flex: 1;
+}
+.card-meta {
+  font-size: 13px;
+  color: var(--text-sub);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+.card-meta-item { white-space: nowrap; }
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ===== ステータスバッジ ===== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.badge-upcoming { background: var(--badge-upcoming-bg); color: var(--badge-upcoming-fg); }
+.badge-upcoming .badge-dot { background: var(--badge-upcoming-fg); }
+.badge-live     { background: var(--badge-live-bg);     color: var(--badge-live-fg);     }
+.badge-live     .badge-dot { background: var(--badge-live-fg); animation: pulse 1.2s infinite; }
+.badge-final    { background: var(--badge-final-bg);    color: var(--badge-final-fg);    }
+.badge-final    .badge-dot { background: var(--badge-final-fg); }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+/* ===== 結果リンクボタン ===== */
+.result-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 16px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  background: var(--accent);
+  color: #fff;
+  transition: opacity 0.15s;
+}
+.result-link:hover { opacity: 0.82; }
+.result-link:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.result-link-arrow { font-size: 11px; }
+
+/* ===== ローディング・エラー ===== */
+.hub-loading, .hub-error {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.hub-error { color: #B91C1C; }
+
+/* ===== モバイル 360px ===== */
+@media (max-width: 400px) {
+  .hub-header { padding: 20px 14px 18px; }
+  .hub-main { padding: 18px 12px 40px; }
+  .tournament-card { padding: 14px 14px; }
+  .card-name { font-size: 14px; }
+}
+</style>
+</head>
+<body>
+
+<header class="hub-header" role="banner">
+  <div class="hub-header-inner">
+    <div class="hub-header-label" id="hub-label">BOAT RACE HUB</div>
+    <h1 class="hub-header-title" id="hub-title">大会一覧</h1>
+  </div>
+</header>
+
+<main class="hub-main" id="hub-main">
+  <div class="hub-loading" id="hub-loading" aria-live="polite">データを読み込み中...</div>
+  <div class="hub-error"   id="hub-error"   aria-live="assertive" style="display:none;"></div>
+  <div id="hub-content" style="display:none;"></div>
+</main>
+
+<script>
+// ===== XSS エスケープ =====
+function esc(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ===== 日付フォーマット（YYYY-MM-DD → M月D日） =====
+function fmtDate(d) {
+  if (!d) return '';
+  const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return esc(d);
+  return m[2].replace(/^0/, '') + '月' + m[3].replace(/^0/, '') + '日';
+}
+
+function fmtDates(dates) {
+  if (!Array.isArray(dates) || dates.length === 0) return '';
+  if (dates.length === 1) return fmtDate(dates[0]);
+  return fmtDate(dates[0]) + '〜' + fmtDate(dates[dates.length - 1]);
+}
+
+// ===== ステータスバッジ HTML =====
+const STATUS_CONFIG = {
+  upcoming: { label: '開催予定', cls: 'badge-upcoming' },
+  live:     { label: '速報中',   cls: 'badge-live'     },
+  final:    { label: '結果確定', cls: 'badge-final'    },
+};
+
+function badgeHtml(status) {
+  const cfg = STATUS_CONFIG[status] || { label: esc(status), cls: 'badge-final' };
+  return `<span class="badge ${cfg.cls}" role="status" aria-label="ステータス: ${cfg.label}">` +
+    `<span class="badge-dot" aria-hidden="true"></span>${cfg.label}</span>`;
+}
+
+// ===== 大会カード HTML =====
+function cardHtml(t) {
+  const dateStr = fmtDates(t.dates);
+  const venue   = t.venue ? `<span class="card-meta-item">📍 ${esc(t.venue)}</span>` : '';
+  const badge   = badgeHtml(t.status);
+  const link    = t.url
+    ? `<a class="result-link" href="${esc(t.url)}" target="_blank" rel="noopener noreferrer">結果を見る <span class="result-link-arrow" aria-hidden="true">↗</span></a>`
+    : '';
+  return `<article class="tournament-card">
+  <div class="card-top">
+    <div class="card-name">${esc(t.name)}</div>
+  </div>
+  <div class="card-meta">
+    ${dateStr ? `<span class="card-meta-item">📅 ${dateStr}</span>` : ''}
+    ${venue}
+  </div>
+  <div class="card-footer">
+    ${badge}
+    ${link}
+  </div>
+</article>`;
+}
+
+// ===== レンダリング =====
+function renderYear(tournaments, year) {
+  const inYear = tournaments.filter(t => t.year === year);
+  if (inYear.length === 0) return '';
+
+  // final を「過去大会」セクションに分離。live/upcoming を上に
+  const active = inYear.filter(t => t.status !== 'final');
+  const past   = inYear.filter(t => t.status === 'final');
+
+  // live を先頭にソート
+  active.sort((a, b) => {
+    if (a.status === 'live' && b.status !== 'live') return -1;
+    if (b.status === 'live' && a.status !== 'live') return 1;
+    const da = a.dates?.[0] || '';
+    const db = b.dates?.[0] || '';
+    return da < db ? -1 : da > db ? 1 : 0;
+  });
+  past.sort((a, b) => {
+    const da = a.dates?.[0] || '';
+    const db = b.dates?.[0] || '';
+    return da < db ? -1 : da > db ? 1 : 0;
+  });
+
+  let html = '';
+  if (active.length > 0) {
+    html += `<p class="section-label">開催中・開催予定</p>`;
+    html += active.map(cardHtml).join('');
+  }
+  if (past.length > 0) {
+    html += `<p class="section-label">過去大会</p>`;
+    html += past.map(cardHtml).join('');
+  }
+  return html;
+}
+
+function render(data) {
+  // ヘッダー更新
+  const titleEl = document.getElementById('hub-title');
+  if (titleEl && data.association_name) titleEl.textContent = esc(data.association_name) + ' 大会一覧';
+
+  // 年リスト（降順）
+  const years = [...new Set((data.tournaments || []).map(t => t.year))].sort((a, b) => b - a);
+  if (years.length === 0) {
+    document.getElementById('hub-content').innerHTML = '<p style="color:var(--text-muted);font-size:14px;">大会情報はありません</p>';
+    return;
+  }
+
+  let activeYear = years[0];
+
+  // 年タブ生成
+  const tabsHtml = years.map(y =>
+    `<button class="year-tab${y === activeYear ? ' active' : ''}" data-year="${y}" aria-pressed="${y === activeYear}">${y}年</button>`
+  ).join('');
+
+  document.getElementById('hub-content').innerHTML =
+    `<nav class="year-tabs" role="tablist" aria-label="年度タブ">${tabsHtml}</nav>` +
+    `<div id="year-panel"></div>`;
+
+  function showYear(year) {
+    document.querySelectorAll('.year-tab').forEach(btn => {
+      const y = parseInt(btn.dataset.year, 10);
+      btn.classList.toggle('active', y === year);
+      btn.setAttribute('aria-pressed', String(y === year));
+    });
+    document.getElementById('year-panel').innerHTML = renderYear(data.tournaments, year);
+  }
+
+  showYear(activeYear);
+
+  document.querySelectorAll('.year-tab').forEach(btn => {
+    btn.addEventListener('click', () => showYear(parseInt(btn.dataset.year, 10)));
+  });
+}
+
+// ===== 起動 =====
+(async function init() {
+  const loadingEl = document.getElementById('hub-loading');
+  const errorEl   = document.getElementById('hub-error');
+  const contentEl = document.getElementById('hub-content');
+
+  try {
+    const res = await fetch('association.json');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+
+    loadingEl.style.display = 'none';
+    contentEl.style.display = 'block';
+    render(data);
+  } catch (e) {
+    loadingEl.style.display = 'none';
+    errorEl.style.display   = 'block';
+    errorEl.textContent = '大会情報の読み込みに失敗しました。しばらく後に再試行してください。';
+    console.error('association.json fetch error:', e);
+  }
+})();
+</script>
+</body>
+</html>

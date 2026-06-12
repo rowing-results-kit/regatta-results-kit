@@ -296,6 +296,7 @@ function renderAll() {
 
 /**
  * 大会名・日程・会場をヘッダーに反映する
+ * D-M3: tournament.hub_url が非空のとき「◀ 大会一覧へ」リンクをヘッダーに表示
  */
 function renderTournamentHeader() {
   const t = masterData?.tournament || {};
@@ -315,6 +316,35 @@ function renderTournamentHeader() {
   if (coverName) coverName.textContent = tournamentName;
   const coverMeta = document.getElementById('cover-meta');
   if (coverMeta) coverMeta.textContent = `${dates} | ${t.venue || ''}`;
+
+  // D-M3: hub_url が非空のときのみ「◀ 大会一覧へ」リンクを表示（ハードコード禁止）
+  const hubUrl = (t.hub_url || '').trim();
+  const existingLink = document.getElementById('hub-back-link');
+  if (existingLink) existingLink.remove();
+  if (hubUrl) {
+    const headerInner = document.querySelector('.site-header-inner');
+    if (headerInner) {
+      const link = document.createElement('a');
+      link.id = 'hub-back-link';
+      link.href = h(hubUrl);
+      link.textContent = '◀ 大会一覧へ';
+      link.setAttribute('aria-label', '大会一覧ページへ戻る');
+      link.style.cssText = [
+        'display:inline-flex',
+        'align-items:center',
+        'font-size:12px',
+        'font-weight:600',
+        'color:rgba(255,255,255,0.82)',
+        'text-decoration:none',
+        'margin-bottom:8px',
+        'letter-spacing:0.03em',
+        'transition:opacity 0.15s',
+      ].join(';');
+      link.addEventListener('mouseover', () => { link.style.opacity = '0.6'; });
+      link.addEventListener('mouseout',  () => { link.style.opacity = '1';   });
+      headerInner.insertBefore(link, headerInner.firstChild);
+    }
+  }
 }
 
 
