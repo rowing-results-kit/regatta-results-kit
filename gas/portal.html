@@ -277,6 +277,105 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
   font-size:12px;color:var(--text-sub);line-height:1.7;
   white-space:pre-wrap;margin:0;font-family:inherit;
 }
+
+/* ===== タブ5: システム図 ===== */
+.sm-story{
+  display:flex;gap:0;align-items:stretch;flex-wrap:wrap;
+  margin-bottom:20px;
+}
+.sm-story-step{
+  flex:1;min-width:200px;
+  background:var(--card);border-radius:var(--radius);
+  padding:14px 16px;position:relative;
+}
+.sm-story-step+.sm-story-step{border-left:2px solid var(--border);}
+@media(max-width:620px){
+  .sm-story-step+.sm-story-step{border-left:none;border-top:2px solid var(--border);}
+}
+.sm-story-step .sn{
+  font-size:22px;font-weight:700;color:var(--color-accent);
+  display:block;margin-bottom:4px;
+}
+.sm-story-step .st{font-size:14px;font-weight:700;color:var(--text);}
+.sm-story-step .sd{font-size:12px;color:var(--text-sub);margin-top:4px;}
+.sm-story-arrow{
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;color:var(--color-accent);padding:0 4px;font-weight:700;
+  align-self:center;
+}
+@media(max-width:620px){.sm-story-arrow{transform:rotate(90deg);width:100%;justify-content:center;padding:4px 0;}}
+
+/* ユーザー操作エリア（強調） */
+.sm-actor-you{
+  background:#EEF5EE;
+  border-radius:var(--radius-lg);
+  padding:16px;margin-bottom:16px;
+  box-shadow:0 0 0 2px var(--color-primary);
+}
+.sm-actor-you .sm-actor-label{
+  font-size:11px;font-weight:700;color:#fff;background:var(--color-primary);
+  display:inline-block;padding:2px 10px;border-radius:999px;margin-bottom:10px;
+  letter-spacing:.05em;
+}
+
+/* 自動エリア（トーンダウン） */
+.sm-actor-auto{
+  background:var(--bg);border-radius:var(--radius-lg);
+  padding:16px;margin-bottom:16px;
+  border:1px solid var(--border);
+}
+.sm-actor-auto .sm-actor-label{
+  font-size:11px;font-weight:700;color:var(--text-sub);background:var(--border);
+  display:inline-block;padding:2px 10px;border-radius:999px;margin-bottom:10px;
+  letter-spacing:.05em;
+}
+
+.sm-cards{display:flex;flex-wrap:wrap;gap:10px;}
+.sm-card{
+  background:var(--card);border-radius:var(--radius);
+  padding:12px 14px;flex:1;min-width:180px;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);
+}
+.sm-card.dim{background:#f8f7f5;box-shadow:none;}
+.sm-card .sc-head{display:flex;align-items:center;gap:7px;margin-bottom:5px;flex-wrap:wrap;}
+.sm-card .sc-title{font-size:13px;font-weight:700;}
+.sm-card .sc-title.dim{color:var(--text-sub);}
+.sm-card .sc-body{font-size:12px;color:var(--text-sub);line-height:1.6;}
+.sm-badge{
+  font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;white-space:nowrap;
+}
+.sm-badge.pdf{background:#FDEEEC;color:#C0392B;}
+.sm-badge.web{background:#E8EFF8;color:#2563B8;}
+.sm-badge.doc{background:#FBF3DF;color:#B7860B;}
+.sm-badge.pre{background:#EEF5EE;color:var(--color-primary);}
+.sm-badge.post{background:#F7EFE7;color:#7A3B16;}
+.sm-badge.auto{background:#E4F0E5;color:var(--color-primary);}
+.sm-badge.manual{background:var(--gold-bg);color:var(--gold);}
+
+.sm-section-title{
+  font-size:12px;font-weight:700;color:var(--text-sub);
+  text-transform:uppercase;letter-spacing:.08em;
+  margin:0 0 10px;
+}
+.sm-out-split{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:620px){.sm-out-split{grid-template-columns:1fr;}}
+.sm-out-band{border-radius:var(--radius);padding:12px 14px;}
+.sm-out-band.pre{background:#EEF5EE;border:1px solid #cddbc9;}
+.sm-out-band.post{background:#F7EFE7;border:1px solid #e3cdb8;}
+.sm-out-band .sm-band-title{font-size:13px;font-weight:700;margin:0 0 8px;display:flex;align-items:center;gap:6px;}
+.sm-out-band.pre .sm-band-title{color:var(--color-primary);}
+.sm-out-band.post .sm-band-title{color:#7A3B16;}
+.sm-out-items{display:flex;flex-direction:column;gap:7px;}
+.sm-out-item{
+  background:var(--card);border-radius:var(--radius);
+  padding:8px 10px;display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;
+}
+.sm-out-item .so-badges{display:flex;gap:4px;flex-wrap:wrap;flex-shrink:0;}
+.sm-out-item .so-info{flex:1;min-width:120px;}
+.sm-out-item .so-name{font-size:12.5px;font-weight:700;line-height:1.3;}
+.sm-out-item .so-mode{font-size:11px;margin-top:2px;}
+.sm-out-item .so-mode.auto{color:var(--color-primary);}
+.sm-out-item .so-mode.manual{color:var(--gold);}
 </style>
 </head>
 <body>
@@ -289,6 +388,7 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
   <button class="tab-btn" data-tab="t2">接続設定</button>
   <button class="tab-btn" data-tab="t3">デザイン</button>
   <button class="tab-btn" data-tab="t4">状態</button>
+  <button class="tab-btn" data-tab="t5">🗺 システム図</button>
 </nav>
 
 <div class="container">
@@ -504,6 +604,182 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
     </div>
   </section>
 
+  <!-- ===== タブ5: システム図 ===== -->
+  <section class="panel" id="t5">
+
+    <!-- ストーリー3ステップ -->
+    <div class="card">
+      <h2>このシステムで何が起きるか</h2>
+      <p class="sub">管理者が操作するのは2か所だけ。あとは自動で動きます。</p>
+      <div class="sm-story">
+        <div class="sm-story-step">
+          <span class="sn">①</span>
+          <div class="st">CSV を Drive に入れる</div>
+          <div class="sd">計測後、BoatTimer の CSV ファイルを Google Drive の所定フォルダに置くだけ</div>
+        </div>
+        <div class="sm-story-arrow">▶</div>
+        <div class="sm-story-step">
+          <span class="sn">②</span>
+          <div class="st">2分以内に速報サイトへ</div>
+          <div class="sd">GAS が2分おきに自動検知し、順位・タイムを公開サイトに反映</div>
+        </div>
+        <div class="sm-story-arrow">▶</div>
+        <div class="sm-story-step">
+          <span class="sn">③</span>
+          <div class="st">PDF はボタン1つ</div>
+          <div class="sd">個別レース結果 PDF は自動生成。冊子・一覧は GAS メニューからボタン操作</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 入力 -->
+    <div class="card">
+      <p class="sm-section-title">入力 — システムに渡すデータ</p>
+      <div class="sm-actor-you">
+        <div class="sm-actor-label">👤 あなたが用意する</div>
+        <div class="sm-cards">
+          <div class="sm-card">
+            <div class="sc-head"><span class="sm-badge pre">🏁 試合前</span></div>
+            <div class="sc-title">エントリー CSV</div>
+            <div class="sc-body">race_no・lane・クルー名・所属。出漕表の元データ</div>
+          </div>
+          <div class="sm-card">
+            <div class="sc-head"><span class="sm-badge pre">🏁 試合前</span></div>
+            <div class="sc-title">スケジュール CSV</div>
+            <div class="sc-body">レースNo・種目・ラウンド・日付・時刻</div>
+          </div>
+          <div class="sm-card">
+            <div class="sc-head"><span class="sm-badge post">🏆 結果後</span></div>
+            <div class="sc-title">計測 CSV（BoatTimer）</div>
+            <div class="sc-body">R001_500m.csv / R001_1000m.csv<br>レース後 Drive に届く実測タイム</div>
+          </div>
+        </div>
+      </div>
+      <div class="sm-actor-you">
+        <div class="sm-actor-label">👤 このポータルで設定する</div>
+        <div class="sm-cards">
+          <div class="sm-card">
+            <div class="sc-title">大会情報・ステータス</div>
+            <div class="sc-body">大会名・日程・会場・公開URL・ステータス（開催予定 / 速報中 / 結果確定）</div>
+          </div>
+          <div class="sm-card">
+            <div class="sc-title">Drive / GitHub 接続</div>
+            <div class="sc-body">Drive フォルダID・GitHub Owner / Repo / Token。保存後は自動で動く。</div>
+          </div>
+          <div class="sm-card">
+            <div class="sc-title">ブランドカラー・フォント</div>
+            <div class="sc-body">メインカラー・アクセントカラー・フォント。公開サイトに即反映。</div>
+          </div>
+          <div class="sm-card">
+            <div class="sc-title">進行モデル選択</div>
+            <div class="sc-body">全日本モデル A / B・汎用モデルなど。クルー数に応じた進出ルールを自動適用。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 処理（自動） -->
+    <div class="card">
+      <p class="sm-section-title">処理 — 自動で動く部分（待つだけ）</p>
+      <div class="sm-actor-auto">
+        <div class="sm-actor-label">⚙️ 自動で動く（GAS）</div>
+        <div class="sm-cards">
+          <div class="sm-card dim">
+            <div class="sc-head"><span class="sm-badge auto">⚙️ 2分間隔</span></div>
+            <div class="sc-title dim">GAS メイン（Code.gs）</div>
+            <div class="sc-body">計測CSV → race_NNN.json → サイトへPush。onTrigger() を自動実行。</div>
+          </div>
+          <div class="sm-card dim">
+            <div class="sc-head"><span class="sm-badge auto">⚙️ 自動</span></div>
+            <div class="sc-title dim">PDF 自動生成</div>
+            <div class="sc-body">個別レース結果 PDF を processPendingPDFs() が Drive へ自動出力。</div>
+          </div>
+          <div class="sm-card dim">
+            <div class="sc-head"><span class="sm-badge manual">👤 手動起動</span></div>
+            <div class="sc-title dim">PDF 冊子・帳票（GAS メニュー）</div>
+            <div class="sc-body">準備資料・結果冊子・結果一覧・判定員帳票は GAS メニューからボタン操作。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 出力 -->
+    <div class="card">
+      <p class="sm-section-title">出力 — 生成されるもの</p>
+      <div class="sm-out-split">
+        <!-- 試合前 -->
+        <div class="sm-out-band pre">
+          <div class="sm-band-title">🏁 試合前に書き出せるもの</div>
+          <div class="sm-out-items">
+            <div class="sm-out-item">
+              <div class="so-badges"><span class="sm-badge web">🟦 Web</span></div>
+              <div class="so-info">
+                <div class="so-name">スケジュール・出漕表示</div>
+                <div class="so-mode auto">⚙️ 自動（master.json 由来）</div>
+              </div>
+            </div>
+            <div class="sm-out-item">
+              <div class="so-badges"><span class="sm-badge web">🟦 Web</span></div>
+              <div class="so-info">
+                <div class="so-name">ハブ掲載（大会一覧）</div>
+                <div class="so-mode manual">👤 ポータル操作 → ⚙️ 自動反映</div>
+              </div>
+            </div>
+            <div class="sm-out-item">
+              <div class="so-badges"><span class="sm-badge pdf">🟥 PDF</span></div>
+              <div class="so-info">
+                <div class="so-name">判定員帳票・準備資料ブックレット</div>
+                <div class="so-mode manual">👤 GAS メニューから手動</div>
+              </div>
+            </div>
+            <div class="sm-out-item">
+              <div class="so-badges"><span class="sm-badge pdf">🟥 PDF</span><span class="sm-badge doc">🟨 Excel</span></div>
+              <div class="so-info">
+                <div class="so-name">競漕記録シート（空欄）</div>
+                <div class="so-mode manual">👤 ローカルツール（技術者）</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 結果後 -->
+        <div class="sm-out-band post">
+          <div class="sm-band-title">🏆 試合結果から作るもの</div>
+          <div class="sm-out-items">
+            <div class="sm-out-item">
+              <div class="so-badges"><span class="sm-badge web">🟦 Web</span></div>
+              <div class="so-info">
+                <div class="so-name">順位・タイム表示</div>
+                <div class="so-mode auto">⚙️ 自動（2分ごと）</div>
+              </div>
+            </div>
+            <div class="sm-out-item">
+              <div class="so-badges"><span class="sm-badge pdf">🟥 PDF</span></div>
+              <div class="so-info">
+                <div class="so-name">個別レース結果 PDF</div>
+                <div class="so-mode auto">⚙️ 自動</div>
+              </div>
+            </div>
+            <div class="sm-out-item">
+              <div class="so-badges"><span class="sm-badge pdf">🟥 PDF</span></div>
+              <div class="so-info">
+                <div class="so-name">結果ブックレット・結果一覧表</div>
+                <div class="so-mode manual">👤 GAS メニューから手動</div>
+              </div>
+            </div>
+            <div class="sm-out-item">
+              <div class="so-badges"><span class="sm-badge pdf">🟥 PDF</span><span class="sm-badge doc">🟨 Excel</span></div>
+              <div class="so-info">
+                <div class="so-name">競漕記録シート（タイム入り）</div>
+                <div class="so-mode manual">👤 ローカルツール（技術者）</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
 </div>
 
 <!-- ===== 大会 追加/編集モーダル ===== -->
@@ -572,7 +848,7 @@ document.querySelectorAll('.tab-btn').forEach(function(b){
   b.addEventListener('click',function(){activateTab(b.dataset.tab);});
 });
 /* file:// プレビューで #t2 等のハッシュ指定があれば該当タブを開く */
-if(/^#t[1-4]$/.test(location.hash))activateTab(location.hash.slice(1));
+if(/^#t[1-5]$/.test(location.hash))activateTab(location.hash.slice(1));
 
 /* =========================================================
    タブ1: 大会管理
