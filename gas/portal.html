@@ -27,9 +27,9 @@ if (typeof google === 'undefined') {
           portalGetAssociation: { ok: true, data: {
             association_name: 'サンプル県ボート協会',
             tournaments: [
-              { id: 'masters-2026', name: 'サンプルマスターズレガッタ', year: 2026,
+              { id: 'regatta-2027', name: 'サンプルマスターズレガッタ', year: 2026,
                 dates: ['2026-05-23','2026-05-24'], venue: 'サンプル漕艇場', status: 'final',
-                url: 'https://masters-2026.example.pages.dev' },
+                url: 'https://regatta-2027.example.pages.dev' },
               { id: 'sample-autumn-2026', name: 'サンプル秋季ローイング大会', year: 2026,
                 dates: ['2026-10-11','2026-10-12'], venue: 'サンプル漕艇場', status: 'live',
                 url: 'https://sample-autumn-2026.example.pages.dev' },
@@ -52,11 +52,14 @@ if (typeof google === 'undefined') {
           portalGetProgression: { ok: true, data: {
             models: [
               { id: 'alljapan-a', label: '全日本モデル A', lanes: 6,
-                entries_range: [1, 42], description: '予選→準決→決勝。タイム拾い上げあり' },
+                entries_range: [1, 42], description: '予選→準決→決勝。タイム拾い上げあり。順位上がり変更版（2026/4/17）',
+                explanation: '【ラウンド構成】\nクルー数に応じて自動的にパターンが選ばれます。\n\n1〜6クルー: プレリミナリー → ファイナル（全クルーが決勝へ）\n7〜12クルー: 予選 → ファイナルA・B\n13〜18クルー: 予選 → 準決勝 → ファイナルA〜C\n19〜24クルー: 予選 → 準決勝 → ファイナルA〜D\n25〜30クルー: 予選 → 準々決勝 → 準決勝 → ファイナルA〜E\n31〜36クルー: 予選 → 準々決勝 → 準決勝 → ファイナルA〜F\n37〜42クルー: 予選 → 準々決勝 → 準決勝 → ファイナルA〜G\n\n【進出ルール（主な例）】\n・7〜12クルー: 予選1位はFA直進。残りのタイム1〜4位がFA、タイム5〜10位がFBへ\n・13〜18クルー: 予選1位は準決勝直進。残りタイム1〜9位も準決勝。準決勝1〜3位がFA\n\n【モデルBとの違い】\n予選からの直進枠が「1位のみ」（モデルBは「1・2位」）。タイム拾い上げの枠数が全体的に多め。\nJARA 全日本選手権 2026 要項 版（2026/4/17）に基づく。' },
               { id: 'alljapan-b', label: '全日本モデル B', lanes: 6,
-                entries_range: [1, 18], description: '予選→決勝のみ（少エントリー対応）' },
+                entries_range: [1, 42], description: '予選→準決→決勝。タイム拾い上げあり。標準版（2026/4/19）',
+                explanation: '【ラウンド構成】\nクルー数に応じて自動的にパターンが選ばれます。\n\n1〜6クルー: プレリミナリー → ファイナル（全クルーが決勝へ）\n7〜12クルー: 予選 → ファイナルA・B\n13〜18クルー: 予選 → 準決勝 → ファイナルA〜C\n19〜24クルー: 予選 → 準決勝 → ファイナルA〜D\n25〜30クルー: 予選 → 準々決勝 → 準決勝 → ファイナルA〜E\n31〜36クルー: 予選 → 準々決勝 → 準決勝 → ファイナルA〜F\n37〜42クルー: 予選 → 準々決勝 → 準決勝 → ファイナルA〜G\n\n【進出ルール（主な例）】\n・7〜12クルー: 予選1・2位はFA直進。残りタイム1・2位もFA。タイム3〜8位がFBへ\n・13〜18クルー: 予選1・2位は準決勝直進。残りタイム1〜6位も準決勝。準決勝1〜3位がFA\n\n【モデルAとの違い】\n予選からの直進枠が「1・2位」（モデルAは「1位のみ」）。標準版として位置づけ。\nJARA 全日本選手権 2026 要項 版（2026/4/19）に基づく。' },
               { id: 'model-001', label: '汎用モデル 001', lanes: 4,
-                entries_range: [1, 16], description: '予選→決勝。4レーン対応' }
+                entries_range: [1, 16], description: '予選→決勝。4レーン対応',
+                explanation: 'テンプレート定義参照' }
             ],
             current_template_id: 'alljapan-a'
           }},
@@ -246,6 +249,34 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
 .dot-bad{color:var(--live);}
 .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--color-primary);border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;}
 @keyframes sp{to{transform:rotate(360deg);}}
+
+/* ===== 取得方法 details ===== */
+.help-details{margin-top:6px;}
+.help-details summary{
+  font-size:12px;color:var(--color-primary);cursor:pointer;
+  font-weight:700;user-select:none;list-style:none;display:inline-flex;align-items:center;gap:4px;
+}
+.help-details summary::-webkit-details-marker{display:none;}
+.help-details[open] summary::before{content:"▾";}
+.help-details:not([open]) summary::before{content:"▸";}
+.help-details .help-body{
+  background:var(--bg);border-radius:var(--radius);
+  padding:10px 12px;margin-top:6px;font-size:12px;color:var(--text-sub);line-height:1.7;
+}
+.help-details .help-body ol{margin:4px 0 0 0;padding-left:18px;}
+.help-details .help-body li{margin-bottom:3px;}
+.help-details .help-body .warn{color:var(--live);font-weight:700;}
+.help-details .help-body .note{color:var(--gold);font-weight:700;}
+.help-details .help-body .url-diagram{
+  font-family:ui-monospace,Menlo,monospace;font-size:11px;
+  background:#fff;border:1px solid var(--border);border-radius:var(--radius);
+  padding:6px 8px;margin:6px 0;white-space:pre;display:block;overflow-x:auto;
+}
+/* ===== 進行モデル解説 details ===== */
+.prog-explanation{
+  font-size:12px;color:var(--text-sub);line-height:1.7;
+  white-space:pre-wrap;margin:0;font-family:inherit;
+}
 </style>
 </head>
 <body>
@@ -285,6 +316,17 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
         <label>Drive ルートフォルダ（URL を貼ると ID を自動抽出）</label>
         <div class="mask" id="curDrive">—</div>
         <input type="text" id="inDrive" placeholder="https://drive.google.com/drive/folders/XXXX または ID">
+        <details class="help-details">
+          <summary>📖 取得方法</summary>
+          <div class="help-body">
+            <ol>
+              <li><a href="https://drive.google.com" target="_blank">drive.google.com</a> を開き、大会用フォルダを新規作成します。</li>
+              <li>作成したフォルダをクリックして開きます。</li>
+              <li>ブラウザのアドレスバーに表示された URL をそのままコピーしてこの欄に貼り付けます。ID は自動で取り出されます。</li>
+            </ol>
+            <span class="note">※ このフォルダの中の master/・race_csv/ などのサブフォルダは、初回実行時に自動で作成されます。事前に作る必要はありません。</span>
+          </div>
+        </details>
       </div>
       <div class="field">
         <label>計測ポイント（MEASUREMENT_POINTS）</label>
@@ -308,11 +350,40 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
           <input type="text" id="inRepo" placeholder="例: regatta-results-kit">
         </div>
       </div>
+      <details class="help-details" style="margin-bottom:10px;">
+        <summary>📖 GITHUB_OWNER / GITHUB_REPO の取得方法</summary>
+        <div class="help-body">
+          速報サイトのテンプレートから作成した自分のリポジトリを使います。<br>
+          リポジトリページの URL から読み取ります。
+          <code class="url-diagram">https://github.com/〈オーナー名〉/〈リポジトリ名〉
+                         ↑ これが GITHUB_OWNER  ↑ これが GITHUB_REPO</code>
+          例: <code>https://github.com/sample-rowing/regatta-2027</code> の場合<br>
+          　GITHUB_OWNER = <code>sample-rowing</code>　GITHUB_REPO = <code>regatta-2027</code>
+        </div>
+      </details>
       <div class="field">
         <label>GITHUB_TOKEN（入力時のみ更新・空欄なら変更しません）</label>
         <div class="mask" id="curToken">—</div>
         <input type="text" id="inToken" placeholder="github_pat_... を入力したときだけ保存されます">
         <div class="hint">トークンは保存後マスク表示されず「設定あり」のみ表示します。</div>
+        <details class="help-details">
+          <summary>📖 取得方法（GitHub fine-grained PAT）</summary>
+          <div class="help-body">
+            <ol>
+              <li>GitHub にログインし、右上のアイコン → <strong>Settings</strong> を開きます。</li>
+              <li>左メニュー最下部の <strong>Developer settings</strong> をクリックします。</li>
+              <li><strong>Personal access tokens → Fine-grained tokens</strong> を選びます。</li>
+              <li><strong>Generate new token</strong> をクリックします。</li>
+              <li><strong>Expiration</strong>（有効期限）は <strong>90 days</strong> を推奨します。<br>
+                  <span class="note">※ 90日で自動失効します。失効後はここで再発行・再設定が必要です。</span></li>
+              <li><strong>Repository access</strong> は「Only select repositories」で対象リポジトリのみを選択します。</li>
+              <li><strong>Permissions → Repository permissions → Contents</strong> を <strong>Read and write</strong> に設定します。</li>
+              <li><strong>Generate token</strong> をクリックし、表示されたトークン（<code>github_pat_...</code>）を今すぐコピーします。<br>
+                  <span class="warn">⚠ このページを閉じると二度と表示されません。必ず今コピーしてください。</span></li>
+            </ol>
+            <span class="warn">⚠ 全リポジトリに権限を与える Classic token は使わないでください。</span>
+          </div>
+        </details>
       </div>
       <div class="btn-row">
         <button class="btn" id="btnSaveSettings">設定を保存</button>
@@ -330,6 +401,12 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
           <option value="">使用しない</option>
         </select>
         <div id="progressionDesc" style="margin-top:6px;font-size:12px;color:var(--text-sub);min-height:1.4em;"></div>
+        <details class="help-details" id="progressionExplDetails" style="display:none;">
+          <summary>📖 このモデルの解説</summary>
+          <div class="help-body">
+            <pre id="progressionExplText" class="prog-explanation"></pre>
+          </div>
+        </details>
       </div>
       <div class="btn-row">
         <button class="btn" id="btnSaveProgression">進行モデルを保存</button>
@@ -436,7 +513,7 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
     <input type="hidden" id="mIndex" value="-1">
     <div class="field"><label>大会名 *</label><input type="text" id="mName"></div>
     <div class="row2">
-      <div class="field"><label>ID *</label><input type="text" id="mId" placeholder="masters-2026"></div>
+      <div class="field"><label>ID *</label><input type="text" id="mId" placeholder="regatta-2027"></div>
       <div class="field"><label>年 *</label><input type="number" id="mYear" placeholder="2026"></div>
     </div>
     <div class="row2">
@@ -762,7 +839,11 @@ function updateProgressionDesc() {
   var sel = $('selProgression');
   var id = sel.value;
   var descEl = $('progressionDesc');
+  var explDetails = $('progressionExplDetails');
+  var explText = $('progressionExplText');
   descEl.textContent = '';
+  explDetails.style.display = 'none';
+  explText.textContent = '';
   if (!id) return;
   PROGRESSION_MODELS.forEach(function(m) {
     if (m.id !== id) return;
@@ -772,6 +853,10 @@ function updateProgressionDesc() {
       lines.push('種目ごとのクルー数に応じたパターンを自動適用します（対応クルー数: ' + m.entries_range[0] + '〜' + m.entries_range[1] + '）');
     }
     descEl.textContent = lines.join(' ／ ');
+    if (m.explanation) {
+      explText.textContent = m.explanation;
+      explDetails.style.display = '';
+    }
   });
 }
 
