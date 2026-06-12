@@ -373,6 +373,87 @@ function portalGetStatus() {
 }
 
 /**
+ * 進行モデルライブラリを取得し、現在の大会の選択状態も返す。
+ * ①自リポジトリの progression/registry.json を GET し models を返す。
+ * ②site/data/master.json の現在の progression.template_id を返す。
+ * registry が無い場合は models:[] で正常応答。
+ */
+function portalGetProgression() {
+  try {
+    var ctx = portalGithubCtx_();
+
+    // ① registry.json を取得
+    var registryGot = portalGithubGet_(ctx, 'progression/registry.json');
+    var models = [];
+    if (registryGot.text !== null) {
+      var registry = JSON.parse(registryGot.text);
+      if (Array.isArray(registry.models)) {
+        models = registry.models.map(function(m) {
+          return {
+            id:            m.id          || '',
+            label:         m.label       || '',
+            lanes:         m.lanes       || null,
+            entries_range: m.entries_range || null,
+            description:   m.description || '',
+          };
+        });
+      }
+    }
+
+    // ② master.json の progression.template_id を取得
+    var currentTemplateId = '';
+    var masterGot = portalGithubGet_(ctx, CONFIG.github.masterPath);
+    if (masterGot.text !== null) {
+      var master = JSON.parse(masterGot.text);
+      if (master.progression && master.progression.template_id) {
+        currentTemplateId = master.progression.template_id;
+      }
+    }
+
+    return { ok: true, data: { models: models, current_template_id: currentTemplateId } };
+  } catch (e) {
+    return { ok: false, error: String(e && e.message ? e.message : e) };
+  }
+}
+
+/**
+ * master.json の progression フィールドだけを更新する。
+ * templateId が空文字または null なら progression フィールドを削除。
+ * 他フィールドは絶対に変更しない（JSON を丸ごと parse → 該当キーのみ変更 → stringify）。
+ */
+function portalSaveProgression(templateId) {
+  try {
+    var ctx = portalGithubCtx_();
+
+    // master.json を GET
+    var got = portalGithubGet_(ctx, CONFIG.github.masterPath);
+    var master;
+    if (got.text === null) {
+      throw new Error('master.json が見つかりません。scaffold を先に実行してください。');
+    }
+    master = JSON.parse(got.text);
+
+    // progression フィールドのみ変更（他フィールドは一切触らない）
+    var tid = (typeof templateId === 'string') ? templateId.trim() : '';
+    if (tid) {
+      master.progression = { template_id: tid };
+    } else {
+      delete master.progression;
+    }
+
+    var content = JSON.stringify(master, null, 2);
+    var msg = tid
+      ? ('進行モデルを設定: ' + tid + ' [admin portal]')
+      : ('進行モデルを解除 [admin portal]');
+    portalGithubPut_(ctx, CONFIG.github.masterPath, content, msg, got.sha);
+
+    return { ok: true, data: { template_id: tid } };
+  } catch (e) {
+    return { ok: false, error: String(e && e.message ? e.message : e) };
+  }
+}
+
+/**
  * pdf_publisher / judge_form_publisher 用 setupFromConfig 貼り付け JSON 雛形。
  * 値は空文字（実プロパティ値は埋めない）。
  */

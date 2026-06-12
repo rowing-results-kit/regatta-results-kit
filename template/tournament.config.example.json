@@ -5,7 +5,8 @@
     "name": "",
     "venue": "",
     "dates": [],
-    "hub_url": ""
+    "hub_url": "",
+    "progression_template_id": ""
   },
   "default_course": {
     "length_m": 1000,
