@@ -1,0 +1,159 @@
+name: ハブ — ステータス変更
+
+on:
+  workflow_dispatch:
+    inputs:
+      tournament_id:
+        description: '大会 ID（例: tournament-20260912）— hub/association.json の "id" フィールドを確認'
+        required: true
+        type: string
+      new_status:
+        description: '新しいステータス'
+        required: true
+        default: 'live'
+        type: choice
+        options:
+          - upcoming
+          - live
+          - final
+
+permissions:
+  contents: write
+
+jobs:
+  update-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: チェックアウト
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: ステータス変更
+        id: update
+        env:
+          INPUT_TOURNAMENT_ID: ${{ inputs.tournament_id }}
+          INPUT_NEW_STATUS: ${{ inputs.new_status }}
+        run: |
+          set -euo pipefail
+
+          python3 - << 'PYEOF'
+          import json
+          import os
+          import re
+          import sys
+
+          # ===== 環境変数から取得 =====
+          tournament_id = os.environ["INPUT_TOURNAMENT_ID"].strip()
+          new_status    = os.environ["INPUT_NEW_STATUS"].strip()
+
+          GITHUB_STEP_SUMMARY = os.environ.get("GITHUB_STEP_SUMMARY", "/dev/null")
+          GITHUB_OUTPUT       = os.environ.get("GITHUB_OUTPUT",       "/dev/null")
+
+          # ===== バリデーション =====
+          errors = []
+
+          # 大会 ID: 英数字・ハイフンのみ許可（インジェクション対策）
+          if not re.match(r'^[A-Za-z0-9\-]+$', tournament_id):
+              errors.append(
+                  f"大会 ID の形式が正しくありません（入力値の確認が必要です）。"
+                  "英数字とハイフンのみ使用できます（例: tournament-20260912）。"
+              )
+
+          if new_status not in ("upcoming", "live", "final"):
+              errors.append(f"ステータスの値が不正です: {new_status!r}。upcoming / live / final のいずれかを選択してください。")
+
+          if errors:
+              with open(GITHUB_STEP_SUMMARY, "a", encoding="utf-8") as f:
+                  f.write("## ハブ — ステータス変更エラー\n\n")
+                  f.write("入力内容に問題があったため、処理を中止しました。\n\n")
+                  for e in errors:
+                      f.write(f"- {e}\n")
+                  f.write("\n---\n\n### やり直し方\n\n")
+                  f.write("1. 右上の **Run workflow** ボタンをクリック\n")
+                  f.write("2. 各項目を上の説明に従って修正\n")
+                  f.write("3. **Run workflow** をクリックして再実行\n")
+              sys.exit(1)
+
+          # ===== association.json 読み込み =====
+          hub_path = "hub/association.json"
+          with open(hub_path, "r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          tournaments = data.get("tournaments", [])
+
+          # ===== 大会 ID の存在確認 =====
+          target = next((t for t in tournaments if t.get("id") == tournament_id), None)
+          if target is None:
+              # 存在しない ID を Summary に一覧付きで報告
+              id_list = [t.get("id", "（ID なし）") for t in tournaments]
+              with open(GITHUB_STEP_SUMMARY, "a", encoding="utf-8") as f:
+                  f.write("## ハブ — ステータス変更エラー\n\n")
+                  f.write(f"大会 ID `{tournament_id}` が見つかりませんでした。\n\n")
+                  f.write("### 登録済み大会 ID 一覧\n\n")
+                  for tid in id_list:
+                      f.write(f"- `{tid}`\n")
+                  f.write("\n`hub/association.json` の `id` フィールドをコピーして正確に入力してください。\n")
+              sys.exit(1)
+
+          # ===== ステータス変更 =====
+          old_status = target.get("status", "")
+          target["status"] = new_status
+
+          # 書き込み
+          with open(hub_path, "w", encoding="utf-8") as f:
+              json.dump(data, f, ensure_ascii=False, indent=2)
+              f.write("\n")
+
+          # ===== GitHub Output =====
+          with open(GITHUB_OUTPUT, "a", encoding="utf-8") as f:
+              f.write(f"tournament_name={target.get('name', tournament_id)}\n")
+              f.write(f"old_status={old_status}\n")
+
+          print(f"ステータス変更: {tournament_id}: {old_status} -> {new_status}")
+          PYEOF
+
+      - name: コミット & プッシュ
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TOURNAMENT_ID: ${{ inputs.tournament_id }}
+          TOURNAMENT_NAME: ${{ steps.update.outputs.tournament_name }}
+          OLD_STATUS: ${{ steps.update.outputs.old_status }}
+          NEW_STATUS: ${{ inputs.new_status }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add hub/association.json
+
+          if git diff --cached --quiet; then
+            echo "変更なし — ステータスはすでに ${NEW_STATUS} です（正常）"
+          else
+            git commit -m "hub: ステータス変更 [${TOURNAMENT_ID}] ${OLD_STATUS} -> ${NEW_STATUS}"
+            git push
+          fi
+
+          # Actions Summary
+          {
+            echo "## ハブ — ステータス変更完了"
+            echo ""
+            echo "| 項目 | 値 |"
+            echo "|---|---|"
+            printf "| 大会名 | %s |\n"         "${TOURNAMENT_NAME}"
+            printf "| 大会 ID | %s |\n"         "${TOURNAMENT_ID}"
+            printf "| 変更前ステータス | %s |\n" "${OLD_STATUS}"
+            printf "| 変更後ステータス | %s |\n" "${NEW_STATUS}"
+            echo ""
+            echo "### 次のステップ"
+            echo ""
+            echo "1. Cloudflare Pages が自動デプロイされるまで 2〜5 分待つ"
+            echo "2. ハブ URL（hub/index.html）を開いてバッジが更新されていることを確認する"
+          } >> "$GITHUB_STEP_SUMMARY"
