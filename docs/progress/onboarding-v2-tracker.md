@@ -1,6 +1,6 @@
 ---
 status: in_progress
-progress_pct: 75
+progress_pct: 90
 last_updated: 2026-06-12
 created: 2026-06-12
 ---
@@ -39,7 +39,8 @@ created: 2026-06-12
 | W2-3 | `gas/portal.html` の「接続設定」タブに「GitHub 接続テスト」ボタン追加・結果バッジ表示 | working-engineer | ✅ | W2-1 |
 | W2-4 | `gas/portal.html` の「状態」タブに PAT 期限バッジ（赤: 14 日以内 / 黄: 30 日以内）表示追加 | working-engineer | ✅ | W2-2 |
 | W2-5 | `gas/Code.gs` のグローバル定数 `SETUP_DRIVE_FOLDER_ID` / `SETUP_GITHUB_TOKEN` 削除（スクリプトプロパティ直接入力を主フロー化） | working-engineer | ✅ | W2-1 完了後（ポータル設定 UI が先に使えるようにしてから削除） |
-| W2-6 | `docs/SETUP_GUIDE.md` ステップ 5 を「コピーを作成」方式に書き換え（`saveSetup()` コード貼り付け手順を廃止） | working-engineer | - | W2-5 |
+| W2-6 | `docs/SETUP_GUIDE.md` ステップ 5 を「コピーを作成」方式に書き換え（`saveSetup()` コード貼り付け手順を廃止） | working-engineer | ✅ | W2-5 |
+| W2-7 | 整合性 block 解消: 管理者ポータルに「初期セットアップ実行」ボタン新設（Drive サブフォルダ作成＋自動更新トリガー設定・冪等）・状態タブに「自動更新: 🟢/🔴」バナー＋「開始する」ボタン・SETUP_GUIDE Step 7 書き換え・SPEC-onboarding-v2 Step 7 完了基準更新・案 A 配置確定 | working-engineer | ✅ | W2-5 |
 
 ### W3: オンボーディングサイト
 
@@ -99,6 +100,15 @@ W3-1 + W3-2 ─→ W3-3 ─→ W3-4 (配置・公開 / PM 確認後)
   - Code.gs: `saveSetup()` / `SETUP_DRIVE_FOLDER_ID` / `SETUP_GITHUB_TOKEN` グローバル定数廃止
   - Code.gs / AdminPortal.gs: 「コピーを作成」配布前提のコメントヘッダー追加（7行以内）
   - W2-6（SETUP_GUIDE.md 改訂）は W4 フェーズで実施
+- **W2-7 完了（2026-06-12 working-engineer）** — 整合性ブロック解消
+  - AdminPortal.gs: `portalInitialSetup()`（Drive サブフォルダ作成＋onTrigger 設定・冪等）新設
+  - AdminPortal.gs: `portalStartTrigger()`（状態タブ「開始する」ボタン用）新設
+  - portal.html: タブ4 に「初期セットアップ実行」カード（ボタン + 結果表示）追加
+  - portal.html: 状態タブに「自動更新: 🟢稼働中 / 🔴停止中」バナー＋「開始する」ボタン追加
+  - portal.html: モックデータに `portalInitialSetup` / `portalStartTrigger` 追加
+  - SETUP_GUIDE.md: Step 7 を書き換え（GAS エディタ手動実行を全廃・ポータルボタン完結に統一・導入完了基準を「接続テスト OK ＋ 自動更新稼働中 = 全部緑」に改定）
+  - SPEC-onboarding-v2.md: Step 7 完了基準にトリガー稼働を追加・案 A 採用確定を記述
+  - 静的検証: portalInitialSetup / portalStartTrigger の google.script.run 呼び出しと .gs 関数名が一致・ブレース対称・{ok, data/error} 形式統一を確認
 - **W3-1・W3-4 完了（2026-06-12 working-designer）**
   - docs/onboarding/index.html: 1941行・自己完結HTML・外部CSS/JS依存ゼロ
   - 7ステップ全カード（操作手順・疑似スクリーンモック・セルフチェック・Q&A）

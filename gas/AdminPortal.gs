@@ -616,6 +616,110 @@ function portalSaveProgression(templateId) {
 }
 
 /**
+ * 初期セットアップを実行する（冪等）。
+ * ① Drive サブフォルダ作成（createDriveFolderStructure_ 相当）
+ * ② onTrigger の 2分タイマートリガー設定（既存があれば作成しない）
+ *
+ * 実行コンテキスト: doGet → HtmlService 経由。
+ * デプロイ設定「次のユーザーとして実行: 自分」が前提。
+ * ScriptApp.newTrigger はオーナーとして実行されるため権限が付与される。
+ *
+ * 戻り値: { ok, data: { folderResult, triggerResult } }
+ *   folderResult: '✅ フォルダ作成済み（既存）' | '✅ フォルダを新規作成しました'
+ *   triggerResult: '✅ 自動更新 稼働開始' | '✅ 自動更新 すでに稼働中'
+ */
+function portalInitialSetup() {
+  try {
+    var props = PropertiesService.getScriptProperties();
+    var results = {};
+
+    // ① Drive サブフォルダ作成
+    var rootFolderId = props.getProperty(CONFIG.props.driveFolderId);
+    if (!rootFolderId) {
+      return { ok: false, error: 'DRIVE_ROOT_FOLDER_ID が未設定です。先に「接続設定」タブで Drive フォルダを設定してください。' };
+    }
+    try {
+      var rootFolder = DriveApp.getFolderById(rootFolderId);
+      var measurementPointsStr = props.getProperty(CONFIG.props.measurementPoints) || '500m,1000m';
+      var points = measurementPointsStr.split(',').map(function(p) { return p.trim(); });
+
+      var subFolders = ['master', 'race_csv', 'processed'];
+      var createdAny = false;
+
+      subFolders.forEach(function(name) {
+        var iter = rootFolder.getFoldersByName(name);
+        var folder;
+        if (iter.hasNext()) {
+          folder = iter.next();
+        } else {
+          folder = rootFolder.createFolder(name);
+          createdAny = true;
+        }
+        // race_csv / processed 配下に計測ポイントサブフォルダ
+        if (name === 'race_csv' || name === 'processed') {
+          points.forEach(function(pt) {
+            var ptIter = folder.getFoldersByName(pt);
+            if (!ptIter.hasNext()) {
+              folder.createFolder(pt);
+              createdAny = true;
+            }
+          });
+        }
+      });
+
+      results.folderResult = createdAny
+        ? '✅ Drive サブフォルダを作成しました'
+        : '✅ Drive サブフォルダ作成済み（既存）';
+    } catch (driveErr) {
+      return { ok: false, error: 'Drive フォルダ作成中にエラー: ' + String(driveErr.message) };
+    }
+
+    // ② onTrigger の 2分タイマートリガー設定（冪等）
+    var triggers = ScriptApp.getProjectTriggers();
+    var hasTrigger = triggers.some(function(t) {
+      return t.getHandlerFunction() === 'onTrigger';
+    });
+
+    if (hasTrigger) {
+      results.triggerResult = '✅ 自動更新 すでに稼働中';
+    } else {
+      ScriptApp.newTrigger('onTrigger')
+        .timeBased()
+        .everyMinutes(2)
+        .create();
+      results.triggerResult = '✅ 自動更新 稼働開始（2分ごと）';
+    }
+
+    return { ok: true, data: results };
+  } catch (e) {
+    return { ok: false, error: String(e && e.message ? e.message : e) };
+  }
+}
+
+/**
+ * onTrigger の 2分タイマートリガーを設定する（冪等）。
+ * 「状態」タブの「開始する」ボタン用。
+ */
+function portalStartTrigger() {
+  try {
+    var triggers = ScriptApp.getProjectTriggers();
+    var hasTrigger = triggers.some(function(t) {
+      return t.getHandlerFunction() === 'onTrigger';
+    });
+    if (hasTrigger) {
+      return { ok: true, data: { message: '✅ 自動更新 すでに稼働中' } };
+    }
+    ScriptApp.newTrigger('onTrigger')
+      .timeBased()
+      .everyMinutes(2)
+      .create();
+    return { ok: true, data: { message: '✅ 自動更新 稼働開始（2分ごと）' } };
+  } catch (e) {
+    return { ok: false, error: String(e && e.message ? e.message : e) };
+  }
+}
+
+/**
  * pdf_publisher / judge_form_publisher 用 setupFromConfig 貼り付け JSON 雛形。
  * 値は空文字（実プロパティ値は埋めない）。
  */

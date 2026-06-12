@@ -63,7 +63,11 @@ if (typeof google === 'undefined') {
             ],
             current_template_id: 'alljapan-a'
           }},
-          portalSaveProgression: { ok: true, data: { template_id: 'alljapan-a' } }
+          portalSaveProgression: { ok: true, data: { template_id: 'alljapan-a' } },
+          portalInitialSetup: { ok: true, data: {
+            folderResult: '✅ Drive サブフォルダ作成済み（既存）',
+            triggerResult: '✅ 自動更新 稼働開始（2分ごと）' } },
+          portalStartTrigger: { ok: true, data: { message: '✅ 自動更新 稼働開始（2分ごと）' } }
         };
         function makeRunner(success, failure) {
           var handler = {};
@@ -593,11 +597,28 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
 
   <!-- ===== タブ4: 状態 ===== -->
   <section class="panel" id="t4">
+
+    <!-- 初期セットアップカード -->
+    <div class="card" id="initialSetupCard">
+      <h2>初期セットアップ実行</h2>
+      <p class="sub">① Drive サブフォルダ自動作成（master / race_csv / processed 等）<br>② 2分ごとの自動更新トリガー設定<br>を一括で実行します。<strong>何度押しても安全です（冪等）。</strong></p>
+      <p class="sub" style="color:var(--color-accent);font-size:12px;">※ 初回実行時に Google の権限承認ダイアログが表示される場合があります。「許可」を選択してください。</p>
+      <div class="btn-row" style="margin-bottom:10px;">
+        <button class="btn" id="btnInitialSetup">初期セットアップ実行</button>
+      </div>
+      <div id="initialSetupMsg" class="msg"></div>
+    </div>
+
+    <!-- 稼働状態カード -->
     <div class="card">
       <h2>稼働状態</h2>
       <p class="sub">トリガー稼働・最終ハートビート・API レート制限の状況を確認できます。</p>
       <div class="btn-row" style="margin-bottom:14px;">
         <button class="btn secondary small" id="btnReloadStatus">再読み込み</button>
+      </div>
+      <div id="autoUpdateStatus" style="margin-bottom:12px;padding:10px 14px;border-radius:6px;background:var(--card);border:1px solid #e0ddd5;display:none;">
+        <span id="autoUpdateLabel" style="font-weight:600;font-size:14px;"></span>
+        <button class="btn small" id="btnStartTrigger" style="display:none;margin-left:12px;">開始する</button>
       </div>
       <div class="status-grid" id="statusGrid">
         <p class="sub">読み込み中 <span class="spin"></span></p>
@@ -1281,6 +1302,52 @@ function saveTheme(){
 $('btnSaveTheme').addEventListener('click',saveTheme);
 
 /* =========================================================
+   タブ4: 初期セットアップ
+   ========================================================= */
+function runInitialSetup(){
+  var btn=$('btnInitialSetup');
+  var msg=$('initialSetupMsg');
+  btn.disabled=true;
+  btn.textContent='実行中...';
+  showMsg(msg,'実行中 — Drive フォルダ作成 → 自動更新設定','info');
+  run().withSuccessHandler(function(res){
+    btn.disabled=false;
+    btn.textContent='初期セットアップ実行';
+    if(!res||!res.ok){showMsg(msg,(res&&res.error)||'実行失敗','err');return;}
+    var d=res.data;
+    var lines=[];
+    if(d.folderResult)lines.push(d.folderResult);
+    if(d.triggerResult)lines.push(d.triggerResult);
+    showMsg(msg,lines.join('\n'),'ok');
+    // 状態タブを更新
+    loadStatus();
+  }).withFailureHandler(function(e){
+    btn.disabled=false;
+    btn.textContent='初期セットアップ実行';
+    showMsg(msg,'通信エラー: '+esc(e&&e.message),'err');
+  }).portalInitialSetup();
+}
+$('btnInitialSetup').addEventListener('click',runInitialSetup);
+
+function startTrigger(){
+  var btn=$('btnStartTrigger');
+  btn.disabled=true;
+  btn.textContent='設定中...';
+  run().withSuccessHandler(function(res){
+    btn.disabled=false;
+    btn.textContent='開始する';
+    if(!res||!res.ok){showMsg($('statusMsg'),(res&&res.error)||'設定失敗','err');return;}
+    showMsg($('statusMsg'),(res.data&&res.data.message)||'✅ 自動更新 稼働開始','ok');
+    loadStatus();
+  }).withFailureHandler(function(e){
+    btn.disabled=false;
+    btn.textContent='開始する';
+    showMsg($('statusMsg'),'通信エラー: '+esc(e&&e.message),'err');
+  }).portalStartTrigger();
+}
+$('btnStartTrigger').addEventListener('click',startTrigger);
+
+/* =========================================================
    タブ4: 状態
    ========================================================= */
 function fmtDate(iso){
@@ -1296,6 +1363,20 @@ function loadStatus(){
     if(!res||!res.ok){showMsg($('statusMsg'),(res&&res.error)||'読み込み失敗','err');grid.textContent='';return;}
     clearMsg($('statusMsg'));
     var d=res.data;
+    // 自動更新ステータスバナー
+    var banner=$('autoUpdateStatus');
+    var label=$('autoUpdateLabel');
+    var startBtn=$('btnStartTrigger');
+    banner.style.display='';
+    if(d.hasTrigger){
+      label.textContent='自動更新: 🟢 稼働中';
+      label.style.color='#2D7A2D';
+      startBtn.style.display='none';
+    } else {
+      label.textContent='自動更新: 🔴 停止中';
+      label.style.color='#C0392B';
+      startBtn.style.display='';
+    }
     grid.textContent='';
     addStat(grid,'トリガー稼働',d.hasTrigger?'稼働中 ●':'停止中 ●',d.hasTrigger?'dot-ok':'dot-bad');
     addStat(grid,'最終ハートビート',fmtDate(d.lastTriggerAt),'');
