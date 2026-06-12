@@ -1,0 +1,9 @@
+{
+  "name": "regatta-results-kit",
+  "description": "ボート競技大会の速報サイトを一発生成する Claude Code キット。新大会セットアップ・進行モデル登録などのコマンドを提供します。",
+  "version": "0.1.0",
+  "author": {
+    "name": "RYUIYAMADA"
+  },
+  "homepage": "https://github.com/RYUIYAMADA/regatta-results-kit"
+}
