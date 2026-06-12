@@ -20,3 +20,8 @@ data/results/*.json
 build/
 dist/
 .next/
+
+# 秘匿情報
+.env
+.env.*
+*.secret
