@@ -1,0 +1,224 @@
+name: ハブ — 大会追加
+
+on:
+  workflow_dispatch:
+    inputs:
+      tournament_name:
+        description: '大会名（例: 第02回○○マスターズレガッタ）'
+        required: true
+        type: string
+      start_date:
+        description: '開始日（例: 2026/09/12 または 2026-09-12）'
+        required: true
+        type: string
+      end_date:
+        description: '終了日（例: 2026/09/13 または 2026-09-13）'
+        required: true
+        type: string
+      venue:
+        description: '会場（例: ○○漕艇競技場）'
+        required: true
+        type: string
+      site_url:
+        description: '速報サイト URL（例: https://xxxxx.pages.dev）— 未確定の場合は空欄でOK'
+        required: false
+        default: ''
+        type: string
+      status:
+        description: '公開ステータス'
+        required: true
+        default: 'upcoming'
+        type: choice
+        options:
+          - upcoming
+          - live
+          - final
+
+permissions:
+  contents: write
+
+jobs:
+  add-tournament:
+    runs-on: ubuntu-latest
+    steps:
+      - name: チェックアウト
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: 入力バリデーション & 大会追加
+        id: add
+        env:
+          INPUT_NAME: ${{ inputs.tournament_name }}
+          INPUT_START_DATE: ${{ inputs.start_date }}
+          INPUT_END_DATE: ${{ inputs.end_date }}
+          INPUT_VENUE: ${{ inputs.venue }}
+          INPUT_URL: ${{ inputs.site_url }}
+          INPUT_STATUS: ${{ inputs.status }}
+        run: |
+          set -euo pipefail
+
+          python3 - << 'PYEOF'
+          import json
+          import os
+          import re
+          import sys
+
+          # ===== 環境変数から取得 =====
+          name      = os.environ["INPUT_NAME"].strip()
+          raw_start = os.environ["INPUT_START_DATE"].strip()
+          raw_end   = os.environ["INPUT_END_DATE"].strip()
+          venue     = os.environ["INPUT_VENUE"].strip()
+          url       = os.environ["INPUT_URL"].strip()
+          status    = os.environ["INPUT_STATUS"].strip()
+
+          GITHUB_STEP_SUMMARY = os.environ.get("GITHUB_STEP_SUMMARY", "/dev/null")
+          GITHUB_OUTPUT       = os.environ.get("GITHUB_OUTPUT",       "/dev/null")
+
+          # ===== 日付正規化（setup-tournament.yml と同ロジック）=====
+          def normalize_date(raw):
+              m = re.match(r'^(\d{4})[/\-](\d{1,2})[/\-](\d{1,2})$', raw)
+              if not m:
+                  return None
+              y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
+              if not (1 <= mo <= 12 and 1 <= d <= 31):
+                  return None
+              return f"{y:04d}-{mo:02d}-{d:02d}"
+
+          # ===== バリデーション =====
+          errors = []
+
+          if not name:
+              errors.append("大会名が空です。大会名を入力してください。")
+
+          start_date = normalize_date(raw_start)
+          if start_date is None:
+              errors.append(
+                  f"開始日の形式が正しくありません（入力値の確認が必要です）。"
+                  "`2026/09/12` または `2026-09-12` の形式で入力してください。"
+              )
+
+          end_date = normalize_date(raw_end)
+          if end_date is None:
+              errors.append(
+                  f"終了日の形式が正しくありません（入力値の確認が必要です）。"
+                  "`2026/09/13` または `2026-09-13` の形式で入力してください。"
+              )
+
+          if status not in ("upcoming", "live", "final"):
+              errors.append(f"ステータスの値が不正です: {status!r}。upcoming / live / final のいずれかを選択してください。")
+
+          if not venue:
+              errors.append("会場が空です。会場名を入力してください。")
+
+          # URL 形式チェック（空欄は許可）
+          if url and not re.match(r'^https?://', url):
+              errors.append(f"速報サイト URL の形式が正しくありません（入力値の確認が必要です）。`https://` から始まる URL を入力してください。")
+
+          if errors:
+              with open(GITHUB_STEP_SUMMARY, "a", encoding="utf-8") as f:
+                  f.write("## ハブ — 大会追加エラー\n\n")
+                  f.write("入力内容に問題があったため、処理を中止しました。\n")
+                  f.write("以下の内容を確認して、もう一度 **Run workflow** を実行してください。\n\n")
+                  for e in errors:
+                      f.write(f"- {e}\n")
+                  f.write("\n---\n\n### やり直し方\n\n")
+                  f.write("1. 右上の **Run workflow** ボタンをクリック\n")
+                  f.write("2. 各項目を上の説明に従って修正\n")
+                  f.write("3. **Run workflow** をクリックして再実行\n")
+              sys.exit(1)
+
+          # ===== 大会 ID 生成（start_date ベース） =====
+          tournament_id = "tournament-" + start_date.replace("-", "")
+
+          # ===== association.json 読み込み =====
+          hub_path = "hub/association.json"
+          with open(hub_path, "r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          if "tournaments" not in data or not isinstance(data["tournaments"], list):
+              data["tournaments"] = []
+
+          # ===== 冪等処理: 同一 ID が既存なら更新、なければ追加 =====
+          existing = next((t for t in data["tournaments"] if t.get("id") == tournament_id), None)
+          action = "更新" if existing else "追加"
+
+          entry = {
+              "id":     tournament_id,
+              "name":   name,
+              "year":   int(start_date[:4]),
+              "dates":  [start_date, end_date],
+              "venue":  venue,
+              "status": status,
+              "url":    url,
+          }
+
+          if existing:
+              idx = data["tournaments"].index(existing)
+              data["tournaments"][idx] = entry
+          else:
+              data["tournaments"].append(entry)
+
+          # ===== 書き込み =====
+          with open(hub_path, "w", encoding="utf-8") as f:
+              json.dump(data, f, ensure_ascii=False, indent=2)
+              f.write("\n")
+
+          # ===== GitHub Output =====
+          with open(GITHUB_OUTPUT, "a", encoding="utf-8") as f:
+              f.write(f"tournament_id={tournament_id}\n")
+              f.write(f"action={action}\n")
+
+          print(f"大会 {action} 完了: {name} ({tournament_id})")
+          PYEOF
+
+      - name: コミット & プッシュ
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TOURNAMENT_NAME: ${{ inputs.tournament_name }}
+          TOURNAMENT_ACTION: ${{ steps.add.outputs.action }}
+          TOURNAMENT_ID: ${{ steps.add.outputs.tournament_id }}
+          INPUT_VENUE: ${{ inputs.venue }}
+          INPUT_STATUS: ${{ inputs.status }}
+          INPUT_START_DATE: ${{ inputs.start_date }}
+          INPUT_END_DATE: ${{ inputs.end_date }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add hub/association.json
+
+          if git diff --cached --quiet; then
+            echo "変更なし — 同一内容のため既にコミット済みです（正常）"
+          else
+            git commit -m "hub: 大会${TOURNAMENT_ACTION} [${TOURNAMENT_NAME}]"
+            git push
+          fi
+
+          # Actions Summary
+          {
+            echo "## ハブ — 大会${TOURNAMENT_ACTION}完了"
+            echo ""
+            echo "| 項目 | 設定値 |"
+            echo "|---|---|"
+            printf "| 大会名 | %s |\n"    "${TOURNAMENT_NAME}"
+            printf "| 会場   | %s |\n"    "${INPUT_VENUE}"
+            printf "| 開始日 | %s |\n"    "${INPUT_START_DATE}"
+            printf "| 終了日 | %s |\n"    "${INPUT_END_DATE}"
+            printf "| ステータス | %s |\n" "${INPUT_STATUS}"
+            printf "| 大会 ID | %s |\n"   "${TOURNAMENT_ID}"
+            echo ""
+            echo "### 次のステップ"
+            echo ""
+            echo "1. Cloudflare Pages が自動デプロイされるまで 2〜5 分待つ"
+            echo "2. ハブ URL（hub/index.html）を開いて大会カードが表示されることを確認する"
+            echo "3. ステータスを変更したい場合は **ハブ — ステータス変更** ワークフローを実行する"
+          } >> "$GITHUB_STEP_SUMMARY"
