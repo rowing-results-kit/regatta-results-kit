@@ -25,3 +25,6 @@ dist/
 .env
 .env.*
 *.secret
+
+# 写真原本（Web最適化版のみコミット対象）
+assets-src/
