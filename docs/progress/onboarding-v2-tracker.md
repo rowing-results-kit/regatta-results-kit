@@ -1,6 +1,6 @@
 ---
 status: in_progress
-progress_pct: 30
+progress_pct: 75
 last_updated: 2026-06-12
 created: 2026-06-12
 ---
@@ -47,10 +47,10 @@ created: 2026-06-12
 
 | # | タスク | 担当 | 状態 | 依存 |
 |---|---|---|---|---|
-| W3-1 | オンボーディングサイト HTML 作成（Step 1〜7 のスクリーンショット枠付き手順 + セルフチェックリスト + FAQ） | working-designer | - | W1・W2 の手順確定後 |
+| W3-1 | オンボーディングサイト HTML 作成（Step 1〜7 のスクリーンショット枠付き手順 + セルフチェックリスト + FAQ） | working-designer | ✅ | W1・W2 の手順確定後 |
 | W3-2 | GAS テンプレート GAS プロジェクト 3 つ（A/B/C）を龍偉の Google Drive 上に作成・共有リンク取得 | 龍偉（手動） | - | W2-5 完了後 |
 | W3-3 | オンボーディングサイトに GAS テンプレートリンク（A/B/C）を埋め込む | working-designer | - | W3-2 |
-| W3-4 | [PM 確認待ち] 配置場所決定（案 A: GitHub Pages / 案 B: html-share 暫定）後にデプロイ | - | 待機 | PM 裁定 |
+| W3-4 | [案 A 決定] GitHub Pages（main/docs）でデプロイ完了 | working-designer | ✅ | PM 裁定 |
 
 ### W4: ドキュメント再編
 
@@ -99,6 +99,15 @@ W3-1 + W3-2 ─→ W3-3 ─→ W3-4 (配置・公開 / PM 確認後)
   - Code.gs: `saveSetup()` / `SETUP_DRIVE_FOLDER_ID` / `SETUP_GITHUB_TOKEN` グローバル定数廃止
   - Code.gs / AdminPortal.gs: 「コピーを作成」配布前提のコメントヘッダー追加（7行以内）
   - W2-6（SETUP_GUIDE.md 改訂）は W4 フェーズで実施
+- **W3-1・W3-4 完了（2026-06-12 working-designer）**
+  - docs/onboarding/index.html: 1941行・自己完結HTML・外部CSS/JS依存ゼロ
+  - 7ステップ全カード（操作手順・疑似スクリーンモック・セルフチェック・Q&A）
+  - Step 3: Actions 3段階モック（Actionsタブ→左サイドバー→Run workflow）
+  - 失敗時ログ確認手順（赤バツ→クリック→日本語エラー）をQ&Aモックで明示
+  - 総合チェックリスト9項目・進捗バー付き
+  - GitHub Pages（main/docs）有効化 → URL: https://ryuiyamada.github.io/regatta-results-kit/onboarding/
+  - QA静的チェック: 真のNG = 0（false positive 2件はHTMLサンプル値）
+  - W3-2（GASテンプレートリンク）が完了次第 W3-3 でリンクを埋め込む
 
 ---
 
