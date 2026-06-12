@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{TOURNAMENT_NAME}}</title>
+
+<!-- OGPメタタグ -->
+<meta property="og:title" content="{{TOURNAMENT_NAME}}">
+<meta property="og:description" content="{{TOURNAMENT_NAME}} - {{DATES_LABEL}} {{VENUE}}">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#2D4F2C">
+
+<!-- favicon（外部ファイル不要のbase64 SVG） -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚣</text></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body style="background: #F7F4EF">
+
+<!-- ページ上部 sticky 固定エリア -->
+<div id="sticky-top">
+  <header class="site-header">
+    <div class="site-header-inner">
+      <div class="site-header-top-row">
+        <div class="site-header-label">BOAT RACE RESULTS</div>
+        <div class="font-size-ctrl" aria-label="文字サイズ変更">
+          <button class="fs-btn" onclick="setFontSize('small')" title="小">小</button>
+          <button class="fs-btn fs-btn-active" onclick="setFontSize('normal')" title="標準">中</button>
+          <button class="fs-btn" onclick="setFontSize('large')" title="大">大</button>
+        </div>
+      </div>
+      <div class="cover-tournament-name" id="cover-tournament-name">速報サイト</div>
+      <div class="cover-meta" id="cover-meta"></div>
+    </div>
+  </header>
+
+  <!-- ビュー切替タブ -->
+  <div class="view-tabs">
+    <div class="view-tab active" onclick="switchView('toggle', this)">🏁 種目別</div>
+    <div class="view-tab" onclick="switchView('table', this)">📊 全レース一覧</div>
+    <div class="view-tab" onclick="switchView('schedule', this)">🕐 スケジュール</div>
+  </div>
+
+  <!-- 進行中レースバナー（JS側で更新） -->
+  <div id="current-race-bar" style="display:none;"></div>
+</div>
+
+
+<div class="notion-page">
+
+  <!-- ローディング・エラー表示 -->
+  <div id="loading" class="loading">
+    <span class="loading-spinner"></span>データを読み込んでいます...
+    <div id="loading-slow" style="display:none;margin-top:12px;font-size:12px;color:var(--text-muted)">
+      読み込みに時間がかかっています。<br>インターネット接続をご確認ください。
+    </div>
+  </div>
+  <div id="error-message" style="display:none;"></div>
+
+  <!-- ================================================================ -->
+  <!--                     VIEW 1: 種目別トグル表示                       -->
+  <!-- ================================================================ -->
+  <div class="view-content active" id="view-toggle">
+
+    <!-- 日別タブ（JS側で動的生成） -->
+    <div id="day-tabs" class="day-tabs"></div>
+
+    <!-- フィルタバー -->
+    <div class="filter-bar">
+      <!-- モバイル用: 検索+トグルボタン行 -->
+      <div class="filter-top-row">
+        <input type="text" class="filter-search" id="filter-crew"
+          placeholder="🔍 所属・クルー名で検索" oninput="applyFilters()"
+          aria-label="所属・クルー名で検索">
+        <button class="filter-toggle-btn" id="filter-toggle-btn"
+          onclick="toggleFilterPanel()" aria-expanded="false">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          フィルタ
+        </button>
+      </div>
+      <!-- フィルタパネル（モバイルでは折りたたみ） -->
+      <div class="filter-panel" id="filter-panel">
+        <!-- カテゴリ選択肢は JS 側で動的生成（SPEC §3 / §1）。直書き option 撤去済み -->
+        <select class="filter-select" id="filter-cat" onchange="applyFilters()" aria-label="カテゴリフィルター">
+          <option value="all">カテゴリ: すべて</option>
+        </select>
+<select class="filter-select" id="filter-day" onchange="applyFilters()" aria-label="日程フィルター">
+          <option value="all">日程: すべて</option>
+        </select>
+        <select class="filter-select" id="filter-status" onchange="applyFilters()" aria-label="状態フィルター">
+          <option value="all">状態: すべて</option>
+          <option value="done">結果あり</option>
+          <option value="upcoming">未実施</option>
+        </select>
+        <div class="filter-actions">
+          <button class="filter-reset" onclick="resetFilters()">✕ リセット</button>
+          <span class="filter-count" id="filter-count">-</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- トグル一覧（JS側で動的生成） -->
+    <div id="view-toggle-content"></div>
+
+  </div>
+
+  <!-- ================================================================ -->
+  <!--                   VIEW 2: 全レース一覧テーブル                      -->
+  <!-- ================================================================ -->
+  <div class="view-content" id="view-table">
+    <div id="view-table-content"></div>
+  </div>
+
+  <!-- ================================================================ -->
+  <!--                   VIEW 3: スケジュールビュー                        -->
+  <!-- ================================================================ -->
+  <div class="view-content" id="view-schedule">
+    <div id="schedule-day-tabs" class="day-tabs"></div>
+    <div id="schedule-table-container"></div>
+  </div>
+
+</div>
+
+<!-- ステータスバー -->
+<div class="update-bar"></div>
+
+<!-- トースト通知コンテナ -->
+<div id="toast-container"></div>
+
+<script src="js/shared.js?v=20260612b"></script>
+<script src="js/app.js?v=20260612b"></script>
+</body>
+</html>
