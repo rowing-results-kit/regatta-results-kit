@@ -111,7 +111,10 @@ regatta-results-kit/
 
 結果の自動処理（CSV → 速報サイト）は Google Apps Script（GAS）が担う。
 
-### 必要なもの
+> **重要: すべて「利用する協会・大会自身のアカウント」で構築します。**
+> Google Drive・スプレッドシート・GAS・GitHub リポジトリ・PAT は、すべて利用者自身のアカウント上に作成するものを使います。本キットの提供者の Google Drive や GitHub を共有・利用する仕組みは一切ありません（キットには提供者のフォルダ ID 等は含まれていません）。インフラもデータも 100% 利用者の所有です。
+
+### 必要なもの（すべて利用者自身のアカウントで用意）
 
 - Google アカウント（無料アカウント可）
 - GitHub の **fine-grained Personal Access Token (PAT)**
