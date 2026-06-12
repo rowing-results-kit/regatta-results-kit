@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>regatta-results-kit 全システム MAP</title>
+<style>
+  :root{
+    --color-primary:#2D4F2C;
+    --color-primary-soft:#e7efe6;
+    --color-accent:#C9A227;
+    --color-accent-soft:#f6efd8;
+    --ink:#1c1c1c;
+    --ink-sub:#5a5f59;
+    --line:#cdd4cc;
+    --bg:#f4f6f3;
+    --card:#ffffff;
+    --pdf:#c0392b;
+    --pdf-soft:#fbeceb;
+    --web:#2563b8;
+    --web-soft:#e8eff8;
+    --doc:#b7860b;
+    --doc-soft:#fbf3df;
+    --pre:#2D4F2C;
+    --post:#7a3b16;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Noto Sans JP",-apple-system,sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+    font-weight:500;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1280px;margin:0 auto;padding:24px 28px 40px;}
+
+  /* ---- ヘッダー ---- */
+  header.page-head{
+    display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px 22px;
+    border-bottom:3px solid var(--color-primary);
+    padding-bottom:14px;margin-bottom:18px;
+  }
+  .page-head h1{
+    font-size:25px;font-weight:700;margin:0;color:var(--color-primary);
+    letter-spacing:.01em;
+  }
+  .page-head .sub{font-size:13px;color:var(--ink-sub);margin:0;}
+  .legend{display:flex;flex-wrap:wrap;gap:7px 12px;margin-left:auto;font-size:12.5px;}
+  .legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+  .legend .dot{font-size:14px;}
+
+  /* ---- スイムレーン ---- */
+  .lanes{
+    display:grid;
+    grid-template-columns:230px 24px 320px 24px 1fr;
+    gap:0;align-items:stretch;
+  }
+  .col-head{
+    font-size:13px;font-weight:700;color:#fff;background:var(--color-primary);
+    padding:7px 12px;border-radius:7px 7px 0 0;text-align:center;letter-spacing:.04em;
+  }
+  .col-head.out{background:var(--color-accent);color:#3a2e05;}
+  .arrowcol{display:flex;align-items:center;justify-content:center;}
+  .arrowcol .ar{
+    color:var(--color-accent);font-size:22px;font-weight:700;line-height:1;
+  }
+  .zone{
+    background:var(--card);border:1px solid var(--line);border-top:none;
+    border-radius:0 0 7px 7px;padding:11px 11px 13px;height:100%;
+  }
+
+  /* ---- 入力カード ---- */
+  .incard{
+    border-left:4px solid var(--color-primary);background:var(--color-primary-soft);
+    border-radius:5px;padding:8px 10px;margin-bottom:9px;
+  }
+  .incard:last-child{margin-bottom:0;}
+  .incard h4{margin:0 0 2px;font-size:13px;font-weight:700;}
+  .incard p{margin:0;font-size:11.5px;color:var(--ink-sub);}
+
+  /* ---- 処理カード ---- */
+  .proc{
+    border:1px solid var(--line);border-left:4px solid var(--color-accent);
+    border-radius:5px;padding:8px 10px;margin-bottom:9px;background:#fff;
+  }
+  .proc:last-child{margin-bottom:0;}
+  .proc h4{margin:0 0 3px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;}
+  .proc ul{margin:3px 0 0;padding-left:16px;}
+  .proc li{font-size:11.5px;color:var(--ink-sub);margin:1px 0;}
+  .proc .fn{font-family:ui-monospace,Menlo,monospace;font-size:10.5px;color:var(--color-primary);}
+
+  /* ---- 出力ゾーン 2分割 ---- */
+  .outsplit{display:flex;flex-direction:column;gap:12px;height:100%;}
+  .outband{border-radius:6px;padding:9px 10px 11px;}
+  .outband.pre{background:#eef3ed;border:1px solid #cddbc9;}
+  .outband.post{background:#f7efe7;border:1px solid #e3cdb8;}
+  .band-title{
+    font-size:13px;font-weight:700;margin:0 0 8px;display:flex;align-items:center;gap:7px;
+  }
+  .band-title.pre{color:var(--pre);}
+  .band-title.post{color:var(--post);}
+  .band-title .tag{
+    font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:20px;color:#fff;
+  }
+  .band-title.pre .tag{background:var(--pre);}
+  .band-title.post .tag{background:var(--post);}
+
+  .outgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .ocard{
+    background:#fff;border:1px solid var(--line);border-radius:5px;
+    padding:7px 9px 8px;display:flex;flex-direction:column;gap:4px;
+  }
+  .ocard .top{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .ocard .name{font-size:12.5px;font-weight:700;line-height:1.3;}
+  .badge{
+    font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;white-space:nowrap;
+  }
+  .badge.pdf{background:var(--pdf-soft);color:var(--pdf);}
+  .badge.web{background:var(--web-soft);color:var(--web);}
+  .badge.doc{background:var(--doc-soft);color:var(--doc);}
+  .ocard .means{font-size:11px;color:var(--ink-sub);line-height:1.4;}
+  .ocard .means .fn{font-family:ui-monospace,Menlo,monospace;font-size:10px;color:var(--color-primary);}
+  .ocard .mode{font-size:10.5px;font-weight:700;}
+  .mode.auto{color:#1d6b3a;}
+  .mode.manual{color:#9a3b12;}
+  .ocard.wide{grid-column:1 / -1;}
+
+  /* ---- 注記 ---- */
+  .notes{
+    margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  }
+  .note{
+    border:1px solid var(--line);border-left:4px solid var(--color-accent);
+    background:#fffdf6;border-radius:6px;padding:10px 13px;
+  }
+  .note b{color:var(--color-primary);font-size:13px;}
+  .note p{margin:3px 0 0;font-size:12px;color:var(--ink-sub);}
+
+  footer.mapfoot{margin-top:18px;font-size:11px;color:var(--ink-sub);text-align:right;}
+
+  /* ---- モバイル: 縦積み ---- */
+  @media (max-width:900px){
+    .lanes{grid-template-columns:1fr;}
+    .arrowcol{height:30px;}
+    .arrowcol .ar{transform:rotate(90deg);}
+    .col-head{border-radius:7px 7px 0 0;}
+    .zone{border-radius:0 0 7px 7px;margin-bottom:4px;}
+    .outgrid{grid-template-columns:1fr;}
+    .notes{grid-template-columns:1fr;}
+    .legend{margin-left:0;}
+  }
+
+  /* ---- 印刷: A4横 ---- */
+  @media print{
+    body{background:#fff;}
+    .wrap{max-width:none;padding:8px 10px;}
+    .page-head h1{font-size:18px;}
+    .legend{font-size:10px;}
+    .zone,.ocard,.proc,.incard,.outband,.note{box-shadow:none;}
+    .ocard,.proc,.incard{break-inside:avoid;}
+    .outband{break-inside:avoid;}
+    @page{size:A4 landscape;margin:8mm;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page-head">
+    <div>
+      <h1>regatta-results-kit 全システム MAP</h1>
+      <p class="sub">入力 → 処理 → 出力。試合前に作れるもの / 結果から作るもので分けて俯瞰する1枚図</p>
+    </div>
+    <div class="legend">
+      <span><span class="dot">🟥</span>PDF</span>
+      <span><span class="dot">🟦</span>Webサイト反映</span>
+      <span><span class="dot">🟨</span>Excel・文書</span>
+      <span><span class="dot">⚙️</span>自動</span>
+      <span><span class="dot">👤</span>手動</span>
+    </div>
+  </header>
+
+  <div class="lanes">
+    <!-- 列見出し -->
+    <div class="col-head">入力</div>
+    <div></div>
+    <div class="col-head">処理</div>
+    <div></div>
+    <div class="col-head out">出力</div>
+
+    <!-- ========== 入力 ========== -->
+    <div class="zone">
+      <div class="incard">
+        <h4>エントリーCSV</h4>
+        <p>race_no・lane・クルー名・所属。出漕表の元データ</p>
+      </div>
+      <div class="incard">
+        <h4>スケジュールCSV</h4>
+        <p>レースNo・種目・区分・ラウンド・日付・時刻</p>
+      </div>
+      <div class="incard">
+        <h4>計測CSV（BoatTimer）</h4>
+        <p>R001_500m.csv / R001_1000m.csv。タイム実測値<br>※レース後にDriveへ届く</p>
+      </div>
+      <div class="incard">
+        <h4>config / theme</h4>
+        <p>tournament.config.json・大会名・ブランド色・進行モデル選択</p>
+      </div>
+    </div>
+
+    <div class="arrowcol"><span class="ar">▶</span></div>
+
+    <!-- ========== 処理 ========== -->
+    <div class="zone">
+      <div class="proc">
+        <h4>⚙️ GAS メイン（Code.gs）</h4>
+        <ul>
+          <li><span class="fn">onTrigger()</span> を2分間隔で実行</li>
+          <li>計測CSV→<span class="fn">race_NNN.json</span>→サイトへPush</li>
+          <li>master.json の last_trigger_at も自動更新</li>
+        </ul>
+      </div>
+      <div class="proc">
+        <h4>⚙️👤 GAS PDF出版（pdf_publisher）</h4>
+        <ul>
+          <li><span class="fn">processPendingPDFs()</span> 個別結果PDF（自動）</li>
+          <li><span class="fn">generatePreRaceBooklet()</span> 準備資料（手動）</li>
+          <li><span class="fn">generateAllResultsBooklet()</span> 結果冊子（手動）</li>
+          <li><span class="fn">generateResultsListPdf()</span> 結果一覧（手動）</li>
+        </ul>
+      </div>
+      <div class="proc">
+        <h4>👤 GAS 判定員帳票（judge_form_publisher）</h4>
+        <ul>
+          <li><span class="fn">generateAllJudgeForms()</span> 日別に手動生成</li>
+          <li>master.json のエントリーを各レーンへ記入</li>
+        </ul>
+      </div>
+      <div class="proc">
+        <h4>👤 ローカルツール（tools/・技術者用）</h4>
+        <ul>
+          <li><span class="fn">scaffold.py</span> サイト・staff・手順書を一括生成</li>
+          <li><span class="fn">generate_master.py</span> CSV→master.json</li>
+          <li><span class="fn">generate_race_pdf / _xlsx</span> 競漕記録シート</li>
+          <li><span class="fn">simulate_pipeline / watch</span> GAS無しで再現・リハ</li>
+        </ul>
+      </div>
+      <div class="proc">
+        <h4>👤 管理者ポータル（AdminPortal）</h4>
+        <ul>
+          <li>association.json 更新 → ハブ掲載へ反映</li>
+          <li>theme.json 更新 → サイトのデザイン反映</li>
+          <li>進行モデルを<b>選択</b>（template_id を保存）</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="arrowcol"><span class="ar">▶</span></div>
+
+    <!-- ========== 出力 ========== -->
+    <div class="zone">
+      <div class="outsplit">
+
+        <!-- 試合前 -->
+        <div class="outband pre">
+          <p class="band-title pre"><span class="tag">🏁 試合前</span>試合前に書き出せるもの</p>
+          <div class="outgrid">
+
+            <div class="ocard">
+              <div class="top"><span class="badge pdf">🟥 PDF</span><span class="name">判定員帳票</span></div>
+              <div class="means">GAS <span class="fn">generateAllJudgeForms</span>（日別）</div>
+              <div class="mode manual">👤 手動</div>
+            </div>
+
+            <div class="ocard">
+              <div class="top"><span class="badge pdf">🟥 PDF</span><span class="name">準備資料ブックレット</span></div>
+              <div class="means">GAS <span class="fn">generatePreRaceBooklet</span></div>
+              <div class="mode manual">👤 手動</div>
+            </div>
+
+            <div class="ocard">
+              <div class="top"><span class="badge pdf">🟥 PDF</span><span class="badge doc">🟨 Excel</span></div>
+              <div class="name">競漕記録シート（空欄）</div>
+              <div class="means"><span class="fn">generate_race_pdf/_xlsx</span>（結果未生成時）</div>
+              <div class="mode manual">👤 手動</div>
+            </div>
+
+            <div class="ocard">
+              <div class="top"><span class="badge doc">🟨 HTML</span><span class="name">スタッフ運用HTML</span></div>
+              <div class="means">ローカル <span class="fn">scaffold.py</span></div>
+              <div class="mode manual">👤 手動</div>
+            </div>
+
+            <div class="ocard">
+              <div class="top"><span class="badge doc">🟨 文書</span><span class="name">セットアップ手順書</span></div>
+              <div class="means"><span class="fn">SETUP_GUIDE.generated.md</span></div>
+              <div class="mode manual">👤 手動</div>
+            </div>
+
+            <div class="ocard">
+              <div class="top"><span class="badge web">🟦 Web</span><span class="name">スケジュール / 出漕表示</span></div>
+              <div class="means">サイト3ビュー（master.json 由来）</div>
+              <div class="mode auto">⚙️ 自動</div>
+            </div>
+
+            <div class="ocard wide">
+              <div class="top"><span class="badge web">🟦 Web</span><span class="name">ハブ掲載（大会一覧）</span></div>
+              <div class="means">ポータル association.json 更新 → hub/ に反映</div>
+              <div class="mode manual">👤 手動（操作）→ ⚙️ 反映</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 試合結果 -->
+        <div class="outband post">
+          <p class="band-title post"><span class="tag">🏆 結果後</span>試合結果を元に書き出すもの</p>
+          <div class="outgrid">
+
+            <div class="ocard">
+              <div class="top"><span class="badge web">🟦 Web</span><span class="name">順位 / タイム表示</span></div>
+              <div class="means">GAS <span class="fn">onTrigger</span> 計測CSV→race_NNN.json</div>
+              <div class="mode auto">⚙️ 自動（2分毎）</div>
+            </div>
+
+            <div class="ocard">
+              <div class="top"><span class="badge pdf">🟥 PDF</span><span class="name">個別レース結果</span></div>
+              <div class="means">GAS <span class="fn">processPendingPDFs</span></div>
+              <div class="mode auto">⚙️ 自動</div>
+            </div>
+
+            <div class="ocard">
+              <div class="top"><span class="badge pdf">🟥 PDF</span><span class="name">結果ブックレット</span></div>
+              <div class="means">GAS <span class="fn">generateAllResultsBooklet</span></div>
+              <div class="mode manual">👤 手動</div>
+            </div>
+
+            <div class="ocard">
+              <div class="top"><span class="badge pdf">🟥 PDF</span><span class="name">結果一覧表</span></div>
+              <div class="means">GAS <span class="fn">generateResultsListPdf</span></div>
+              <div class="mode manual">👤 手動</div>
+            </div>
+
+            <div class="ocard">
+              <div class="top"><span class="badge pdf">🟥 PDF</span><span class="badge doc">🟨 Excel</span></div>
+              <div class="name">競漕記録シート（タイム入り）</div>
+              <div class="means"><span class="fn">generate_race_pdf/_xlsx</span>（結果生成後）</div>
+              <div class="mode manual">👤 手動</div>
+            </div>
+
+            <div class="ocard">
+              <div class="top"><span class="badge web">🟦 Web</span><span class="name">ハブのステータス更新</span></div>
+              <div class="means">結果反映に伴い大会ステータスが進行</div>
+              <div class="mode auto">⚙️ 自動／👤一部操作</div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 補足注記 ========== -->
+  <div class="notes">
+    <div class="note">
+      <b>① 進行計算は「次フェーズ」</b>
+      <p>いまのポータルでできるのは進行モデルの<b>選択</b>（registry.json から選び template_id を保存）まで。次ラウンドの自動組分け計算（engine の selectPattern 実行）は<b>次フェーズ</b>で、現状は稼働していない。</p>
+    </div>
+    <div class="note">
+      <b>② 日常で人が触るのは2つだけ</b>
+      <p>大会当日の運用で人が操作するのは <b>Google Drive（CSV投入・PDF回収）</b> と <b>管理者ポータル</b> のみ。GAS 3兄弟・サイト反映は自動。ローカルツール（tools/）は技術者がセットアップ・リハで使う裏方。</p>
+    </div>
+  </div>
+
+  <footer class="mapfoot">regatta-results-kit — system map（A4横・印刷対応）</footer>
+
+</div>
+</body>
+</html>
