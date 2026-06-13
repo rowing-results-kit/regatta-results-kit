@@ -49,7 +49,8 @@
   --lp-container:     1160px;
 
   /* エフェクト */
-  --lp-shadow-card:   0 2px 16px rgba(26,106,255,0.08), 0 1px 4px rgba(0,0,0,0.06);
+  --lp-shadow-base:   0 1px 2px rgba(0,0,0,0.06);
+  --lp-shadow-card:   0 1px 2px rgba(0,0,0,0.06);
   --lp-shadow-hero:   0 24px 64px rgba(26,106,255,0.22);
   --lp-radius:        4px;
   --lp-radius-md:     6px;
@@ -59,6 +60,9 @@
   --ease:             cubic-bezier(0.4, 0, 0.2, 1);
   --dur-fast:         100ms;
   --dur-normal:       200ms;
+
+  /* モック背景色 */
+  --lp-mock-dark:     #1e293b;
 }
 
 /* === Reset === */
@@ -306,7 +310,7 @@ section { padding-block: var(--lp-section-v); }
   align-items: center;
 }
 @media (min-width: 768px) {
-  .hero-inner { grid-template-columns: 1fr 1fr; gap: 3.5rem; }
+  .hero-inner { grid-template-columns: 1fr 1.2fr; gap: 3.5rem; }
 }
 
 .hero-badge {
@@ -346,6 +350,13 @@ section { padding-block: var(--lp-section-v); }
 /* === Hero mock: browser frame === */
 .hero-mock { display: none; }
 @media (min-width: 768px) { .hero-mock { display: block; } }
+
+.hero-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  box-shadow: var(--lp-shadow-hero);
+}
 
 .mock-device {
   border-radius: var(--lp-radius-md);
@@ -454,7 +465,7 @@ section { padding-block: var(--lp-section-v); }
   gap: 0;
 }
 @media (min-width: 640px) {
-  .kpi-inner { grid-template-columns: repeat(3, 1fr); }
+  .kpi-inner { grid-template-columns: auto 1fr auto; gap: 2rem; justify-items: start; }
 }
 .kpi-item {
   padding: 1.5rem 2rem;
@@ -542,10 +553,32 @@ section { padding-block: var(--lp-section-v); }
 .pillar-kpi-unit { font-size: 1rem; font-weight: 700; color: var(--lp-primary); }
 
 /* 画像: 枠なし・角丸なし（straight edge） */
+.pillar-img {
+  overflow: hidden;
+}
 .pillar-img img {
   width: 100%;
   height: auto;
   display: block;
+}
+/* PDF は高さ制限でクロップ（モバイル対応） */
+@media (max-width: 767px) {
+  .pillar-row:nth-child(2) .pillar-img img {
+    max-height: 480px;
+    object-fit: cover;
+    object-position: top;
+  }
+}
+@media (min-width: 768px) {
+  .pillar-img {
+    aspect-ratio: 16/10;
+  }
+  .pillar-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
 }
 
 /* ハブモック */
@@ -646,7 +679,7 @@ section { padding-block: var(--lp-section-v); }
   font-size: 0.75rem;
   font-weight: 700;
   padding: 0.2rem 0.625rem;
-  border-radius: var(--lp-radius-full);
+  border-radius: var(--lp-radius);
   margin-top: 0.375rem;
   font-variant-numeric: tabular-nums;
 }
@@ -816,7 +849,7 @@ section { padding-block: var(--lp-section-v); }
   font-size: 0.8125rem;
   font-weight: 700;
   padding: 0.375rem 0.875rem;
-  border-radius: var(--lp-radius-full);
+  border-radius: var(--lp-radius);
 }
 
 /* === Footer CTA === */
@@ -860,6 +893,9 @@ footer {
   color: rgba(255,255,255,0.25);
   margin-top: 0.75rem;
 }
+
+/* === Component-specific: Mock colors === */
+.mock-bar-dark { background: var(--lp-mock-dark) !important; }
 
 /* === Responsive utilities === */
 @media (max-width: 767px) {
@@ -920,50 +956,16 @@ footer {
       <p class="hero-note">準備するもの: Google / GitHub / Cloudflare の3アカウント</p>
     </div>
 
-    <!-- Speed site mock -->
+    <!-- Hero right: Live screenshot -->
     <div class="hero-mock" aria-hidden="true">
-      <div class="mock-device">
-        <div class="mock-bar">
-          <span class="mock-dot mock-dot-r"></span>
-          <span class="mock-dot mock-dot-y"></span>
-          <span class="mock-dot mock-dot-g"></span>
-          <span class="mock-url">masters-regatta-2026.pages.dev</span>
-        </div>
-        <div class="mock-screen">
-          <div class="mock-head">
-            <div class="mock-head-title">第17回全日本マスターズレガッタ — 速報</div>
-            <div class="mock-head-sub">石川県津幡漕艇競技場 / 2026-05-23</div>
-          </div>
-          <div class="mock-category">M1X — 1000m 決勝</div>
-          <div class="mock-th">
-            <span>順位</span><span>チーム</span><span>500m</span><span>1000m</span>
-          </div>
-          <div class="mock-tr">
-            <span class="mock-rank mock-rank-1">1</span>
-            <span>秋田RC</span>
-            <span class="mock-time">3:42.1</span>
-            <span class="mock-time">7:18.4</span>
-          </div>
-          <div class="mock-tr">
-            <span class="mock-rank mock-rank-2">2</span>
-            <span>石川OB</span>
-            <span class="mock-time">3:44.8</span>
-            <span class="mock-time">7:23.1</span>
-          </div>
-          <div class="mock-tr">
-            <span class="mock-rank mock-rank-3">3</span>
-            <span>東北BRC</span>
-            <span class="mock-time">3:47.2</span>
-            <span class="mock-time">7:29.7</span>
-          </div>
-          <div style="padding:0.375rem 0.5rem;text-align:right;">
-            <span class="mock-live">
-              <span class="mock-live-dot"></span>
-              自動更新中
-            </span>
-          </div>
-        </div>
-      </div>
+      <img
+        class="hero-image"
+        src="./assets/img/live-site-pc.png"
+        alt="速報サイトのPC表示画面"
+        width="640"
+        height="480"
+        loading="eager"
+      >
     </div>
   </div>
 </section>
@@ -1175,7 +1177,7 @@ footer {
         </div>
 
         <div class="mock-drive">
-          <div class="mock-bar" style="background:#1e293b;">
+          <div class="mock-bar mock-bar-dark">
             <span class="mock-dot" style="background:#FF5F57;"></span>
             <span class="mock-dot" style="background:#FEBC2E;"></span>
             <span class="mock-dot" style="background:#28C840;"></span>
@@ -1424,7 +1426,7 @@ footer {
           </svg>
         </button>
         <div class="faq-a" id="faq-a-2" role="region" aria-labelledby="faq-q-2">
-          <p class="faq-a-inner">導入に必要な操作は「コピー&amp;ペーストと数か所の書き換え」だけです。手順書のとおりに進めれば完了できるよう設計しています。</p>
+          <p class="faq-a-inner">導入に必要な操作は「コピー&amp;ペーストと数か所の書き換え」のみ。手順書のとおりに進めれば完了します。</p>
         </div>
       </div>
 
@@ -1436,13 +1438,13 @@ footer {
           </svg>
         </button>
         <div class="faq-a" id="faq-a-3" role="region" aria-labelledby="faq-q-3">
-          <p class="faq-a-inner">3つのアカウントを用意するだけです。</p>
+          <p class="faq-a-inner">3つのアカウント。いずれも無料。</p>
           <div class="account-pills" role="list">
             <span class="account-pill" role="listitem">Google アカウント</span>
             <span class="account-pill" role="listitem">GitHub アカウント</span>
             <span class="account-pill" role="listitem">Cloudflare アカウント</span>
           </div>
-          <p class="faq-a-inner" style="margin-top:0.75rem;">いずれも無料で作成できます。PC（スマホ不可）とインターネット環境があれば始められます。</p>
+          <p class="faq-a-inner" style="margin-top:0.75rem;">いずれも無料作成可。PC（スマホ不可）とインターネット環境があれば十分です。</p>
         </div>
       </div>
 
@@ -1466,7 +1468,7 @@ footer {
           </svg>
         </button>
         <div class="faq-a" id="faq-a-5" role="region" aria-labelledby="faq-q-5">
-          <p class="faq-a-inner">使えます。複数大会を年間ハブで一元管理する機能を実装済みです。大会ごとにデータをリセットする操作だけで、同じ仕組みを繰り返し利用できます。</p>
+          <p class="faq-a-inner">複数大会を年間ハブで一元管理可能。大会ごとにデータをリセットするだけで同じ仕組みを繰り返し利用できます。</p>
         </div>
       </div>
 
