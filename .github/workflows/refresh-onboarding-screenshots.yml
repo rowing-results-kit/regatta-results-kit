@@ -70,7 +70,7 @@ jobs:
 
           ログイン不要の公開画面6枚を再撮影してオンボーディングガイドに反映。
           - gh-template-repo.png / gh-login.png / gh-actions-tab-example.png
-          - cf-login.png / google-drive-login.png / gas-landing.png
+          - cf-pages.png / google-drive-login.png / gas-landing.png
 
           Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
           git push
