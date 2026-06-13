@@ -573,12 +573,12 @@ function testGenerateRace1() {
   const dummyResult = {
     race_no: 1,
     results: [
-      { rank: 1, lane: 4, category: 'F', affiliation: 'ＲⅭ神戸', crew_name: 'ＲＣ神戸　なでしこＯｈバーン', time_500: '1:38.20', time_1000: '3:24.50', note: '' },
-      { rank: 2, lane: 2, category: 'D', affiliation: '愛知東郷ボートクラブ', crew_name: '愛知東郷ボートクラブ', time_500: '1:42.50', time_1000: '3:31.20', note: '' },
-      { rank: 3, lane: 5, category: 'F', affiliation: '瀬田漕艇クラブ', crew_name: '瀬田漕艇クラブ', time_500: '1:44.00', time_1000: '3:34.80', note: '' },
-      { rank: 4, lane: 1, category: 'D', affiliation: 'Ｅ．Ｒ．Ｃ．Ｃ', crew_name: 'Ｅ．Ｒ．Ｃ．Ｃ　Ｗ４Ｘ＋　Ｄ', time_500: '1:45.30', time_1000: '3:38.10', note: '' },
-      { rank: 5, lane: 3, category: 'E', affiliation: 'ボート団塊号', crew_name: '宮ヶ瀬', time_500: '1:47.10', time_1000: '3:42.60', note: '' },
-      { rank: 6, lane: 6, category: 'F', affiliation: '浜寺マスターズクラブ', crew_name: '浜寺マスターズアマゾネスＢ', time_500: '1:51.80', time_1000: '3:48.30', note: '' }
+      { rank: 1, lane: 4, category: 'F', affiliation: 'サンプルクラブA', crew_name: 'サンプルクラブA　チームα', time_500: '1:38.20', time_1000: '3:24.50', note: '' },
+      { rank: 2, lane: 2, category: 'D', affiliation: 'サンプルクラブB', crew_name: 'サンプルクラブB', time_500: '1:42.50', time_1000: '3:31.20', note: '' },
+      { rank: 3, lane: 5, category: 'F', affiliation: 'サンプルクラブC', crew_name: 'サンプルクラブC', time_500: '1:44.00', time_1000: '3:34.80', note: '' },
+      { rank: 4, lane: 1, category: 'D', affiliation: 'サンプルクラブD', crew_name: 'サンプルクラブD　W4X＋　D', time_500: '1:45.30', time_1000: '3:38.10', note: '' },
+      { rank: 5, lane: 3, category: 'E', affiliation: 'サンプルクラブE', crew_name: 'サンプルクラブE　チームβ', time_500: '1:47.10', time_1000: '3:42.60', note: '' },
+      { rank: 6, lane: 6, category: 'F', affiliation: 'サンプルクラブF', crew_name: 'サンプルクラブF　チームγ', time_500: '1:51.80', time_1000: '3:48.30', note: '' }
     ]
   };
   return generatePdf('1', masterData, dummyResult);
