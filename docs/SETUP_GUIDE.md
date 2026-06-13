@@ -159,10 +159,11 @@
 | プロパティ名 | 値 |
 |---|---|
 | `DRIVE_ROOT_FOLDER_ID` | ステップ 4 でコピーしたフォルダ ID |
-| `GITHUB_OWNER` | 自分の GitHub アカウント名（例: `your-org`） |
-| `GITHUB_REPO` | ステップ 1 で作成したリポジトリ名（例: `association-regatta-2027`） |
-| `MEASUREMENT_POINTS` | `500m,1000m`（変更不要） |
 
+> `GITHUB_OWNER` / `GITHUB_REPO` は管理者ポータルの「接続設定」タブで GitHub リポジトリの URL を貼り付けるだけで自動設定されます（スクリプトプロパティへの手入力は不要です）。
+>
+> `MEASUREMENT_POINTS` は `500m,1000m` がデフォルトで自動設定されるため、通常は設定不要です。1500m・2000m コース等で変更が必要な場合のみ、管理者ポータルの接続設定から変更してください。
+>
 > `GITHUB_TOKEN` はステップ 6 の後に設定します。
 
 ### GAS-B（PDF Publisher）— 任意

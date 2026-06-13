@@ -120,6 +120,23 @@ function portalGithubPut_(ctx, path, contentText, message, sha) {
   return true;
 }
 
+/**
+ * GitHub リポジトリ URL から {owner, repo} を抽出する。
+ * 入力: "https://github.com/<owner>/<repo>" またはowner/repo形式（後方互換）
+ * 戻り値: {owner:string, repo:string} または null（不正URL時）
+ */
+function extractOwnerRepoFromUrl(input) {
+  if (!input) return null;
+  var s = String(input).trim();
+  // https://github.com/<owner>/<repo>[.git][/...]
+  var m = s.match(/^https?:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+?)(?:\.git)?\/?(?:[?#].*)?$/);
+  if (m) return { owner: m[1], repo: m[2] };
+  // owner/repo 形式（後方互換）
+  var m2 = s.match(/^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)$/);
+  if (m2) return { owner: m2[1], repo: m2[2] };
+  return null;
+}
+
 /** Drive 共有 URL からフォルダ ID を抽出。ID 直書きならそのまま返す。 */
 function portalExtractFolderId_(input) {
   if (!input) return '';
@@ -201,14 +218,31 @@ function portalSaveSettings(obj) {
         saved.push('MEASUREMENT_POINTS');
       }
     }
-    if (Object.prototype.hasOwnProperty.call(obj, 'githubOwner')) {
+    // GitHub URL 一括入力（主動線）
+    if (Object.prototype.hasOwnProperty.call(obj, 'githubRepoUrl')) {
+      var rawUrl = obj.githubRepoUrl;
+      if (rawUrl !== null && rawUrl !== undefined && String(rawUrl).trim() !== '') {
+        var parsed = extractOwnerRepoFromUrl(String(rawUrl).trim());
+        if (!parsed) {
+          throw new Error('GitHub URL の形式が正しくありません。「https://github.com/アカウント名/リポジトリ名」の形で貼り付けてください。');
+        }
+        props.setProperty('GITHUB_OWNER', parsed.owner);
+        props.setProperty('GITHUB_REPO', parsed.repo);
+        saved.push('GITHUB_OWNER');
+        saved.push('GITHUB_REPO');
+      }
+    }
+    // 個別入力（後方互換）— githubRepoUrl が未指定の場合のみ適用
+    if (Object.prototype.hasOwnProperty.call(obj, 'githubOwner') &&
+        !Object.prototype.hasOwnProperty.call(obj, 'githubRepoUrl')) {
       var ow = obj.githubOwner;
       if (ow !== null && ow !== undefined && String(ow).trim() !== '') {
         props.setProperty('GITHUB_OWNER', String(ow).trim());
         saved.push('GITHUB_OWNER');
       }
     }
-    if (Object.prototype.hasOwnProperty.call(obj, 'githubRepo')) {
+    if (Object.prototype.hasOwnProperty.call(obj, 'githubRepo') &&
+        !Object.prototype.hasOwnProperty.call(obj, 'githubRepoUrl')) {
       var rp = obj.githubRepo;
       if (rp !== null && rp !== undefined && String(rp).trim() !== '') {
         props.setProperty('GITHUB_REPO', String(rp).trim());

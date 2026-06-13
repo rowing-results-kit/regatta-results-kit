@@ -433,36 +433,31 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
         </details>
       </div>
       <div class="field">
-        <label>計測ポイント（MEASUREMENT_POINTS）</label>
-        <div id="mpCheckboxes" style="display:flex;gap:18px;flex-wrap:wrap;margin-top:4px;">
-          <label style="display:flex;align-items:center;gap:6px;font-weight:500;cursor:pointer;"><input type="checkbox" id="mp500" value="500m"> 500m</label>
-          <label style="display:flex;align-items:center;gap:6px;font-weight:500;cursor:pointer;"><input type="checkbox" id="mp1000" value="1000m"> 1000m</label>
-          <label style="display:flex;align-items:center;gap:6px;font-weight:500;cursor:pointer;"><input type="checkbox" id="mp1500" value="1500m"> 1500m</label>
-          <label style="display:flex;align-items:center;gap:6px;font-weight:500;cursor:pointer;"><input type="checkbox" id="mp2000" value="2000m"> 2000m</label>
+        <label>GitHub リポジトリ URL</label>
+        <div style="display:flex;gap:6px;align-items:center;margin-top:2px;font-size:13px;color:var(--muted)">
+          <span id="curOwnerRepo">現在: —</span>
         </div>
-        <div class="hint">1つ以上選択してください。</div>
-      </div>
-      <div class="row2">
-        <div class="field">
-          <label>GITHUB_OWNER</label>
-          <div class="mask" id="curOwner">—</div>
-          <input type="text" id="inOwner" placeholder="例: your-association">
-        </div>
-        <div class="field">
-          <label>GITHUB_REPO</label>
-          <div class="mask" id="curRepo">—</div>
-          <input type="text" id="inRepo" placeholder="例: regatta-results-kit">
-        </div>
+        <input type="text" id="inRepoUrl" placeholder="https://github.com/your-association/regatta-2027">
+        <div class="hint">リポジトリページの URL をそのまま貼り付けてください。オーナーとリポジトリ名は自動で取り出されます。</div>
+        <details class="help-details">
+          <summary>取得方法</summary>
+          <div class="help-body">
+            Step 1 で作成したリポジトリを GitHub で開き、ブラウザのアドレスバーの URL をコピーして貼り付けます。<br>
+            例: <code>https://github.com/sample-rowing/regatta-2027</code>
+          </div>
+        </details>
       </div>
       <details class="help-details" style="margin-bottom:10px;">
-        <summary>📖 GITHUB_OWNER / GITHUB_REPO の取得方法</summary>
+        <summary>計測ポイントを変更したい場合（通常は変更不要）</summary>
         <div class="help-body">
-          速報サイトのテンプレートから作成した自分のリポジトリを使います。<br>
-          リポジトリページの URL から読み取ります。
-          <code class="url-diagram">https://github.com/〈オーナー名〉/〈リポジトリ名〉
-                         ↑ これが GITHUB_OWNER  ↑ これが GITHUB_REPO</code>
-          例: <code>https://github.com/sample-rowing/regatta-2027</code> の場合<br>
-          　GITHUB_OWNER = <code>sample-rowing</code>　GITHUB_REPO = <code>regatta-2027</code>
+          <div style="margin-bottom:6px;font-size:12px;color:var(--muted)">デフォルトで「500m, 1000m」が自動設定されます。1500m・2000mコース等で変更が必要な場合のみ選択してください。</div>
+          <div id="mpCheckboxes" style="display:flex;gap:18px;flex-wrap:wrap;margin-top:4px;">
+            <label style="display:flex;align-items:center;gap:6px;font-weight:500;cursor:pointer;"><input type="checkbox" id="mp500" value="500m"> 500m</label>
+            <label style="display:flex;align-items:center;gap:6px;font-weight:500;cursor:pointer;"><input type="checkbox" id="mp1000" value="1000m"> 1000m</label>
+            <label style="display:flex;align-items:center;gap:6px;font-weight:500;cursor:pointer;"><input type="checkbox" id="mp1500" value="1500m"> 1500m</label>
+            <label style="display:flex;align-items:center;gap:6px;font-weight:500;cursor:pointer;"><input type="checkbox" id="mp2000" value="2000m"> 2000m</label>
+          </div>
+          <div class="hint" id="mpHint" style="display:none">選択した値で保存します（未選択の場合は変更しません）。</div>
         </div>
       </details>
       <div class="field">
@@ -1030,10 +1025,16 @@ function loadSettings(){
     if(!res||!res.ok){showMsg($('settingsMsg'),(res&&res.error)||'読み込み失敗','err');return;}
     var d=res.data;
     setText($('curDrive'),d.driveRootFolderId.set?('現在: '+d.driveRootFolderId.masked):'未設定');
-    setText($('curOwner'),d.githubOwner.set?('現在: '+d.githubOwner.masked):'未設定');
-    setText($('curRepo'),d.githubRepo.set?('現在: '+d.githubRepo.masked):'未設定');
+    /* GitHub owner/repo を1行にまとめて表示 */
+    var ownerSet=d.githubOwner&&d.githubOwner.set;
+    var repoSet=d.githubRepo&&d.githubRepo.set;
+    var orText=ownerSet&&repoSet?('現在: '+d.githubOwner.masked+'/'+d.githubRepo.masked)
+               :ownerSet?('現在: '+d.githubOwner.masked+'/（リポジトリ未設定）')
+               :repoSet?('現在: （オーナー未設定）/'+d.githubRepo.masked)
+               :'未設定';
+    setText($('curOwnerRepo'),orText);
     setText($('curToken'),d.githubToken.set?'設定あり':'未設定');
-    /* チェックボックスに既存値を反映 */
+    /* チェックボックスに既存値を反映（設定済みの場合のみ）*/
     var mpIds = ['mp500','mp1000','mp1500','mp2000'];
     mpIds.forEach(function(id){$(id).checked=false;});
     if(d.measurementPoints&&d.measurementPoints.value){
@@ -1049,25 +1050,26 @@ function loadSettings(){
 }
 
 function saveSettings(){
-  /* 計測ポイントをチェックボックスから組み立て（昇順） */
+  var obj={};
+  if($('inDrive').value.trim())obj.driveRootFolderId=$('inDrive').value.trim();
+  /* GitHub リポジトリ URL（主動線） */
+  if($('inRepoUrl').value.trim())obj.githubRepoUrl=$('inRepoUrl').value.trim();
+  /* 計測ポイント — チェックがある場合のみ送信（未チェック＝変更しない） */
   var mpOrder=['500m','1000m','1500m','2000m'];
   var mpMap={'500m':'mp500','1000m':'mp1000','1500m':'mp1500','2000m':'mp2000'};
   var selectedMp=mpOrder.filter(function(v){return $(mpMap[v]).checked;});
-  if(selectedMp.length===0){
-    showMsg($('settingsMsg'),'計測ポイントを1つ以上選択してください','err');
+  if(selectedMp.length>0)obj.measurementPoints=selectedMp.join(',');
+  if($('inToken').value.trim())obj.githubToken=$('inToken').value.trim();
+  /* 何も変更がない場合 */
+  if(Object.keys(obj).length===0){
+    showMsg($('settingsMsg'),'変更する項目を入力してください','err');
     return;
   }
-  var obj={};
-  if($('inDrive').value.trim())obj.driveRootFolderId=$('inDrive').value.trim();
-  obj.measurementPoints=selectedMp.join(',');
-  if($('inOwner').value.trim())obj.githubOwner=$('inOwner').value.trim();
-  if($('inRepo').value.trim())obj.githubRepo=$('inRepo').value.trim();
-  if($('inToken').value.trim())obj.githubToken=$('inToken').value.trim();
   showMsg($('settingsMsg'),'保存中 …','info');
   run().withSuccessHandler(function(res){
     if(!res||!res.ok){showMsg($('settingsMsg'),(res&&res.error)||'保存失敗','err');return;}
     showMsg($('settingsMsg'),'保存しました: '+(res.data.saved.join(', ')||'（変更なし）'),'ok');
-    $('inDrive').value='';$('inOwner').value='';$('inRepo').value='';$('inToken').value='';
+    $('inDrive').value='';$('inRepoUrl').value='';$('inToken').value='';
     loadSettings();
   }).withFailureHandler(function(e){
     showMsg($('settingsMsg'),'通信エラー: '+esc(e&&e.message),'err');
