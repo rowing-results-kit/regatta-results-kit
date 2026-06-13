@@ -452,7 +452,7 @@ section { padding-block: var(--lp-section-v); }
   gap: 0;
 }
 @media (min-width: 640px) {
-  .kpi-inner { grid-template-columns: auto 1fr auto; gap: 2rem; justify-items: start; }
+  .kpi-inner { grid-template-columns: repeat(3, max-content); gap: clamp(1.5rem, 5vw, 4rem); justify-content: space-between; justify-items: start; }
 }
 .kpi-item {
   padding: 1.5rem 2rem;
