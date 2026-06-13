@@ -24,7 +24,7 @@ const OUT_DIR = path.join(REPO_ROOT, 'docs/assets/img/onboarding');
 const SHOTS = [
   {
     id: 'gh-template-repo',
-    url: 'https://github.com/RYUIYAMADA/regatta-results-kit',
+    url: 'https://github.com/rowing-results-kit/regatta-results-kit',
     waitFor: 'networkidle',
     desc: 'GitHub テンプレートリポジトリ（Use this template ボタン）',
   },
@@ -42,7 +42,7 @@ const SHOTS = [
   },
   {
     id: 'gh-actions-tab-example',
-    url: 'https://github.com/RYUIYAMADA/regatta-results-kit/actions',
+    url: 'https://github.com/rowing-results-kit/regatta-results-kit/actions',
     waitFor: 'networkidle',
     desc: 'GitHub Actions タブ（公開リポジトリ）',
   },

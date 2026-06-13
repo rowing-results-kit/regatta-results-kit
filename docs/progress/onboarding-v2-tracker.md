@@ -128,7 +128,7 @@ W3-1 + W3-2 ─→ W3-3 ─→ W3-4 (配置・公開 / PM 確認後)
   - Step 3: Actions 3段階モック（Actionsタブ→左サイドバー→Run workflow）
   - 失敗時ログ確認手順（赤バツ→クリック→日本語エラー）をQ&Aモックで明示
   - 総合チェックリスト9項目・進捗バー付き
-  - GitHub Pages（main/docs）有効化 → URL: https://ryuiyamada.github.io/regatta-results-kit/onboarding/
+  - GitHub Pages（main/docs）有効化 → URL: https://rowing-results-kit.github.io/regatta-results-kit/onboarding/
   - QA静的チェック: 真のNG = 0（false positive 2件はHTMLサンプル値）
   - W3-2（GASテンプレートリンク）が完了次第 W3-3 でリンクを埋め込む
 

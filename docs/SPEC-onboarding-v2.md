@@ -35,7 +35,7 @@ Python 環境・ターミナル操作・git 操作を前提とするため、技
 
 **操作**
 
-1. オンボーディングサイトに記載の URL（`https://github.com/RYUIYAMADA/regatta-results-kit`）を開く
+1. オンボーディングサイトに記載の URL（`https://github.com/rowing-results-kit/regatta-results-kit`）を開く
 2. 右上の **"Use this template"** → **"Create a new repository"** をクリック
 3. Owner を自団体の GitHub アカウントに変更
 4. Repository name を入力（例: `association-regatta-2027`）
@@ -472,7 +472,7 @@ var patExpiresAt = props.getProperty('PAT_EXPIRES_AT') || '';
 
 **採用: 案 A — `regatta-results-kit` リポジトリの GitHub Pages として同梱**
 - 配置: `docs/onboarding/index.html`（GitHub Pages の `docs/` フォルダ公開設定）
-- URL（確定・固定）: `https://ryuiyamada.github.io/regatta-results-kit/onboarding/`
+- URL（確定・固定）: `https://rowing-results-kit.github.io/regatta-results-kit/onboarding/`
 - 実装済み（2026-06-12 working-designer）: GitHub Pages（main/docs）有効化済み
 
 理由: オンボーディングサイトの内容（手順・スクリーンショット・GAS テンプレートリンク）はリポジトリのバージョンと密結合しており、kit の public 化 GO と同時にリリースするのが自然。
