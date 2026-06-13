@@ -35,11 +35,10 @@ const SHOTS = [
     desc: 'GitHub ログイン画面',
   },
   {
-    id: 'cf-login',
-    url: 'https://dash.cloudflare.com/login',
-    waitFor: 'load',
-    waitTimeout: 12000,
-    desc: 'Cloudflare ログイン画面（Turnstile含む）',
+    id: 'cf-pages',
+    url: 'https://pages.cloudflare.com/',
+    waitFor: 'networkidle',
+    desc: 'Cloudflare Pages 製品ページ（アカウント作成フォーム・Sign Up ボタン）',
   },
   {
     id: 'gh-actions-tab-example',
