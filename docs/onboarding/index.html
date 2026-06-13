@@ -1079,6 +1079,92 @@ p, li, td, th, caption, .ja-text {
   padding: 0.25rem 0.625rem;
   margin-bottom: 0.5rem;
 }
+
+/* ── AI 相談ボタン ── */
+.ai-consult-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+.ai-consult-label {
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+.btn-ai-consult {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: 4px;
+  border: 1.5px solid var(--color-primary);
+  background: var(--color-bg);
+  color: var(--color-primary);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  min-height: 36px;
+}
+.btn-ai-consult:hover,
+.btn-ai-consult:focus-visible {
+  background: var(--color-primary-100);
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.btn-ai-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: 4px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  min-height: 36px;
+  transition: background 0.15s;
+}
+.btn-ai-copy:hover,
+.btn-ai-copy:focus-visible {
+  background: var(--color-bg-sub);
+  outline: 2px solid var(--color-border);
+  outline-offset: 2px;
+}
+.ai-copy-feedback {
+  font-size: 0.78rem;
+  color: var(--color-success);
+  display: none;
+  font-weight: 700;
+}
+.ai-consult-section {
+  background: var(--color-bg-sub);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 1.25rem 1.5rem;
+  margin: 2rem 0;
+}
+.ai-consult-section h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 0.5rem;
+}
+.ai-consult-section p {
+  font-size: 0.875rem;
+  color: var(--color-text);
+  margin-bottom: 0.875rem;
+  line-height: 1.6;
+}
 </style>
 </head>
 <body>
@@ -1230,6 +1316,22 @@ p, li, td, th, caption, .ja-text {
                 <label for="c1-2"><code style="font-family:monospace;font-size:0.8rem">.github/workflows/</code> フォルダが存在する</label>
               </li>
             </ul>
+            <div class="ai-consult-row">
+              <span class="ai-consult-label">詰まった場合:</span>
+              <a href="https://claude.ai/new?q=regatta-results-kit%20%E3%81%AE%E3%82%BB%E3%83%83%E3%83%88%E3%82%A2%E3%83%83%E3%83%97%20Step%201%EF%BC%88%E3%83%86%E3%83%B3%E3%83%97%E3%83%AC%E3%83%BC%E3%83%88%E3%83%AA%E3%83%9D%E3%82%B8%E3%83%88%E3%83%AA%E3%82%92%E3%82%B3%E3%83%94%E3%83%BC%EF%BC%89%E3%81%A7%E5%9B%B0%E3%81%A3%E3%81%A6%E3%81%84%E3%81%BE%E3%81%99%E3%80%82GitHub%20%E3%81%A7%20Use%20this%20template%20%E3%83%9C%E3%82%BF%E3%83%B3%E3%82%92%E6%8A%BC%E3%81%97%E3%81%A6%E8%87%AA%E5%88%86%E3%81%AE%E3%83%AA%E3%83%9D%E3%82%B8%E3%83%88%E3%83%AA%E3%82%92%E4%BD%9C%E3%82%8B%E6%89%8B%E9%A0%86%E3%81%A7%E8%A9%B0%E3%81%BE%E3%81%A3%E3%81%A6%E3%81%84%E3%81%BE%E3%81%99%E3%80%82%E5%88%9D%E5%BF%83%E8%80%85%E5%90%91%E3%81%91%E3%81%AB%E4%B8%81%E5%AF%A7%E3%81%AB%E6%95%99%E3%81%88%E3%81%A6%E3%81%8F%E3%81%A0%E3%81%95%E3%81%84%E3%80%82"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 class="btn-ai-consult"
+                 aria-label="Step 1 についてClaudeに相談する（新しいタブで開きます）">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Claude に相談する
+              </a>
+              <button class="btn-ai-copy" data-step="1" data-context="regatta-results-kit のセットアップ Step 1（テンプレートリポジトリをコピー）で困っています。GitHub で Use this template ボタンを押して自分のリポジトリを作る手順で詰まっています。初心者向けに丁寧に教えてください。" aria-label="相談文をクリップボードにコピー">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                相談文をコピー
+              </button>
+              <span class="ai-copy-feedback" aria-live="polite">コピーしました</span>
+            </div>
           </div>
           <hr class="divider">
           <div class="qa-block" aria-label="詰まったときの対処">
@@ -1332,6 +1434,22 @@ p, li, td, th, caption, .ja-text {
                 <label for="c2-2"><code style="font-family:monospace;font-size:0.8rem">https://&lt;project-name&gt;.pages.dev</code> でページが表示される</label>
               </li>
             </ul>
+            <div class="ai-consult-row">
+              <span class="ai-consult-label">詰まった場合:</span>
+              <a href="https://claude.ai/new?q=regatta-results-kit%20%E3%81%AE%E3%82%BB%E3%83%83%E3%83%88%E3%82%A2%E3%83%83%E3%83%97%20Step%202%EF%BC%88Cloudflare%20Pages%20%E6%8E%A5%E7%B6%9A%EF%BC%89%E3%81%A7%E5%9B%B0%E3%81%A3%E3%81%A6%E3%81%84%E3%81%BE%E3%81%99%E3%80%82GitHub%20%E3%83%AA%E3%83%9D%E3%82%B8%E3%83%88%E3%83%AA%E3%82%92Cloudflare%20Pages%20%E3%81%AB%E6%8E%A5%E7%B6%9A%E3%81%97%E3%81%A6%E8%87%AA%E5%8B%95%E3%83%87%E3%83%97%E3%83%AD%E3%82%A4%E3%82%92%E8%A8%AD%E5%AE%9A%E3%81%99%E3%82%8B%E6%89%8B%E9%A0%86%E3%81%A7%E8%A9%B0%E3%81%BE%E3%81%A3%E3%81%A6%E3%81%84%E3%81%BE%E3%81%99%E3%80%82Build%20output%20directory%E3%81%AF%20site%20%E3%82%92%E6%8C%87%E5%AE%9A%E3%81%97%E3%81%BE%E3%81%99%E3%80%82%E5%88%9D%E5%BF%83%E8%80%85%E5%90%91%E3%81%91%E3%81%AB%E4%B8%81%E5%AF%A7%E3%81%AB%E6%95%99%E3%81%88%E3%81%A6%E3%81%8F%E3%81%A0%E3%81%95%E3%81%84%E3%80%82"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 class="btn-ai-consult"
+                 aria-label="Step 2 についてClaudeに相談する（新しいタブで開きます）">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Claude に相談する
+              </a>
+              <button class="btn-ai-copy" data-step="2" data-context="regatta-results-kit のセットアップ Step 2（Cloudflare Pages 接続）で困っています。GitHub リポジトリを Cloudflare Pages に接続して自動デプロイを設定する手順で詰まっています。Build output directory は site を指定します。初心者向けに丁寧に教えてください。" aria-label="相談文をクリップボードにコピー">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                相談文をコピー
+              </button>
+              <span class="ai-copy-feedback" aria-live="polite">コピーしました</span>
+            </div>
           </div>
           <hr class="divider">
           <div class="qa-block" aria-label="詰まったときの対処">
@@ -1456,6 +1574,22 @@ p, li, td, th, caption, .ja-text {
                 <label for="c3-3">Cloudflare の速報サイトに大会名が表示されている</label>
               </li>
             </ul>
+            <div class="ai-consult-row">
+              <span class="ai-consult-label">詰まった場合:</span>
+              <a href="https://claude.ai/new?q=regatta-results-kit%20%E3%81%AE%E3%82%BB%E3%83%83%E3%83%88%E3%82%A2%E3%83%83%E3%83%97%20Step%203%EF%BC%88GitHub%20Actions%20%E3%81%A7%E5%A4%A7%E4%BC%9A%E6%83%85%E5%A0%B1%E5%88%9D%E6%9C%9F%E6%A7%8B%E7%AF%89%EF%BC%89%E3%81%A7%E5%9B%B0%E3%81%A3%E3%81%A6%E3%81%84%E3%81%BE%E3%81%99%E3%80%82Actions%20%E3%82%BF%E3%83%96%E3%81%AE%E3%80%8C%E5%A4%A7%E4%BC%9A%E5%88%9D%E6%9C%9F%E6%A7%8B%E7%AF%89%E3%80%8D%E3%82%92Run%20workflow%20%E3%81%97%E3%81%A6%E5%A4%A7%E4%BC%9A%E5%90%8D%E3%83%BB%E4%BC%9A%E5%A0%B4%E3%83%BB%E6%97%A5%E7%A8%8B%E3%82%92%E5%85%A5%E5%8A%9B%E3%81%99%E3%82%8B%E6%89%8B%E9%A0%86%E3%81%A7%E8%A9%B0%E3%81%BE%E3%81%A3%E3%81%A6%E3%81%84%E3%81%BE%E3%81%99%E3%80%82%E5%88%9D%E5%BF%83%E8%80%85%E5%90%91%E3%81%91%E3%81%AB%E4%B8%81%E5%AF%A7%E3%81%AB%E6%95%99%E3%81%88%E3%81%A6%E3%81%8F%E3%81%A0%E3%81%95%E3%81%84%E3%80%82"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 class="btn-ai-consult"
+                 aria-label="Step 3 についてClaudeに相談する（新しいタブで開きます）">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Claude に相談する
+              </a>
+              <button class="btn-ai-copy" data-step="3" data-context="regatta-results-kit のセットアップ Step 3（GitHub Actions で大会情報を入力して初期構築）で困っています。Actions タブの「大会初期構築」を Run workflow して大会名・会場・日程を入力する手順で詰まっています。初心者向けに丁寧に教えてください。" aria-label="相談文をクリップボードにコピー">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                相談文をコピー
+              </button>
+              <span class="ai-copy-feedback" aria-live="polite">コピーしました</span>
+            </div>
           </div>
           <hr class="divider">
           <div class="qa-block" aria-label="詰まったときの対処">
@@ -1664,6 +1798,22 @@ p, li, td, th, caption, .ja-text {
                 <label for="c4-1">URL末尾の英数字（20〜30文字）をコピーできた</label>
               </li>
             </ul>
+            <div class="ai-consult-row">
+              <span class="ai-consult-label">詰まった場合:</span>
+              <a href="https://claude.ai/new?q=regatta-results-kit%20%E3%81%AE%E3%82%BB%E3%83%83%E3%83%88%E3%82%A2%E3%83%83%E3%83%97%20Step%204%EF%BC%88Google%20Drive%20%E3%83%95%E3%82%A9%E3%83%AB%E3%83%80%E3%81%AEID%E5%8F%96%E5%BE%97%EF%BC%89%E3%81%A7%E5%9B%B0%E3%81%A3%E3%81%A6%E3%81%84%E3%81%BE%E3%81%99%E3%80%82Google%20Drive%20%E3%81%A7%E5%A4%A7%E4%BC%9A%E7%94%A8%E3%83%95%E3%82%A9%E3%83%AB%E3%83%80%E3%82%92%E4%BD%9C%E6%88%90%E3%81%97%E3%80%81URL%20%E3%81%8B%E3%82%89%E3%83%95%E3%82%A9%E3%83%AB%E3%83%80%20ID%20%E3%82%92%E3%82%B3%E3%83%94%E3%83%BC%E3%81%99%E3%82%8B%E6%89%8B%E9%A0%86%E3%81%A7%E8%A9%B0%E3%81%BE%E3%81%A3%E3%81%A6%E3%81%84%E3%81%BE%E3%81%99%E3%80%82%E5%88%9D%E5%BF%83%E8%80%85%E5%90%91%E3%81%91%E3%81%AB%E4%B8%81%E5%AF%A7%E3%81%AB%E6%95%99%E3%81%88%E3%81%A6%E3%81%8F%E3%81%A0%E3%81%95%E3%81%84%E3%80%82"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 class="btn-ai-consult"
+                 aria-label="Step 4 についてClaudeに相談する（新しいタブで開きます）">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Claude に相談する
+              </a>
+              <button class="btn-ai-copy" data-step="4" data-context="regatta-results-kit のセットアップ Step 4（Google Drive フォルダの ID 取得）で困っています。Google Drive で大会用フォルダを作成し、URL からフォルダ ID をコピーする手順で詰まっています。初心者向けに丁寧に教えてください。" aria-label="相談文をクリップボードにコピー">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                相談文をコピー
+              </button>
+              <span class="ai-copy-feedback" aria-live="polite">コピーしました</span>
+            </div>
           </div>
         </div>
         <div>
@@ -1780,6 +1930,22 @@ p, li, td, th, caption, .ja-text {
                 <label for="c5-1">GAS エディタのスクリプトプロパティ一覧に設定した全キーが表示されている</label>
               </li>
             </ul>
+            <div class="ai-consult-row">
+              <span class="ai-consult-label">詰まった場合:</span>
+              <a href="https://claude.ai/new?q=regatta-results-kit%20%E3%81%AE%E3%82%BB%E3%83%83%E3%83%88%E3%82%A2%E3%83%83%E3%83%97%20Step%205%EF%BC%88GAS%20%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%97%E3%83%88%E3%83%97%E3%83%AD%E3%83%91%E3%83%86%E3%82%A3%E8%A8%AD%E5%AE%9A%EF%BC%89%E3%81%A7%E5%9B%B0%E3%81%A3%E3%81%A6%E3%81%84%E3%81%BE%E3%81%99%E3%80%82Google%20Apps%20Script%20%E3%81%AE%E3%82%B3%E3%83%94%E3%83%BC%E3%82%92%E4%BD%9C%E6%88%90%E3%81%97%E3%81%A6%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%97%E3%83%88%E3%83%97%E3%83%AD%E3%83%91%E3%83%86%E3%82%A3%E3%82%92%E8%A8%AD%E5%AE%9A%E3%81%99%E3%82%8B%E6%89%8B%E9%A0%86%E3%81%A7%E8%A9%B0%E3%81%BE%E3%81%A3%E3%81%A6%E3%81%84%E3%81%BE%E3%81%99%E3%80%82%E5%88%9D%E5%BF%83%E8%80%85%E5%90%91%E3%81%91%E3%81%AB%E4%B8%81%E5%AF%A7%E3%81%AB%E6%95%99%E3%81%88%E3%81%A6%E3%81%8F%E3%81%A0%E3%81%95%E3%81%84%E3%80%82"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 class="btn-ai-consult"
+                 aria-label="Step 5 についてClaudeに相談する（新しいタブで開きます）">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Claude に相談する
+              </a>
+              <button class="btn-ai-copy" data-step="5" data-context="regatta-results-kit のセットアップ Step 5（GAS のスクリプトプロパティ設定）で困っています。Google Apps Script のコピーを作成してスクリプトプロパティ（DRIVE_ROOT_FOLDER_ID 等）を設定する手順で詰まっています。初心者向けに丁寧に教えてください。" aria-label="相談文をクリップボードにコピー">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                相談文をコピー
+              </button>
+              <span class="ai-copy-feedback" aria-live="polite">コピーしました</span>
+            </div>
           </div>
           <hr class="divider">
           <div class="qa-block" aria-label="詰まったときの対処">
@@ -1967,6 +2133,22 @@ p, li, td, th, caption, .ja-text {
                 <label for="c6-1">GAS のスクリプトプロパティに <code style="font-family:monospace;font-size:0.8rem">GITHUB_TOKEN</code> が設定されている</label>
               </li>
             </ul>
+            <div class="ai-consult-row">
+              <span class="ai-consult-label">詰まった場合:</span>
+              <a href="https://claude.ai/new?q=regatta-results-kit%20%E3%81%AE%E3%82%BB%E3%83%83%E3%83%88%E3%82%A2%E3%83%83%E3%83%97%20Step%206%EF%BC%88GitHub%20PAT%E3%82%A2%E3%82%AF%E3%82%BB%E3%82%B9%E3%83%88%E3%83%BC%E3%82%AF%E3%83%B3%E3%81%AE%E4%BD%9C%E6%88%90%E3%81%A8%E8%A8%AD%E5%AE%9A%EF%BC%89%E3%81%A7%E5%9B%B0%E3%81%A3%E3%81%A6%E3%81%84%E3%81%BE%E3%81%99%E3%80%82GitHub%20%E3%81%A7Fine-grained%20PAT%E3%82%92%E7%94%9F%E6%88%90%E3%81%97%E3%81%A6GAS%E3%81%AE%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%97%E3%83%88%E3%83%97%E3%83%AD%E3%83%91%E3%83%86%E3%82%A3%E3%81%ABContents%E6%9B%B8%E3%81%8D%E8%BE%BC%E3%81%BF%E6%A8%A9%E9%99%90%E4%BB%98%E3%81%8D%E3%83%88%E3%83%BC%E3%82%AF%E3%83%B3%E3%82%92%E8%A8%AD%E5%AE%9A%E3%81%99%E3%82%8B%E6%89%8B%E9%A0%86%E3%81%A7%E8%A9%B0%E3%81%BE%E3%81%A3%E3%81%A6%E3%81%84%E3%81%BE%E3%81%99%E3%80%82%E5%88%9D%E5%BF%83%E8%80%85%E5%90%91%E3%81%91%E3%81%AB%E4%B8%81%E5%AF%A7%E3%81%AB%E6%95%99%E3%81%88%E3%81%A6%E3%81%8F%E3%81%A0%E3%81%95%E3%81%84%E3%80%82"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 class="btn-ai-consult"
+                 aria-label="Step 6 についてClaudeに相談する（新しいタブで開きます）">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Claude に相談する
+              </a>
+              <button class="btn-ai-copy" data-step="6" data-context="regatta-results-kit のセットアップ Step 6（GitHub PAT アクセストークンの作成と設定）で困っています。GitHub で Fine-grained PAT を生成して GAS のスクリプトプロパティに Contents 書き込み権限付きトークンを設定する手順で詰まっています。初心者向けに丁寧に教えてください。" aria-label="相談文をクリップボードにコピー">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                相談文をコピー
+              </button>
+              <span class="ai-copy-feedback" aria-live="polite">コピーしました</span>
+            </div>
           </div>
           <hr class="divider">
           <div class="qa-block" aria-label="詰まったときの対処">
@@ -2086,6 +2268,22 @@ p, li, td, th, caption, .ja-text {
                 <label for="c7-6">速報サイト（pages.dev）に大会名・会場・日程が表示されている</label>
               </li>
             </ul>
+            <div class="ai-consult-row">
+              <span class="ai-consult-label">詰まった場合:</span>
+              <a href="https://claude.ai/new?q=regatta-results-kit%20%E3%81%AE%E3%82%BB%E3%83%83%E3%83%88%E3%82%A2%E3%83%83%E3%83%97%20Step%207%EF%BC%88%E7%AE%A1%E7%90%86%E8%80%85%E3%83%9D%E3%83%BC%E3%82%BF%E3%83%AB%E3%81%AE%E5%85%AC%E9%96%8B%E3%81%A8%E6%8E%A5%E7%B6%9A%E3%83%86%E3%82%B9%E3%83%88%EF%BC%89%E3%81%A7%E5%9B%B0%E3%81%A3%E3%81%A6%E3%81%84%E3%81%BE%E3%81%99%E3%80%82GAS%20%E3%82%A6%E3%82%A7%E3%83%96%E3%82%A2%E3%83%97%E3%83%AA%E3%82%92%E3%83%87%E3%83%97%E3%83%AD%E3%82%A4%E3%81%97%E3%81%A6%E7%AE%A1%E7%90%86%E8%80%85%E3%83%9D%E3%83%BC%E3%82%BF%E3%83%AB%E3%82%92%E9%96%8B%E3%81%8D%E3%80%81GitHub%E3%83%BBDrive%20%E6%8E%A5%E7%B6%9A%E3%83%86%E3%82%B9%E3%83%88%E3%82%92%E5%AE%8C%E4%BA%86%E3%81%95%E3%81%9B%E3%82%8B%E6%89%8B%E9%A0%86%E3%81%A7%E8%A9%B3%E3%81%BE%E3%81%A3%E3%81%A6%E3%81%84%E3%81%BE%E3%81%99%E3%80%82%E5%88%9D%E5%BF%83%E8%80%85%E5%90%91%E3%81%91%E3%81%AB%E4%B8%81%E5%AF%A7%E3%81%AB%E6%95%99%E3%81%88%E3%81%A6%E3%81%8F%E3%81%A0%E3%81%95%E3%81%84%E3%80%82"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 class="btn-ai-consult"
+                 aria-label="Step 7 についてClaudeに相談する（新しいタブで開きます）">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Claude に相談する
+              </a>
+              <button class="btn-ai-copy" data-step="7" data-context="regatta-results-kit のセットアップ Step 7（管理者ポータルの公開と接続テスト）で困っています。GAS ウェブアプリをデプロイして管理者ポータルを開き、GitHub・Drive 接続テストを完了させる手順で詰まっています。初心者向けに丁寧に教えてください。" aria-label="相談文をクリップボードにコピー">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                相談文をコピー
+              </button>
+              <span class="ai-copy-feedback" aria-live="polite">コピーしました</span>
+            </div>
           </div>
           <hr class="divider">
           <div class="qa-block" aria-label="詰まったときの対処">
@@ -2145,6 +2343,39 @@ p, li, td, th, caption, .ja-text {
         </div>
       </div>
     </article>
+
+    <!-- AI 相談共通セクション -->
+    <section class="ai-consult-section" aria-labelledby="ai-help-title">
+      <h3 id="ai-help-title">手順が分からなくなったら AI に相談できます</h3>
+      <p>
+        各ステップの「Claude に相談する」ボタンを使うか、以下から手順書全体について相談できます。
+        個人情報やトークンは含まれないので安心して使えます。
+      </p>
+      <div class="ai-consult-row" style="border-top:none;padding-top:0;margin-top:0">
+        <a href="https://claude.ai/new?q=regatta-results-kit%20%E3%81%AE%E3%82%BB%E3%83%83%E3%83%88%E3%82%A2%E3%83%83%E3%83%97%E3%82%AC%E3%82%A4%E3%83%89%E3%81%AE%E6%89%8B%E9%A0%86%E3%82%92%E5%88%9D%E3%82%81%E3%81%8B%E3%82%89%E8%AA%AC%E6%98%8E%E3%81%97%E3%81%A6%E3%81%8F%E3%81%A0%E3%81%95%E3%81%84%E3%80%82GitHub%E3%83%BBCloudflare%20Pages%E3%83%BBGoogle%20Apps%20Script%20%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%A6%E3%83%9C%E3%83%BC%E3%83%88%E3%83%AC%E3%83%BC%E3%82%B9%E9%80%9F%E5%A0%B1%E3%82%B5%E3%82%A4%E3%83%88%E3%82%92%E7%AB%8B%E3%81%A1%E4%B8%8A%E3%81%92%E3%82%8B%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%81%A7%E3%81%99%E3%80%82%E3%83%91%E3%82%BD%E3%82%B3%E3%83%B3%E5%88%9D%E5%BF%83%E8%80%85%E3%81%A7%E3%82%82%E3%81%A7%E3%81%8D%E3%82%8B%E3%82%88%E3%81%86%E4%B8%81%E5%AF%A7%E3%81%AB%E6%95%99%E3%81%88%E3%81%A6%E3%81%8F%E3%81%A0%E3%81%95%E3%81%84%E3%80%82"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="btn-ai-consult"
+           aria-label="導入ガイド全体についてClaudeに相談する（新しいタブで開きます）">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Claude に相談する
+        </a>
+        <a href="https://chatgpt.com/?q=regatta-results-kit%20%E3%81%AE%E3%82%BB%E3%83%83%E3%83%88%E3%82%A2%E3%83%83%E3%83%97%E3%82%AC%E3%82%A4%E3%83%89%E3%81%AE%E6%89%8B%E9%A0%86%E3%82%92%E5%88%9D%E3%82%81%E3%81%8B%E3%82%89%E8%AA%AC%E6%98%8E%E3%81%97%E3%81%A6%E3%81%8F%E3%81%A0%E3%81%95%E3%81%84%E3%80%82GitHub%E3%83%BBCloudflare%20Pages%E3%83%BBGoogle%20Apps%20Script%20%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%A6%E3%83%9C%E3%83%BC%E3%83%88%E3%83%AC%E3%83%BC%E3%82%B9%E9%80%9F%E5%A0%B1%E3%82%B5%E3%82%A4%E3%83%88%E3%82%92%E7%AB%8B%E3%81%A1%E4%B8%8A%E3%81%92%E3%82%8B%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%81%A7%E3%81%99%E3%80%82%E3%83%91%E3%82%BD%E3%82%B3%E3%83%B3%E5%88%9D%E5%BF%83%E8%80%85%E3%81%A7%E3%82%82%E3%81%A7%E3%81%8D%E3%82%8B%E3%82%88%E3%81%86%E4%B8%81%E5%AF%A7%E3%81%AB%E6%95%99%E3%81%88%E3%81%A6%E3%81%8F%E3%81%A0%E3%81%95%E3%81%84%E3%80%82"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="btn-ai-consult"
+           style="border-color:var(--color-border);color:var(--color-text)"
+           aria-label="導入ガイド全体についてChatGPTに相談する（新しいタブで開きます）">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          ChatGPT に相談する
+        </a>
+        <button class="btn-ai-copy" data-step="0" data-context="regatta-results-kit のセットアップガイドの手順を初めから説明してください。GitHub・Cloudflare Pages・Google Apps Script を使ってボートレース速報サイトを立ち上げるシステムです。パソコン初心者でもできるよう丁寧に教えてください。" aria-label="相談文をクリップボードにコピー">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          相談文をコピー
+        </button>
+        <span class="ai-copy-feedback" aria-live="polite">コピーしました</span>
+      </div>
+    </section>
 
     <!-- Final checklist -->
     <section class="final-check-section" aria-labelledby="final-title">
@@ -2240,6 +2471,44 @@ p, li, td, th, caption, .ja-text {
     cb.addEventListener('change', updateProgress);
   });
   updateProgress();
+
+  // AI相談コピーボタン
+  document.querySelectorAll('.btn-ai-copy').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var ctx = btn.getAttribute('data-context') || '';
+      var feedbackEl = btn.nextElementSibling;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(ctx).then(function() {
+          if (feedbackEl && feedbackEl.classList.contains('ai-copy-feedback')) {
+            feedbackEl.style.display = 'inline';
+            setTimeout(function() { feedbackEl.style.display = 'none'; }, 2000);
+          }
+        }).catch(function() {
+          // fallback: execCommand
+          var ta = document.createElement('textarea');
+          ta.value = ctx;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          try { document.execCommand('copy'); } catch(e) {}
+          document.body.removeChild(ta);
+          if (feedbackEl && feedbackEl.classList.contains('ai-copy-feedback')) {
+            feedbackEl.style.display = 'inline';
+            setTimeout(function() { feedbackEl.style.display = 'none'; }, 2000);
+          }
+        });
+      }
+    });
+    // キーボードアクセシビリティ
+    btn.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        btn.click();
+      }
+    });
+  });
 })();
 </script>
 </body>
