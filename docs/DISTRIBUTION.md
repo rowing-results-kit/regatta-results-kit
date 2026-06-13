@@ -23,7 +23,7 @@
 ```
 [龍偉]
   オンボーディングサイトの URL を協会担当に送るだけ
-  （https://ryuiyamada.github.io/regatta-results-kit/onboarding/）
+  （https://rowing-results-kit.github.io/regatta-results-kit/onboarding/）
         │
         ▼
 [協会担当]
@@ -53,7 +53,7 @@
 
 ```
 オンボーディングサイトの URL を協会担当に送信
-https://ryuiyamada.github.io/regatta-results-kit/onboarding/
+https://rowing-results-kit.github.io/regatta-results-kit/onboarding/
 ```
 
 協会担当はこのサイトにアクセスし、7 ステップを自力で完結できます。
@@ -61,7 +61,7 @@ https://ryuiyamada.github.io/regatta-results-kit/onboarding/
 ### 案内文イメージ
 
 > 速報サイトの導入手順はこちらのページに記載されています。ステップ 1〜7 を順番に進めてください。
-> https://ryuiyamada.github.io/regatta-results-kit/onboarding/
+> https://rowing-results-kit.github.io/regatta-results-kit/onboarding/
 >
 > 途中でつまずいた場合は、各ステップの「NGパターンと自己復旧」をご確認ください。
 
@@ -176,7 +176,7 @@ Python・ターミナル・git コマンドは不要です。
 - [ ] GitHub リポジトリが **Template repository** 設定になっている
   - Settings → General → "Template repository" にチェックが入っている
 - [ ] `main` ブランチの最新コミットが CI（`.github/workflows/validate.yml`）をパスしている
-- [ ] オンボーディングサイトの URL が有効か確認（`https://ryuiyamada.github.io/regatta-results-kit/onboarding/`）
+- [ ] オンボーディングサイトの URL が有効か確認（`https://rowing-results-kit.github.io/regatta-results-kit/onboarding/`）
 - [ ] 実名・実際の ID が本体リポジトリに混入していないか確認
 
   ```bash
@@ -203,14 +203,14 @@ Python・ターミナル・git コマンドは不要です。
 ### 個別招待（gh CLI）
 
 ```bash
-gh api repos/RYUIYAMADA/regatta-results-kit/collaborators/<github-username> \
+gh api repos/rowing-results-kit/regatta-results-kit/collaborators/<github-username> \
   --method PUT \
   --field permission=read
 ```
 
 ### 個別招待（GitHub 画面操作）
 
-1. `https://github.com/RYUIYAMADA/regatta-results-kit/settings/access` を開く
+1. `https://github.com/rowing-results-kit/regatta-results-kit/settings/access` を開く
 2. **"Invite a collaborator"** をクリック
 3. 協会担当者の GitHub ユーザー名またはメールアドレスを入力
 4. **Permission: Read** を選択して **"Add \<username\> to this repository"** をクリック
@@ -223,7 +223,7 @@ gh api repos/RYUIYAMADA/regatta-results-kit/collaborators/<github-username> \
 ```bash
 while IFS= read -r username; do
   echo "Inviting: $username"
-  gh api repos/RYUIYAMADA/regatta-results-kit/collaborators/"$username" \
+  gh api repos/rowing-results-kit/regatta-results-kit/collaborators/"$username" \
     --method PUT \
     --field permission=read
 done < accounts.txt
@@ -232,6 +232,6 @@ done < accounts.txt
 招待後の承諾ステータス確認:
 
 ```bash
-gh api repos/RYUIYAMADA/regatta-results-kit/collaborators --paginate \
+gh api repos/rowing-results-kit/regatta-results-kit/collaborators --paginate \
   | jq '.[].login'
 ```

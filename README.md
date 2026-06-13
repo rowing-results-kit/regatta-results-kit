@@ -10,7 +10,7 @@
 
 > 配布者から受け取った URL を開き、7 ステップを自力で完結できます。
 >
-> **オンボーディングサイト**: https://ryuiyamada.github.io/regatta-results-kit/onboarding/
+> **オンボーディングサイト**: https://rowing-results-kit.github.io/regatta-results-kit/onboarding/
 >
 > ターミナル・Python・git 操作は不要です。すべてブラウザだけで完結します。
 
@@ -39,7 +39,7 @@
 
 ### 協会担当者向け（推奨・ターミナル不要）
 
-1. オンボーディングサイト（https://ryuiyamada.github.io/regatta-results-kit/onboarding/）を開く
+1. オンボーディングサイト（https://rowing-results-kit.github.io/regatta-results-kit/onboarding/）を開く
 2. Step 1〜7 を順番に進める
 
 ### 技術者・配布者向け（ローカル開発・テスト用）
@@ -266,7 +266,7 @@ claude
 
 ```bash
 # マーケットプレイスを登録
-/plugin marketplace add RYUIYAMADA/regatta-results-kit
+/plugin marketplace add rowing-results-kit/regatta-results-kit
 
 # プラグインをインストール
 /plugin install regatta-results-kit@regatta-results-kit
@@ -282,7 +282,7 @@ claude
 ### ローカルテスト（plugin-dir フラグ）
 
 ```bash
-git clone https://github.com/RYUIYAMADA/regatta-results-kit
+git clone https://github.com/rowing-results-kit/regatta-results-kit
 cd ..  # 親ディレクトリから実行
 claude --plugin-dir ./regatta-results-kit
 ```

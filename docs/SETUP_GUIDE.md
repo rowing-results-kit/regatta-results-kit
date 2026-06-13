@@ -1,6 +1,6 @@
 # regatta-results-kit — セットアップ手順書（7ステップ）
 
-> **協会担当者の方へ**: オンボーディングサイト（https://ryuiyamada.github.io/regatta-results-kit/onboarding/）に
+> **協会担当者の方へ**: オンボーディングサイト（https://rowing-results-kit.github.io/regatta-results-kit/onboarding/）に
 > スクリーンショット付きの手順が掲載されています。まずそちらをご確認ください。
 >
 > このファイルはオンボーディングサイトと同内容のテキスト版です。
@@ -28,7 +28,7 @@
 
 ## ステップ 1 — テンプレートリポジトリのコピー
 
-1. `https://github.com/RYUIYAMADA/regatta-results-kit` を開く
+1. `https://github.com/rowing-results-kit/regatta-results-kit` を開く
 2. 右上の **"Use this template"** → **"Create a new repository"** をクリック
 3. **Owner** を自団体の GitHub アカウントに変更
 4. **Repository name** を入力（例: `association-regatta-2027`）
