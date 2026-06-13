@@ -3,7 +3,7 @@
   "description": "ボート競技大会の速報サイトを一発生成する Claude Code キット。新大会セットアップ・進行モデル登録などのコマンドを提供します。",
   "version": "0.1.0",
   "author": {
-    "name": "RYUIYAMADA"
+    "name": "rowing-results-kit"
   },
   "homepage": "https://github.com/rowing-results-kit/regatta-results-kit"
 }

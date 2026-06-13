@@ -174,10 +174,11 @@
 
 | プロパティ名 | 値 |
 |---|---|
-| `GITHUB_REPO` | ステップ 1 のリポジトリ名 |
 | `TEMPLATE_SHEET_ID` | PDF テンプレートの Spreadsheet ID |
 | `PDF_OUTPUT_FOLDER_ID` | PDF 出力先 Drive フォルダ ID |
 | その他 | オンボーディングサイトの表を参照 |
+
+> `GITHUB_REPO` は GitHub リポジトリの URL から自動設定されます（スクリプトプロパティへの手入力は不要です）。
 
 ### GAS-C（判定員帳票）— 任意
 

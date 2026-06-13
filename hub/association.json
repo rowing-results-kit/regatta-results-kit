@@ -1,34 +1,6 @@
 {
   "schema_version": "1.0",
-  "association_name": "サンプル県ボート協会",
+  "association_name": "",
   "hub_url": "",
-  "tournaments": [
-    {
-      "id": "masters-2026",
-      "name": "サンプルマスターズレガッタ",
-      "year": 2026,
-      "dates": ["2026-05-23", "2026-05-24"],
-      "venue": "サンプル漕艇場",
-      "status": "final",
-      "url": "https://masters-2026.example.pages.dev"
-    },
-    {
-      "id": "sample-autumn-2026",
-      "name": "サンプル秋季ローイング大会",
-      "year": 2026,
-      "dates": ["2026-10-11", "2026-10-12"],
-      "venue": "サンプル漕艇場",
-      "status": "upcoming",
-      "url": "https://sample-autumn-2026.example.pages.dev"
-    },
-    {
-      "id": "sample-spring-2027",
-      "name": "サンプル春季ローイング大会",
-      "year": 2027,
-      "dates": ["2027-05-08", "2027-05-09"],
-      "venue": "サンプル漕艇場",
-      "status": "upcoming",
-      "url": "https://sample-spring-2027.example.pages.dev"
-    }
-  ]
+  "tournaments": []
 }

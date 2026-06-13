@@ -46,6 +46,8 @@ jobs:
       - name: 入力バリデーション
         id: validate
         env:
+          INPUT_TOURNAMENT_NAME: ${{ inputs.tournament_name }}
+          INPUT_VENUE: ${{ inputs.venue }}
           INPUT_START_DATE: ${{ inputs.start_date }}
           INPUT_END_DATE: ${{ inputs.end_date }}
           INPUT_PRIMARY_COLOR: ${{ inputs.primary_color }}
@@ -91,15 +93,39 @@ jobs:
             echo "$normalized"
           }
 
+          # 大会名・会場: 空チェック
+          if [ -z "$INPUT_TOURNAMENT_NAME" ]; then
+            ERROR_MESSAGES="${ERROR_MESSAGES}
+          ### 大会名が入力されていません
+
+          入力値: （空）
+
+          **正しい入力例**: \`第01回○○マスターズレガッタ\`
+          "
+            HAS_ERROR=true
+          fi
+
+          if [ -z "$INPUT_VENUE" ]; then
+            ERROR_MESSAGES="${ERROR_MESSAGES}
+          ### 会場が入力されていません
+
+          入力値: （空）
+
+          **正しい入力例**: \`○○漕艇競技場\`
+          "
+            HAS_ERROR=true
+          fi
+
           # 開始日: 正規化
           NORMALIZED_START=$(normalize_date "$INPUT_START_DATE")
           if [ -n "$NORMALIZED_START" ]; then
             echo "start_date=${NORMALIZED_START}" >> "$GITHUB_OUTPUT"
           else
+            RAW_START=$(printf '%s' "$INPUT_START_DATE")
             ERROR_MESSAGES="${ERROR_MESSAGES}
           ### 開始日の形式が正しくありません
 
-          入力値: 確認してください
+          入力値: \`${RAW_START}\`
 
           **正しい形式**: \`2026/06/14\` のように **スラッシュ区切り（YYYY/MM/DD）** で入力してください。
           ハイフン区切り（2026-06-14）も使えます。月・日は1桁でも構いません（例: 2026/6/1）。
@@ -112,10 +138,11 @@ jobs:
           if [ -n "$NORMALIZED_END" ]; then
             echo "end_date=${NORMALIZED_END}" >> "$GITHUB_OUTPUT"
           else
+            RAW_END=$(printf '%s' "$INPUT_END_DATE")
             ERROR_MESSAGES="${ERROR_MESSAGES}
           ### 終了日の形式が正しくありません
 
-          入力値: 確認してください
+          入力値: \`${RAW_END}\`
 
           **正しい形式**: \`2026/06/15\` のように **スラッシュ区切り（YYYY/MM/DD）** で入力してください。
           ハイフン区切り（2026-06-15）も使えます。月・日は1桁でも構いません（例: 2026/6/2）。
@@ -131,7 +158,9 @@ jobs:
           else
             PRIMARY_COLOR="#2D4F2C"
             echo "color_fallback=true" >> "$GITHUB_OUTPUT"
-            # バリデーション不通過の raw 入力は GITHUB_OUTPUT に書かない
+            RAW_COLOR=$(printf '%s' "$INPUT_PRIMARY_COLOR")
+            # カラーは失敗扱いにしないがSummaryに通知（カラーフォールバックステップで処理）
+            echo "color_raw=${RAW_COLOR}" >> "$GITHUB_OUTPUT"
           fi
           echo "primary_color=${PRIMARY_COLOR}" >> "$GITHUB_OUTPUT"
 
@@ -278,11 +307,12 @@ jobs:
           # Actions Summary に結果を表示
           if [ "$SKIPPED" = "true" ]; then
             cat >> "$GITHUB_STEP_SUMMARY" << 'SUMMARY_EOF'
-          ## 大会初期構築 — 完了（変更なし）
+          ## 大会初期構築 — 変更なし・コミットをスキップしました（2回目以降）
 
           前回の実行から内容に変化がないため、コミットをスキップしました（正常です）。
+          速報サイトはすでに設定済みです。再度実行する必要はありません。
 
-          速報サイトはすでに設定済みです。
+          > **補足**: このメッセージは同じ設定で 2 回目以降に実行した場合に表示されます。エラーではありません。
           SUMMARY_EOF
           else
             {
