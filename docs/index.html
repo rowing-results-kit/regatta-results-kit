@@ -37,7 +37,7 @@
   --lp-bronze:        #92400E;
 
   /* タイポグラフィ */
-  --lp-hero-size:     clamp(2.75rem, 6vw, 3.75rem);
+  --lp-hero-size:     clamp(1.5rem, 6.5vw, 3.5rem);
   --lp-h1-size:       clamp(2rem, 4.5vw, 2.75rem);
   --lp-h2-size:       clamp(1.5rem, 3vw, 2rem);
   --lp-h3-size:       clamp(1.0625rem, 1.8vw, 1.125rem);
@@ -336,10 +336,10 @@ section { padding-block: var(--lp-section-v); }
   line-height: 1.15;
   color: #fff;
 }
-/* 見出し: 意味区切りで固定改行（孤立行防止） */
+/* 見出し: 各行を絶対に内部改行させない */
 .hero-title .line {
   display: block;
-  word-break: auto-phrase;
+  white-space: nowrap;
 }
 .hero-sub {
   font-size: clamp(1rem, 1.8vw, 1.125rem);
@@ -347,7 +347,13 @@ section { padding-block: var(--lp-section-v); }
   color: rgba(255,255,255,0.82);
   line-height: 1.85;
   margin-top: 1.25rem;
-  max-width: 28em;
+  max-width: 26em;
+}
+/* サブコピー: 各行をブロック表示。句点・1文字孤立を防ぐため overflow-wrap を有効に */
+.hero-sub .line {
+  display: block;
+  overflow-wrap: break-word;
+  word-break: keep-all;
 }
 .hero-note {
   font-size: 0.8125rem;
