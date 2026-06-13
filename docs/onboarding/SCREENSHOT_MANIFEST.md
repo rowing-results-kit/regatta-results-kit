@@ -9,7 +9,7 @@
 |---|---|---|---|---|---|---|
 | Step 1 | GitHub テンプレートリポジトリ（Use this template ボタン） | `gh-template-repo.png` | 自動撮影可 | 取得済 | 2026-06-13 | https://github.com/RYUIYAMADA/regatta-results-kit |
 | Step 1 | GitHub ログイン画面（未ログイン時に遷移） | `gh-login.png` | 自動撮影可 | 取得済 | 2026-06-13 | https://github.com/login |
-| Step 2 | Cloudflare ダッシュボード ログイン画面 | `cf-login.png` | 自動撮影可（Turnstile表示） | 取得済 | 2026-06-13 | https://dash.cloudflare.com/login |
+| Step 2 | Cloudflare Pages 製品ページ（アカウント作成・Sign Up ボタン） | `cf-pages.png` | 自動撮影可 | 取得済 | 2026-06-13 | https://pages.cloudflare.com/ |
 | Step 2 | Cloudflare Pages 作成画面（Create application → Connect to Git） | `cf-pages-create.png` | **手動撮影必須** | 未取得 | — | ログイン後: dash.cloudflare.com → Workers & Pages → Pages |
 | Step 2 | Cloudflare Pages ビルド設定（Build output directory = site） | `cf-pages-build-settings.png` | **手動撮影必須** | 未取得 | — | ログイン後: Pages → Begin setup |
 | Step 3 | GitHub Actions タブ（公開リポジトリの例） | `gh-actions-tab-example.png` | 自動撮影可 | 取得済 | 2026-06-13 | https://github.com/RYUIYAMADA/regatta-results-kit/actions |
@@ -32,7 +32,7 @@
 |---|---|
 | `gh-template-repo.png` | https://github.com/RYUIYAMADA/regatta-results-kit |
 | `gh-login.png` | https://github.com/login |
-| `cf-login.png` | https://dash.cloudflare.com/login |
+| `cf-pages.png` | https://pages.cloudflare.com/ |
 | `gh-actions-tab-example.png` | https://github.com/RYUIYAMADA/regatta-results-kit/actions |
 | `google-drive-login.png` | https://accounts.google.com/ServiceLogin?service=wise&passive=1209600&continue=https%3A%2F%2Fdrive.google.com%2F |
 | `gas-landing.png` | https://script.google.com |
