@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>運用ガイド — regatta-results-kit</title>
+<meta name="description" content="大会の始め方・年間レース管理・当日運用まで。協会担当者向け regatta-results-kit 運用ガイド。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* === LP Design Tokens（LP index.html と同体系） === */
+:root {
+  --lp-primary:       #1A6AFF;
+  --lp-primary-dark:  #1255CC;
+  --lp-primary-light: #5B9BFF;
+  --lp-primary-50:    #EBF2FF;
+  --lp-primary-100:   #D6E6FF;
+
+  --lp-text:          #1A1A2E;
+  --lp-muted:         #6B7280;
+
+  --lp-bg:            #FFFFFF;
+  --lp-bg-sub:        #F5F7FA;
+  --lp-bg-dark:       #0D1425;
+
+  --lp-success:       #16A34A;
+  --lp-success-bg:    #DCFCE7;
+  --lp-warning:       #D97706;
+  --lp-warning-bg:    #FEF3C7;
+
+  --lp-h1-size:       clamp(2rem, 4.5vw, 2.75rem);
+  --lp-h2-size:       clamp(1.5rem, 3vw, 2rem);
+  --lp-h3-size:       clamp(1.0625rem, 1.8vw, 1.125rem);
+  --lp-body-size:     1rem;
+  --lp-small-size:    0.875rem;
+
+  --lp-section-v:     clamp(4rem, 8vw, 6.5rem);
+  --lp-container:     1040px;
+
+  --lp-shadow-base:   0 1px 2px rgba(0,0,0,0.06);
+  --lp-radius:        4px;
+  --lp-radius-md:     6px;
+  --lp-radius-full:   9999px;
+
+  --ease:             cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast:         100ms;
+  --dur-normal:       200ms;
+
+  /* 章番号用 */
+  --ch01: #1A6AFF;
+  --ch02: #0F4FBB;
+  --ch03: #093688;
+}
+
+/* === Reset === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: "Noto Sans JP", sans-serif;
+  font-feature-settings: 'palt' 1, 'kern' 1;
+  font-weight: 400;
+  color: var(--lp-text);
+  background: var(--lp-bg);
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+  line-break: strict;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  hanging-punctuation: first;
+}
+@supports (word-break: auto-phrase) {
+  h1, h2, h3, h4 { word-break: auto-phrase; }
+}
+img, svg { display: block; max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+ul, ol { list-style: none; }
+
+/* === Layout === */
+.container {
+  width: min(100%, var(--lp-container));
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 5vw, 3rem);
+}
+
+/* === Typography === */
+.eyebrow {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--lp-primary);
+  margin-bottom: 0.75rem;
+}
+.section-title {
+  font-size: var(--lp-h1-size);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: var(--lp-text);
+  max-width: 24em;
+}
+.section-lead {
+  font-size: clamp(1rem, 1.6vw, 1.125rem);
+  font-weight: 400;
+  line-height: 1.85;
+  color: var(--lp-muted);
+  max-width: 38em;
+  margin-top: 1rem;
+}
+.body-text {
+  font-size: var(--lp-body-size);
+  line-height: 1.85;
+  color: var(--lp-muted);
+}
+
+/* === Nav === */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255,255,255,0.97);
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+  backdrop-filter: blur(8px);
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+}
+.nav-logo {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--lp-primary);
+}
+.nav-breadcrumb {
+  font-size: 0.875rem;
+  color: var(--lp-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.nav-breadcrumb a {
+  color: var(--lp-primary);
+  font-weight: 500;
+  transition: opacity var(--dur-fast);
+}
+.nav-breadcrumb a:hover { opacity: 0.75; }
+.nav-breadcrumb-sep {
+  color: var(--lp-muted);
+  font-size: 0.75rem;
+}
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.nav-link {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--lp-muted);
+  transition: color var(--dur-fast);
+}
+.nav-link:hover { color: var(--lp-primary); }
+.nav-cta {
+  font-size: 0.875rem;
+  font-weight: 700;
+  background: var(--lp-primary);
+  color: #fff;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--lp-radius);
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  transition: background var(--dur-fast) var(--ease);
+}
+.nav-cta:hover { background: var(--lp-primary-dark); }
+.nav-cta:focus-visible { outline: 2px solid var(--lp-primary); outline-offset: 2px; }
+@media (max-width: 600px) {
+  .nav-right { gap: 0.625rem; }
+  .nav-link { display: none; }
+}
+
+/* === HERO === */
+.guide-hero {
+  background: linear-gradient(135deg, #0D3FCC 0%, #1A6AFF 60%, #3B8FFF 100%);
+  padding-block: clamp(3.5rem, 8vw, 5.5rem);
+  overflow: hidden;
+}
+.guide-hero-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 640px;
+  width: 100%;
+}
+.guide-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.92);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.375rem 0.875rem;
+  border-radius: var(--lp-radius-full);
+  border: 1px solid rgba(255,255,255,0.22);
+  width: fit-content;
+}
+.guide-hero-title {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  color: #fff;
+}
+.guide-hero-sub {
+  font-size: clamp(1rem, 1.8vw, 1.125rem);
+  color: rgba(255,255,255,0.82);
+  line-height: 1.85;
+}
+.guide-hero-toc {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 0.5rem;
+  align-items: flex-start;
+}
+@media (min-width: 520px) {
+  .guide-hero-toc {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+.guide-hero-toc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.22);
+  padding: 0.4375rem 1rem;
+  border-radius: var(--lp-radius-full);
+  transition: background var(--dur-fast), border-color var(--dur-fast);
+}
+.guide-hero-toc-link:hover {
+  background: rgba(255,255,255,0.2);
+  border-color: rgba(255,255,255,0.4);
+}
+.guide-hero-toc-link:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* === Chapter Layout === */
+.chapter {
+  padding-block: var(--lp-section-v);
+}
+.chapter:nth-child(even) { background: var(--lp-bg-sub); }
+
+.chapter-header {
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(1.25rem, 3vw, 2rem);
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+}
+.chapter-num {
+  font-size: clamp(3.5rem, 8vw, 5rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--lp-primary-100);
+  flex-shrink: 0;
+  user-select: none;
+  min-width: 3ch;
+}
+.chapter-header-text { padding-top: 0.25rem; }
+.chapter-title {
+  font-size: var(--lp-h2-size);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  color: var(--lp-text);
+}
+.chapter-desc {
+  font-size: var(--lp-body-size);
+  line-height: 1.85;
+  color: var(--lp-muted);
+  margin-top: 0.625rem;
+  max-width: 38em;
+}
+
+/* === Flow Steps === */
+.flow-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+.flow-steps::before {
+  content: '';
+  position: absolute;
+  left: 23px;
+  top: 48px;
+  bottom: 48px;
+  width: 2px;
+  background: var(--lp-primary-100);
+}
+.flow-step {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  padding-block: 1.5rem;
+  position: relative;
+}
+.flow-step-num {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--lp-primary);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0 0 4px #fff;
+}
+.flow-step-body { padding-top: 0.25rem; flex: 1; }
+.flow-step-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--lp-text);
+  margin-bottom: 0.25rem;
+}
+.flow-step-desc {
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: var(--lp-muted);
+}
+.flow-step-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--lp-primary);
+  background: var(--lp-primary-50);
+  padding: 0.2rem 0.625rem;
+  border-radius: var(--lp-radius-full);
+  margin-top: 0.5rem;
+}
+@media (max-width: 768px) {
+  .flow-steps::before { left: 19px; }
+  .flow-step-num { width: 40px; height: 40px; font-size: 0.875rem; }
+  .flow-step { gap: 1rem; }
+}
+
+/* === Hub Diagram === */
+.hub-diagram {
+  background: var(--lp-bg);
+  border-radius: 12px;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  margin-block: 2.5rem;
+}
+.hub-diagram-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--lp-muted);
+  margin-bottom: 1.5rem;
+}
+.hub-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.hub-center {
+  background: var(--lp-primary);
+  color: #fff;
+  border-radius: 10px;
+  padding: 1rem 2rem;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1rem;
+  width: min(100%, 280px);
+  position: relative;
+}
+.hub-center-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.7);
+  display: block;
+  margin-bottom: 0.2rem;
+}
+.hub-connector {
+  width: 2px;
+  height: 2rem;
+  background: var(--lp-primary-100);
+  position: relative;
+}
+.hub-connector::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid var(--lp-primary-100);
+}
+.hub-children {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  width: 100%;
+}
+.hub-child {
+  background: var(--lp-bg-sub);
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  text-align: center;
+}
+.hub-child-status {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--lp-radius-full);
+  margin-bottom: 0.375rem;
+}
+.status-upcoming {
+  background: var(--lp-primary-50);
+  color: var(--lp-primary-dark);
+}
+.status-live {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+.status-final {
+  background: var(--lp-success-bg);
+  color: #14532D;
+}
+.hub-child-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--lp-text);
+  line-height: 1.4;
+}
+.hub-child-venue {
+  font-size: 0.75rem;
+  color: var(--lp-muted);
+  margin-top: 0.2rem;
+}
+@media (max-width: 600px) {
+  .hub-children { grid-template-columns: 1fr; }
+}
+
+/* === Workflow Cards === */
+.workflow-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 1.25rem;
+  margin-block: 2rem;
+}
+.workflow-card {
+  background: var(--lp-bg);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+.workflow-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--lp-primary-50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+.workflow-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--lp-text);
+  margin-bottom: 0.375rem;
+}
+.workflow-card-desc {
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: var(--lp-muted);
+}
+.workflow-card-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--lp-muted);
+  background: var(--lp-bg-sub);
+  padding: 0.2rem 0.625rem;
+  border-radius: var(--lp-radius-full);
+  margin-top: 0.75rem;
+}
+
+/* === Status Table === */
+.status-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-block: 1.5rem;
+  font-size: 0.9375rem;
+}
+.status-table th {
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lp-muted);
+  padding: 0.625rem 1rem;
+  border-bottom: 2px solid var(--lp-primary-100);
+}
+.status-table td {
+  padding: 0.875rem 1rem;
+  vertical-align: top;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  color: var(--lp-text);
+  line-height: 1.65;
+}
+.status-table tr:last-child td { border-bottom: none; }
+.status-table td:first-child { font-weight: 500; white-space: nowrap; }
+@media (max-width: 600px) {
+  .status-table th { padding: 0.5rem 0.75rem; }
+  .status-table td { padding: 0.75rem; }
+  .status-table td:first-child { white-space: normal; }
+}
+
+/* === Day-of-day Flow === */
+.dayof-flow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 0;
+  position: relative;
+  margin-block: 2rem;
+}
+.dayof-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem 1rem;
+  position: relative;
+}
+.dayof-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: calc(1.5rem + 20px);
+  right: 0;
+  width: 2px;
+  height: 2rem;
+  background: var(--lp-primary-100);
+  transform: translateX(50%);
+}
+.dayof-step-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--lp-primary-50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-bottom: 0.875rem;
+}
+.dayof-step-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--lp-text);
+  margin-bottom: 0.25rem;
+}
+.dayof-step-desc {
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: var(--lp-muted);
+}
+@media (max-width: 768px) {
+  .dayof-flow { grid-template-columns: 1fr; }
+  .dayof-step { align-items: flex-start; text-align: left; flex-direction: row; gap: 1rem; }
+  .dayof-step:not(:last-child)::after {
+    display: none;
+  }
+  .dayof-step-icon { flex-shrink: 0; margin-bottom: 0; }
+  .dayof-step-body { display: flex; flex-direction: column; }
+}
+
+/* === Outputs Grid === */
+.outputs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-block: 2rem;
+}
+.output-card {
+  background: var(--lp-bg);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.output-card-img {
+  aspect-ratio: 16/10;
+  overflow: hidden;
+  background: var(--lp-bg-sub);
+}
+.output-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.output-card-body {
+  padding: 1.125rem 1.25rem 1.375rem;
+  flex: 1;
+}
+.output-card-num {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lp-primary);
+  margin-bottom: 0.3rem;
+}
+.output-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--lp-text);
+  margin-bottom: 0.3rem;
+}
+.output-card-desc {
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: var(--lp-muted);
+}
+@media (max-width: 768px) {
+  .outputs-grid { grid-template-columns: 1fr; }
+}
+@media (min-width: 769px) and (max-width: 1024px) {
+  .outputs-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* === Portal Mock === */
+.portal-mock {
+  background: #1e293b;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-block: 2rem;
+  max-width: 520px;
+}
+.portal-mock-bar {
+  background: #0f172a;
+  padding: 0.625rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.portal-mock-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+}
+.portal-mock-url {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.35);
+  font-family: monospace;
+  margin-left: 0.5rem;
+}
+.portal-mock-body {
+  padding: 1.25rem 1.5rem;
+}
+.portal-mock-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 1.25rem;
+}
+.portal-mock-tab {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.45);
+  padding: 0.5rem 0.875rem;
+  border-bottom: 2px solid transparent;
+}
+.portal-mock-tab.active {
+  color: #fff;
+  border-bottom-color: var(--lp-primary);
+}
+.portal-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.portal-status-row:last-child { border-bottom: none; }
+.portal-status-label {
+  font-size: 0.875rem;
+  color: rgba(255,255,255,0.65);
+}
+.portal-status-val {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.portal-dot-green { width: 8px; height: 8px; border-radius: 50%; background: #4ADE80; }
+.portal-dot-red   { width: 8px; height: 8px; border-radius: 50%; background: #F87171; }
+.portal-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--lp-primary);
+  padding: 0.4rem 0.875rem;
+  border-radius: var(--lp-radius);
+  margin-top: 1rem;
+}
+
+/* === CTA Banner === */
+.cta-banner {
+  background: var(--lp-primary-50);
+  border-radius: 10px;
+  padding: 1.75rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-top: 2.5rem;
+}
+.cta-banner-text { flex: 1; min-width: 200px; }
+.cta-banner-title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--lp-text);
+  margin-bottom: 0.25rem;
+}
+.cta-banner-desc {
+  font-size: 0.9375rem;
+  color: var(--lp-muted);
+  line-height: 1.7;
+}
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0.75rem 1.75rem;
+  background: var(--lp-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--lp-radius);
+  cursor: pointer;
+  min-height: 48px;
+  white-space: nowrap;
+  transition: background var(--dur-fast) var(--ease);
+}
+.btn-primary:hover { background: var(--lp-primary-dark); }
+.btn-primary:focus-visible { outline: 2px solid var(--lp-primary); outline-offset: 3px; }
+.btn-ghost-dark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  padding: 0.625rem 1.5rem;
+  background: transparent;
+  color: var(--lp-primary);
+  border: 1.5px solid var(--lp-primary);
+  border-radius: var(--lp-radius);
+  cursor: pointer;
+  min-height: 44px;
+  white-space: nowrap;
+  transition: background var(--dur-fast), color var(--dur-fast);
+}
+.btn-ghost-dark:hover { background: var(--lp-primary); color: #fff; }
+.btn-ghost-dark:focus-visible { outline: 2px solid var(--lp-primary); outline-offset: 2px; }
+
+/* === Divider === */
+.chapter-divider {
+  height: 1px;
+  background: rgba(0,0,0,0.06);
+}
+
+/* === Footer CTA === */
+.footer-cta {
+  background: var(--lp-bg-dark);
+  padding-block: clamp(3.5rem, 7vw, 5rem);
+}
+.footer-cta-inner {
+  max-width: 560px;
+}
+.footer-cta-title {
+  font-size: var(--lp-h2-size);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: #fff;
+  line-height: 1.25;
+}
+.footer-cta-desc {
+  font-size: 1rem;
+  color: rgba(255,255,255,0.65);
+  line-height: 1.85;
+  margin-top: 0.875rem;
+}
+.footer-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.875rem;
+  margin-top: 2rem;
+}
+.btn-white {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0.75rem 1.75rem;
+  background: #fff;
+  color: var(--lp-primary);
+  border: none;
+  border-radius: var(--lp-radius);
+  cursor: pointer;
+  min-height: 48px;
+  transition: background var(--dur-fast) var(--ease);
+}
+.btn-white:hover { background: var(--lp-primary-50); }
+.btn-white:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.btn-ghost-white {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0.75rem 1.75rem;
+  background: transparent;
+  color: rgba(255,255,255,0.9);
+  border: 1.5px solid rgba(255,255,255,0.35);
+  border-radius: var(--lp-radius);
+  cursor: pointer;
+  min-height: 48px;
+  transition: border-color var(--dur-fast);
+}
+.btn-ghost-white:hover { border-color: rgba(255,255,255,0.7); }
+.btn-ghost-white:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+/* === Footer === */
+footer {
+  background: var(--lp-bg-dark);
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding-block: 1.75rem;
+}
+.footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.footer-logo {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+}
+.footer-links {
+  display: flex;
+  gap: 1.5rem;
+}
+.footer-link {
+  font-size: 0.875rem;
+  color: rgba(255,255,255,0.45);
+  transition: color var(--dur-fast);
+}
+.footer-link:hover { color: rgba(255,255,255,0.8); }
+.footer-copy {
+  font-size: 0.8125rem;
+  color: rgba(255,255,255,0.3);
+  margin-top: 0.75rem;
+}
+
+/* === Utility === */
+.mt-2  { margin-top: 0.5rem; }
+.mt-4  { margin-top: 1rem; }
+.mt-6  { margin-top: 1.5rem; }
+.mt-8  { margin-top: 2rem; }
+.inline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--lp-radius-full);
+  vertical-align: middle;
+}
+.badge-blue   { background: var(--lp-primary-50); color: var(--lp-primary-dark); }
+.badge-green  { background: var(--lp-success-bg); color: #14532D; }
+.badge-red    { background: #FEE2E2; color: #991B1B; }
+
+/* === Responsive Nav === */
+@media (max-width: 480px) {
+  .nav-breadcrumb { display: none; }
+  .nav-cta { padding: 0.4375rem 0.875rem; font-size: 0.8125rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<header>
+  <nav class="nav" aria-label="サイトナビゲーション">
+    <div class="container nav-inner">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <a href="../" class="nav-logo" aria-label="regatta-results-kit トップへ">regatta-results-kit</a>
+        <nav class="nav-breadcrumb" aria-label="パンくず">
+          <span class="nav-breadcrumb-sep">/</span>
+          <span aria-current="page">運用ガイド</span>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <a href="../onboarding/" class="nav-link">導入ガイド</a>
+        <a href="https://github.com/RYUIYAMADA/regatta-results-kit" class="nav-cta" target="_blank" rel="noopener noreferrer" aria-label="GitHubでテンプレートを見る（新しいタブ）">
+          GitHub
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style="margin-left:2px">
+            <path d="M2 2h4M2 2v4M2 2l6 6M5.5 2H10a2 2 0 012 2v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<main id="main-content">
+
+<!-- Hero -->
+<section class="guide-hero" aria-labelledby="guide-hero-title">
+  <div class="container">
+    <div class="guide-hero-inner">
+      <span class="eyebrow" style="color:rgba(255,255,255,0.7);">Operations Guide</span>
+      <h1 id="guide-hero-title" class="guide-hero-title">運用ガイド</h1>
+      <p class="guide-hero-sub">
+        大会の始め方から年間管理・当日運用まで。
+        非エンジニアの協会担当者向けに、3つのテーマで全体像をまとめました。
+      </p>
+      <nav class="guide-hero-toc" aria-label="章へのショートカット">
+        <a href="#ch01" class="guide-hero-toc-link">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M1 7h12M7 1l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          01 大会の始め方
+        </a>
+        <a href="#ch02" class="guide-hero-toc-link">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M1 7h12M7 1l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          02 年間レース管理
+        </a>
+        <a href="#ch03" class="guide-hero-toc-link">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M1 7h12M7 1l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          03 当日運用
+        </a>
+      </nav>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Chapter 01 ===== -->
+<section class="chapter" id="ch01" aria-labelledby="ch01-title">
+  <div class="container">
+
+    <div class="chapter-header">
+      <div class="chapter-num" aria-hidden="true">01</div>
+      <div class="chapter-header-text">
+        <span class="eyebrow">Getting Started</span>
+        <h2 id="ch01-title" class="chapter-title">大会の始め方</h2>
+        <p class="chapter-desc">
+          新規大会のセットアップは全7ステップ。所要時間は50〜70分。
+          ターミナルやコマンド操作は不要で、ブラウザだけで完結します。
+        </p>
+      </div>
+    </div>
+
+    <!-- Flow Steps -->
+    <ol class="flow-steps" aria-label="セットアップ7ステップ">
+      <li class="flow-step">
+        <div class="flow-step-num" aria-label="ステップ1">1</div>
+        <div class="flow-step-body">
+          <p class="flow-step-title">GitHub テンプレートをコピー</p>
+          <p class="flow-step-desc">
+            GitHub 上の "Use this template" から自団体のリポジトリを新規作成します。
+            コードの貼り付けや編集は不要です。
+          </p>
+          <span class="flow-step-meta">約3〜5分</span>
+        </div>
+      </li>
+
+      <li class="flow-step">
+        <div class="flow-step-num" aria-label="ステップ2">2</div>
+        <div class="flow-step-body">
+          <p class="flow-step-title">Cloudflare Pages を接続</p>
+          <p class="flow-step-desc">
+            Cloudflare Dashboard でリポジトリを選択し、速報サイトの公開先を設定します。
+            Build output directory は <code style="font-size:0.875em;background:var(--lp-primary-50);color:var(--lp-primary-dark);padding:0.1em 0.4em;border-radius:3px;">site</code> と入力するのが必須の設定です。
+          </p>
+          <span class="flow-step-meta">約10〜15分</span>
+        </div>
+      </li>
+
+      <li class="flow-step">
+        <div class="flow-step-num" aria-label="ステップ3">3</div>
+        <div class="flow-step-body">
+          <p class="flow-step-title">大会初期構築（GitHub Actions）</p>
+          <p class="flow-step-desc">
+            GitHub の Actions タブから「大会初期構築」ワークフローを実行します。
+            フォームに5項目を入力するだけで、速報サイトのデータが自動生成されます。
+          </p>
+          <div style="margin-top:0.875rem;">
+            <table class="status-table" style="font-size:0.875rem;" aria-label="入力フォーム5項目">
+              <thead>
+                <tr>
+                  <th scope="col">入力項目</th>
+                  <th scope="col">例</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>大会名</td><td>第01回○○マスターズレガッタ</td></tr>
+                <tr><td>会場</td><td>○○漕艇競技場</td></tr>
+                <tr><td>開始日</td><td>2027/06/14</td></tr>
+                <tr><td>終了日</td><td>2027/06/15</td></tr>
+                <tr><td>メインカラー</td><td>#1a3a5c</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <span class="flow-step-meta">約2〜5分</span>
+        </div>
+      </li>
+
+      <li class="flow-step">
+        <div class="flow-step-num" aria-label="ステップ4">4</div>
+        <div class="flow-step-body">
+          <p class="flow-step-title">Google Drive フォルダを作成</p>
+          <p class="flow-step-desc">
+            自団体の Google Drive にルートフォルダを1つ作成します。
+            内部のサブフォルダは後の手順で自動作成されるため、手動での作業は不要です。
+          </p>
+          <span class="flow-step-meta">約5分</span>
+        </div>
+      </li>
+
+      <li class="flow-step">
+        <div class="flow-step-num" aria-label="ステップ5">5</div>
+        <div class="flow-step-body">
+          <p class="flow-step-title">GAS のコピーを作成してプロパティを設定</p>
+          <p class="flow-step-desc">
+            Google Apps Script のテンプレートをコピーし、ステップ4のフォルダIDと
+            GitHub リポジトリ名を設定します。コードの入力は不要です。
+          </p>
+          <span class="flow-step-meta">約10〜15分</span>
+        </div>
+      </li>
+
+      <li class="flow-step">
+        <div class="flow-step-num" aria-label="ステップ6">6</div>
+        <div class="flow-step-body">
+          <p class="flow-step-title">GitHub PAT（Personal Access Token）を発行</p>
+          <p class="flow-step-desc">
+            GAS が GitHub にデータを書き込むための認証トークンを作成し、
+            GAS のプロパティに貼り付けます。有効期限は90日で、期限切れ後は更新が必要です。
+          </p>
+          <span class="flow-step-meta">約10分</span>
+        </div>
+      </li>
+
+      <li class="flow-step">
+        <div class="flow-step-num" aria-label="ステップ7">7</div>
+        <div class="flow-step-body">
+          <p class="flow-step-title">管理ポータルで初期セットアップ・接続テスト</p>
+          <p class="flow-step-desc">
+            GAS をウェブアプリとしてデプロイし、管理ポータルを開きます。
+            Drive 接続テスト、GitHub 接続テストをそれぞれ実行し、
+            「初期セットアップ実行」で自動更新を稼働させたら導入完了です。
+          </p>
+          <div style="margin-top:0.875rem;display:flex;flex-wrap:wrap;gap:0.5rem;">
+            <span class="inline-badge badge-green">Drive 接続テスト OK</span>
+            <span class="inline-badge badge-green">GitHub 接続テスト OK</span>
+            <span class="inline-badge badge-blue">自動更新 稼働中</span>
+          </div>
+          <span class="flow-step-meta" style="margin-top:0.625rem;">約10〜15分</span>
+        </div>
+      </li>
+    </ol>
+
+    <!-- CTA Banner -->
+    <div class="cta-banner" role="complementary" aria-label="詳細手順への案内">
+      <div class="cta-banner-text">
+        <p class="cta-banner-title">スクリーンショット付きの詳細手順はこちら</p>
+        <p class="cta-banner-desc">各ステップのNGパターンと自己復旧方法も掲載しています。</p>
+      </div>
+      <a href="../onboarding/" class="btn-primary">
+        導入ガイドを開く
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<div class="chapter-divider" role="separator"></div>
+
+<!-- ===== Chapter 02 ===== -->
+<section class="chapter" id="ch02" aria-labelledby="ch02-title">
+  <div class="container">
+
+    <div class="chapter-header">
+      <div class="chapter-num" aria-hidden="true">02</div>
+      <div class="chapter-header-text">
+        <span class="eyebrow">Hub Management</span>
+        <h2 id="ch02-title" class="chapter-title">年間のレース管理</h2>
+        <p class="chapter-desc">
+          ハブ機能を使うと、協会が年間の複数大会を1ページで一元管理できます。
+          大会の追加もステータスの切り替えも、GitHub のフォームを埋めるだけです。
+        </p>
+      </div>
+    </div>
+
+    <!-- Hub Diagram -->
+    <div class="hub-diagram" role="img" aria-label="ハブと各大会速報サイトの構造図">
+      <p class="hub-diagram-title">ハブ構造のイメージ</p>
+      <div class="hub-layout">
+        <div class="hub-center">
+          <span class="hub-center-label">Hub（年間大会一覧）</span>
+          協会の大会ポータル
+        </div>
+        <div class="hub-connector" aria-hidden="true"></div>
+        <div class="hub-children" role="list" aria-label="各大会">
+          <div class="hub-child" role="listitem">
+            <span class="hub-child-status status-final">結果確定</span>
+            <p class="hub-child-name">春季マスターズ</p>
+            <p class="hub-child-venue">○○漕艇競技場</p>
+          </div>
+          <div class="hub-child" role="listitem">
+            <span class="hub-child-status status-live">速報中</span>
+            <p class="hub-child-name">夏季選手権</p>
+            <p class="hub-child-venue">△△コース</p>
+          </div>
+          <div class="hub-child" role="listitem">
+            <span class="hub-child-status status-upcoming">開催予定</span>
+            <p class="hub-child-name">秋季オープン</p>
+            <p class="hub-child-venue">○○漕艇競技場</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Workflow Cards -->
+    <h3 class="section-title" style="font-size:var(--lp-h3-size);margin-top:2.5rem;">2つのワークフローで管理する</h3>
+    <div class="workflow-cards">
+      <div class="workflow-card">
+        <div class="workflow-card-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <path d="M11 4v14M4 11h14" stroke="var(--lp-primary)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <p class="workflow-card-title">大会を追加する</p>
+        <p class="workflow-card-desc">
+          GitHub Actions の「ハブ — 大会追加」ワークフローを実行します。
+          大会名・日程・会場・速報サイト URL・ステータスの5項目を入力するだけで、
+          大会一覧に自動追加されます。
+        </p>
+        <span class="workflow-card-tag">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          hub-add-tournament ワークフロー
+        </span>
+      </div>
+
+      <div class="workflow-card">
+        <div class="workflow-card-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <path d="M4 11a7 7 0 0114 0M11 4v4M18 11l-4-4-4 4" stroke="var(--lp-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <p class="workflow-card-title">ステータスを切り替える</p>
+        <p class="workflow-card-desc">
+          GitHub Actions の「ハブ — ステータス変更」ワークフローを実行します。
+          大会 ID を入力して新しいステータスを選択するだけで、
+          ハブページに即座に反映されます。
+        </p>
+        <span class="workflow-card-tag">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <path d="M4 11a7 7 0 0114 0M11 4v4M18 11l-4-4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          hub-update-status ワークフロー
+        </span>
+      </div>
+    </div>
+
+    <!-- Status Table -->
+    <h3 class="section-title" style="font-size:var(--lp-h3-size);margin-top:2.5rem;">3つのステータス</h3>
+    <table class="status-table" aria-label="大会ステータスの種類と使い分け">
+      <thead>
+        <tr>
+          <th scope="col">ステータス</th>
+          <th scope="col">ハブでの表示</th>
+          <th scope="col">使うタイミング</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="inline-badge badge-blue">開催予定</span></td>
+          <td>青いバッジ</td>
+          <td>大会を登録した直後から、開催前日まで</td>
+        </tr>
+        <tr>
+          <td><span class="inline-badge badge-red">速報中</span></td>
+          <td>赤いバッジ（点滅）</td>
+          <td>大会当日・計測 CSV の投入を開始したタイミング</td>
+        </tr>
+        <tr>
+          <td><span class="inline-badge badge-green">結果確定</span></td>
+          <td>緑のバッジ</td>
+          <td>全種目の結果が確定し、速報更新が完了した後</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- CTA Banner -->
+    <div class="cta-banner" role="complementary" aria-label="ハブ機能の詳細">
+      <div class="cta-banner-text">
+        <p class="cta-banner-title">大会一覧ハブはこちら</p>
+        <p class="cta-banner-desc">年間大会の一覧・ステータス・各大会への速報リンクをまとめています。</p>
+      </div>
+      <a href="../../hub/" class="btn-ghost-dark">
+        ハブを開く
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<div class="chapter-divider" role="separator"></div>
+
+<!-- ===== Chapter 03 ===== -->
+<section class="chapter" id="ch03" aria-labelledby="ch03-title">
+  <div class="container">
+
+    <div class="chapter-header">
+      <div class="chapter-num" aria-hidden="true">03</div>
+      <div class="chapter-header-text">
+        <span class="eyebrow">Race Day Operations</span>
+        <h2 id="ch03-title" class="chapter-title">協会主催の大会の運営</h2>
+        <p class="chapter-desc">
+          大会当日は計測 CSV をフォルダに置くだけ。約2分後に速報が自動公開されます。
+          成果物の出力・状態確認・大会終了後の処理まで、すべてブラウザで完結します。
+        </p>
+      </div>
+    </div>
+
+    <!-- Day-of-day flow -->
+    <h3 class="section-title" style="font-size:var(--lp-h3-size);">当日の操作の流れ</h3>
+    <ol class="dayof-flow" aria-label="当日の操作フロー">
+      <li class="dayof-step">
+        <div class="dayof-step-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <path d="M11 3v10M7 9l4 4 4-4M3 17h16" stroke="var(--lp-primary)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="dayof-step-body">
+          <p class="dayof-step-title">CSV を Drive に置く</p>
+          <p class="dayof-step-desc">計測システムから出力した CSV を Google Drive の <code style="font-size:0.8em;background:rgba(0,0,0,0.06);padding:0.1em 0.35em;border-radius:3px;">race_csv/</code> フォルダに置くだけ</p>
+        </div>
+      </li>
+      <li class="dayof-step">
+        <div class="dayof-step-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <circle cx="11" cy="11" r="7" stroke="var(--lp-primary)" stroke-width="1.75"/>
+            <path d="M11 7v5l3 3" stroke="var(--lp-primary)" stroke-width="1.75" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="dayof-step-body">
+          <p class="dayof-step-title">GAS が自動処理（約2分）</p>
+          <p class="dayof-step-desc">GAS がドライブを定期的にスキャンし、CSV を JSON に変換して GitHub へ Push</p>
+        </div>
+      </li>
+      <li class="dayof-step">
+        <div class="dayof-step-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <path d="M4 6h14M4 11h10M4 16h7" stroke="var(--lp-primary)" stroke-width="1.75" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="dayof-step-body">
+          <p class="dayof-step-title">速報サイトに反映</p>
+          <p class="dayof-step-desc">Cloudflare Pages が自動デプロイ。ブラウザをリロードすると最新タイムが表示される</p>
+        </div>
+      </li>
+      <li class="dayof-step">
+        <div class="dayof-step-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <path d="M4 16l5-5 4 4 6-7" stroke="var(--lp-primary)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="dayof-step-body">
+          <p class="dayof-step-title">ポータルで状態確認</p>
+          <p class="dayof-step-desc">管理ポータルの「状態」タブで自動更新の稼働状態をいつでも確認できる</p>
+        </div>
+      </li>
+    </ol>
+
+    <!-- Outputs -->
+    <h3 class="section-title" style="font-size:var(--lp-h3-size);margin-top:3rem;">自動で出力される3つの成果物</h3>
+    <p class="body-text mt-2">CSV を置くたびに、以下の3つが自動的に生成・更新されます。</p>
+    <div class="outputs-grid" role="list">
+      <div class="output-card" role="listitem">
+        <div class="output-card-img">
+          <img
+            src="../assets/img/live-site-pc.png"
+            alt="速報サイトのスクリーンショット（PC表示）"
+            width="400"
+            height="250"
+            loading="lazy"
+          >
+        </div>
+        <div class="output-card-body">
+          <p class="output-card-num">成果物 01</p>
+          <p class="output-card-title">速報サイト</p>
+          <p class="output-card-desc">リアルタイムで更新される公開ページ。選手・家族・観客がどこからでも閲覧できます。</p>
+        </div>
+      </div>
+
+      <div class="output-card" role="listitem">
+        <div class="output-card-img">
+          <img
+            src="../assets/img/results-poster.png"
+            alt="掲示用PDF（結果一覧）のサンプル"
+            width="400"
+            height="250"
+            loading="lazy"
+          >
+        </div>
+        <div class="output-card-body">
+          <p class="output-card-num">成果物 02</p>
+          <p class="output-card-title">掲示用 PDF</p>
+          <p class="output-card-desc">会場の掲示板・A4印刷向けに整形された結果一覧 PDF。GAS が自動生成します。</p>
+        </div>
+      </div>
+
+      <div class="output-card" role="listitem">
+        <div class="output-card-img">
+          <img
+            src="../assets/img/judge-sheet.png"
+            alt="審判用資料（競漕記録）のサンプル"
+            width="400"
+            height="250"
+            loading="lazy"
+          >
+        </div>
+        <div class="output-card-body">
+          <p class="output-card-num">成果物 03</p>
+          <p class="output-card-title">審判用資料</p>
+          <p class="output-card-desc">競漕記録・審判員が使用する帳票類。GAS が自動出力します。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Portal Mock -->
+    <h3 class="section-title" style="font-size:var(--lp-h3-size);margin-top:3rem;">管理ポータルで確認する</h3>
+    <p class="body-text mt-2">当日は管理ポータルの「状態」タブを開いておくと、自動更新の稼働状態と接続状況を随時確認できます。</p>
+    <div class="portal-mock" role="img" aria-label="管理ポータル 状態タブのイメージ">
+      <div class="portal-mock-bar">
+        <div class="portal-mock-dot" style="background:#F87171;" aria-hidden="true"></div>
+        <div class="portal-mock-dot" style="background:#FCD34D;" aria-hidden="true"></div>
+        <div class="portal-mock-dot" style="background:#4ADE80;" aria-hidden="true"></div>
+        <span class="portal-mock-url">script.google.com/macros/s/.../exec</span>
+      </div>
+      <div class="portal-mock-body">
+        <div class="portal-mock-tabs" role="tablist" aria-label="ポータルタブ（イメージ）">
+          <div class="portal-mock-tab active" role="tab" aria-selected="true">状態</div>
+          <div class="portal-mock-tab" role="tab" aria-selected="false">接続設定</div>
+          <div class="portal-mock-tab" role="tab" aria-selected="false">デザイン</div>
+        </div>
+        <div role="list">
+          <div class="portal-status-row" role="listitem">
+            <span class="portal-status-label">自動更新</span>
+            <span class="portal-status-val" style="color:#4ADE80;">
+              <span class="portal-dot-green" aria-hidden="true"></span>
+              稼働中
+            </span>
+          </div>
+          <div class="portal-status-row" role="listitem">
+            <span class="portal-status-label">Drive 接続</span>
+            <span class="portal-status-val" style="color:#4ADE80;">
+              <span class="portal-dot-green" aria-hidden="true"></span>
+              OK
+            </span>
+          </div>
+          <div class="portal-status-row" role="listitem">
+            <span class="portal-status-label">GitHub 接続</span>
+            <span class="portal-status-val" style="color:#4ADE80;">
+              <span class="portal-dot-green" aria-hidden="true"></span>
+              OK
+            </span>
+          </div>
+          <div class="portal-status-row" role="listitem">
+            <span class="portal-status-label">最終更新</span>
+            <span class="portal-status-val" style="color:rgba(255,255,255,0.65);">2分前</span>
+          </div>
+        </div>
+        <div class="portal-btn" role="presentation" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          初期セットアップ実行
+        </div>
+      </div>
+    </div>
+
+    <!-- After tournament -->
+    <h3 class="section-title" style="font-size:var(--lp-h3-size);margin-top:3rem;">大会終了後の処理</h3>
+    <p class="body-text mt-2">
+      全種目の結果が確定したら、管理ポータルの「データリセット」で次の大会に向けて初期化できます。
+      ハブのステータスを「結果確定」に切り替えることも忘れずに行いましょう。
+    </p>
+    <div style="display:flex;flex-wrap:wrap;gap:0.75rem;margin-top:1.25rem;">
+      <span class="inline-badge badge-green" style="font-size:0.875rem;padding:0.3rem 0.875rem;">ステータスを「結果確定」に変更</span>
+      <span class="inline-badge badge-blue" style="font-size:0.875rem;padding:0.3rem 0.875rem;">管理ポータルでデータリセット</span>
+    </div>
+
+    <!-- CTA Banner -->
+    <div class="cta-banner" role="complementary" aria-label="詳細手順への案内">
+      <div class="cta-banner-text">
+        <p class="cta-banner-title">導入が完了していない場合はこちらから</p>
+        <p class="cta-banner-desc">7ステップの導入手順・スクリーンショット付きで解説しています。</p>
+      </div>
+      <a href="../onboarding/" class="btn-primary">
+        導入ガイドを開く
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<!-- Footer CTA -->
+<section class="footer-cta" aria-labelledby="footer-cta-title">
+  <div class="container">
+    <div class="footer-cta-inner">
+      <h2 id="footer-cta-title" class="footer-cta-title">まず「大会の始め方」から。</h2>
+      <p class="footer-cta-desc">導入は7ステップ。所要時間50〜70分。スクリーンショット付きの手順書で詰まりません。</p>
+      <div class="footer-cta-actions">
+        <a href="../onboarding/" class="btn-white">
+          導入ガイドへ
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <a href="https://github.com/RYUIYAMADA/regatta-results-kit" class="btn-ghost-white" target="_blank" rel="noopener noreferrer" aria-label="GitHub でテンプレートを確認する（新しいタブ）">
+          GitHub を見る
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M2 2h4M2 2v4M2 2l6 6M5.5 2H12a2 2 0 012 2v6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <span class="footer-logo">regatta-results-kit</span>
+      <nav class="footer-links" aria-label="フッターナビゲーション">
+        <a href="../" class="footer-link">概要</a>
+        <a href="../onboarding/" class="footer-link">導入ガイド</a>
+        <a href="./" class="footer-link" aria-current="page">運用ガイド</a>
+        <a href="https://github.com/RYUIYAMADA/regatta-results-kit" class="footer-link" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </nav>
+    </div>
+    <p class="footer-copy">ボート競技大会の速報公開インフラ</p>
+  </div>
+</footer>
+
+</body>
+</html>
