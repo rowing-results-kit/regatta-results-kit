@@ -240,54 +240,45 @@ section { padding-block: var(--lp-section-v); }
 /* === HERO === */
 .hero {
   position: relative;
-  min-height: 620px;
+  min-height: clamp(480px, 60vh, 640px);
   display: flex;
   align-items: center;
   overflow: hidden;
-  padding-block: clamp(5rem, 12vw, 9rem);
+  padding-block: clamp(3rem, 8vw, 5rem);
 }
 
-/* ヒーロー青グラデ（LP専用解禁） */
+/* ヒーロー背景: 実写真＋青グラデオーバーレイ */
 .hero-gradient {
   position: absolute;
   inset: 0;
   background: linear-gradient(135deg, #0D3FCC 0%, #1A6AFF 45%, #3B8FFF 80%, #5B9BFF 100%);
 }
-/* 実写真オーバーレイ（右側に寄せて）*/
+/* 背景写真 */
 .hero-photo {
   position: absolute;
-  right: 0;
-  top: 0;
-  width: 55%;
+  inset: 0;
+  width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center 35%;
 }
-/* 写真の左端をグラデーションでなじませる斜め帯 */
+/* グラデマスク（左を濃く・右を薄く） */
 .hero-photo-mask {
   position: absolute;
-  right: 0;
-  top: 0;
-  width: 55%;
+  inset: 0;
+  width: 100%;
   height: 100%;
-  background: linear-gradient(to right, #1A6AFF 0%, rgba(26,106,255,0.65) 30%, rgba(26,106,255,0.12) 70%, rgba(26,106,255,0) 100%);
+  background: linear-gradient(to right, rgba(26,106,255,0.65) 0%, rgba(26,106,255,0.5) 40%, rgba(26,106,255,0.3) 70%, rgba(26,106,255,0.15) 100%);
 }
-/* 全体の暗め補正 */
+/* 全体オーバーレイ */
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(10,30,90,0.18);
+  background: rgba(10,30,90,0.25);
 }
-/* 斜め帯装飾 */
+/* 斜め帯装飾は廃止 */
 .hero-slash {
-  position: absolute;
-  top: -20%;
-  right: 36%;
-  width: 180px;
-  height: 180%;
-  background: rgba(255,255,255,0.03);
-  transform: skewX(-8deg);
-  pointer-events: none;
+  display: none;
 }
 .photo-credit {
   position: absolute;
@@ -305,11 +296,9 @@ section { padding-block: var(--lp-section-v); }
   z-index: 1;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 3rem;
+  gap: 0;
   align-items: center;
-}
-@media (min-width: 768px) {
-  .hero-inner { grid-template-columns: 1fr 1.2fr; gap: 3.5rem; }
+  max-width: 560px;
 }
 
 .hero-badge {
@@ -346,9 +335,8 @@ section { padding-block: var(--lp-section-v); }
   margin-top: 1rem;
 }
 
-/* === Hero mock: browser frame === */
-.hero-mock { display: none; }
-@media (min-width: 768px) { .hero-mock { display: block; } }
+/* === Hero mock: 廃止 === */
+.hero-mock { display: none !important; }
 
 .hero-image {
   width: 100%;
@@ -456,7 +444,7 @@ section { padding-block: var(--lp-section-v); }
 /* === KPI Strip === */
 .kpi-strip {
   background: var(--lp-primary);
-  padding-block: clamp(2.5rem, 6vw, 4rem);
+  padding-block: clamp(1.5rem, 3vw, 2.5rem);
 }
 .kpi-inner {
   display: grid;
@@ -554,11 +542,14 @@ section { padding-block: var(--lp-section-v); }
 /* 画像: 枠なし・角丸なし（straight edge） */
 .pillar-img {
   overflow: hidden;
+  background: #f5f7fa;
 }
 .pillar-img img {
   width: 100%;
   height: auto;
   display: block;
+  object-fit: contain;
+  object-position: center;
 }
 @media (min-width: 768px) {
   .pillar-img {
@@ -567,17 +558,17 @@ section { padding-block: var(--lp-section-v); }
   .pillar-img img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     object-position: center;
   }
 }
 
-/* Poster: モバイルクロップ */
+/* Poster & Screenshots: contain で全表示（端を切らない） */
 @media (max-width: 767px) {
   .poster-img {
-    max-height: 340px;
-    object-fit: cover;
-    object-position: top;
+    max-height: 400px;
+    object-fit: contain;
+    object-position: center;
   }
 }
 
@@ -764,6 +755,9 @@ section { padding-block: var(--lp-section-v); }
   height: auto;
   display: block;
   box-shadow: var(--lp-shadow-base);
+  object-fit: contain;
+  object-position: center;
+  background: #f5f7fa;
 }
 
 /* === 導入ステップ === */
