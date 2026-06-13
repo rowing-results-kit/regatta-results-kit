@@ -54,9 +54,10 @@
   --lp-space-xl:      3rem;     /* 48px */
   --lp-space-2xl:     4rem;     /* 64px */
 
-  /* エフェクト — 影は1種類のみ */
+  /* エフェクト — コンテンツ影は1種類のみ。--lp-shadow-lb はライトボックス拡大画像専用の例外（暗背景から浮かせる用途） */
   --lp-shadow-base:   0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
   --lp-shadow-card:   0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --lp-shadow-lb:     0 8px 40px rgba(0,0,0,0.5);
   --lp-radius:        4px;
   --lp-radius-md:     6px;
   --lp-radius-full:   9999px;
@@ -1040,7 +1041,7 @@ footer {
   width: auto;
   height: auto;
   object-fit: contain;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  box-shadow: var(--lp-shadow-lb);
 }
 .lb-close {
   position: absolute;
