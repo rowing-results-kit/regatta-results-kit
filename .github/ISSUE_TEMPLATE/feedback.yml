@@ -1,0 +1,79 @@
+name: 導入フィードバック
+description: 速報サイト導入キットを試してみた感想・困ったことを教えてください。改善に役立てます。
+title: "[フィードバック] "
+labels: ["feedback", "pilot"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ご報告ありがとうございます。いただいた内容をもとにキットを改善していきます。
+        **必須項目は「詰まったステップ」のみです。**　回答できる範囲で大丈夫です。
+
+  - type: dropdown
+    id: stuck_step
+    attributes:
+      label: どのステップで詰まりましたか？
+      description: 一番時間がかかった・分からなかったステップを選んでください。
+      options:
+        - ステップ1（GitHubアカウント作成・リポジトリ作成）
+        - ステップ2（GASスクリプトのコピー）
+        - ステップ3（スプレッドシートとの連携設定）
+        - ステップ4（Cloudflare Pagesへのデプロイ）
+        - ステップ5（試合情報の入力・確認）
+        - ステップ6（本番公開）
+        - ステップ7（当日の速報入力）
+        - 特に詰まらなかった
+        - まだ途中で止まっている
+    validations:
+      required: true
+
+  - type: input
+    id: time_spent
+    attributes:
+      label: 導入にかかった時間（目安）
+      description: 例：30分、2時間、まだ完了していない など
+      placeholder: 例：1時間くらい
+    validations:
+      required: false
+
+  - type: textarea
+    id: unclear_points
+    attributes:
+      label: 分かりにくかった点・言葉の意味が分からなかった箇所
+      description: 「ここの説明が難しかった」「この言葉が分からなかった」など、具体的に教えていただけると助かります。
+      placeholder: 例：「デプロイ」という言葉の意味が分からなかった。ステップ3の画面が説明と違った。
+    validations:
+      required: false
+
+  - type: textarea
+    id: improvement_requests
+    attributes:
+      label: 改善してほしい点・あったら便利な機能
+      description: こうなればもっと使いやすい、という希望を自由に書いてください。
+      placeholder: 例：スマホからでも設定できるようにしてほしい。動画での説明があると分かりやすい。
+    validations:
+      required: false
+
+  - type: dropdown
+    id: device
+    attributes:
+      label: 主に使った端末
+      options:
+        - PC（Windows）
+        - PC（Mac）
+        - スマートフォン（iPhone）
+        - スマートフォン（Android）
+        - タブレット
+        - その他
+    validations:
+      required: false
+
+  - type: textarea
+    id: other
+    attributes:
+      label: その他・自由記入
+      description: 何でもお気軽にどうぞ。
+    validations:
+      required: false
