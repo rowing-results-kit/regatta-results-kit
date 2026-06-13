@@ -51,7 +51,6 @@
   /* エフェクト */
   --lp-shadow-base:   0 1px 2px rgba(0,0,0,0.06);
   --lp-shadow-card:   0 1px 2px rgba(0,0,0,0.06);
-  --lp-shadow-hero:   0 24px 64px rgba(26,106,255,0.22);
   --lp-radius:        4px;
   --lp-radius-md:     6px;
   --lp-radius-full:   9999px;
@@ -355,13 +354,13 @@ section { padding-block: var(--lp-section-v); }
   width: 100%;
   height: auto;
   display: block;
-  box-shadow: var(--lp-shadow-hero);
+  box-shadow: var(--lp-shadow-base);
 }
 
 .mock-device {
   border-radius: var(--lp-radius-md);
   overflow: hidden;
-  box-shadow: var(--lp-shadow-hero);
+  box-shadow: var(--lp-shadow-base);
   border: 1px solid rgba(255,255,255,0.14);
   background: #fff;
 }
@@ -561,14 +560,6 @@ section { padding-block: var(--lp-section-v); }
   height: auto;
   display: block;
 }
-/* PDF は高さ制限でクロップ（モバイル対応） */
-@media (max-width: 767px) {
-  .pillar-row:nth-child(2) .pillar-img img {
-    max-height: 480px;
-    object-fit: cover;
-    object-position: top;
-  }
-}
 @media (min-width: 768px) {
   .pillar-img {
     aspect-ratio: 16/10;
@@ -581,12 +572,21 @@ section { padding-block: var(--lp-section-v); }
   }
 }
 
+/* Poster: モバイルクロップ */
+@media (max-width: 767px) {
+  .poster-img {
+    max-height: 480px;
+    object-fit: cover;
+    object-position: top;
+  }
+}
+
 /* ハブモック */
 .hub-mock {
   background: var(--lp-bg-sub);
   overflow: hidden;
   border-top: 3px solid var(--lp-primary);
-  box-shadow: var(--lp-shadow-card);
+  box-shadow: var(--lp-shadow-base);
 }
 .hub-mock-head {
   background: var(--lp-primary);
@@ -692,7 +692,7 @@ section { padding-block: var(--lp-section-v); }
 .mock-drive {
   overflow: hidden;
   background: #fff;
-  box-shadow: var(--lp-shadow-card);
+  box-shadow: var(--lp-shadow-base);
 }
 .mock-drive-header {
   padding: 0.625rem 0.875rem;
@@ -763,7 +763,7 @@ section { padding-block: var(--lp-section-v); }
   width: 100%;
   height: auto;
   display: block;
-  box-shadow: var(--lp-shadow-card);
+  box-shadow: var(--lp-shadow-base);
 }
 
 /* === 導入ステップ === */
@@ -787,7 +787,7 @@ section { padding-block: var(--lp-section-v); }
 /* sticky guide card */
 .guide-card {
   background: #fff;
-  box-shadow: var(--lp-shadow-card);
+  box-shadow: var(--lp-shadow-base);
   padding: 1.5rem;
   position: sticky;
   top: 80px;
@@ -956,14 +956,14 @@ footer {
       <p class="hero-note">準備するもの: Google / GitHub / Cloudflare の3アカウント</p>
     </div>
 
-    <!-- Hero right: Live screenshot -->
+    <!-- Hero right: Full-width photo -->
     <div class="hero-mock" aria-hidden="true">
       <img
         class="hero-image"
-        src="./assets/img/live-site-pc.png"
-        alt="速報サイトのPC表示画面"
-        width="640"
-        height="480"
+        src="./assets/img/photo-02.jpg"
+        alt="ボート競技の風景"
+        width="800"
+        height="600"
         loading="eager"
       >
     </div>
@@ -1029,6 +1029,7 @@ footer {
       </div>
       <div class="pillar-img">
         <img
+          class="poster-img"
           src="./assets/img/results-poster.png"
           alt="自動生成された大会結果の掲示用PDF。着順・タイムが整理されたA4レイアウト（第17回全日本マスターズレガッタ 2026-05-23実物）"
           width="640"
@@ -1456,7 +1457,7 @@ footer {
           </svg>
         </button>
         <div class="faq-a" id="faq-a-4" role="region" aria-labelledby="faq-q-4">
-          <p class="faq-a-inner">各ステップの末尾に「うまくいかないとき」の確認項目と対処方法を記載しています。エラーメッセージが出たときの手順も書いているので、見ながら進めれば解決できる場合がほとんどです。</p>
+          <p class="faq-a-inner">各ステップの末尾に「うまくいかないとき」の確認項目と対処方法を記載。エラーメッセージが出たときの手順も記載しているため、見ながら進めれば大抵解決可能です。</p>
         </div>
       </div>
 
@@ -1468,7 +1469,7 @@ footer {
           </svg>
         </button>
         <div class="faq-a" id="faq-a-5" role="region" aria-labelledby="faq-q-5">
-          <p class="faq-a-inner">複数大会を年間ハブで一元管理可能。大会ごとにデータをリセットするだけで同じ仕組みを繰り返し利用できます。</p>
+          <p class="faq-a-inner">複数大会を年間ハブで一元管理可能。大会ごとにデータをリセットするだけで同じ仕組みを繰り返し利用できます。設定変更のみで対応。</p>
         </div>
       </div>
 
