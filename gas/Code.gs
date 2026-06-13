@@ -1445,10 +1445,10 @@ function testRun() {
 function getMeasurementPoints() {
   const props = PropertiesService.getScriptProperties();
   const raw = props.getProperty(CONFIG.props.measurementPoints);
-  if (!raw) {
-    throw new Error('MEASUREMENT_POINTS が設定されていません');
-  }
-  return raw.split(',').map(p => p.trim()).filter(p => p.length > 0);
+  // 未設定の場合は標準大会（500m・1000m計測）をデフォルトとして使用
+  const DEFAULT_MEASUREMENT_POINTS = '500m,1000m';
+  const src = (raw && raw.trim()) ? raw : DEFAULT_MEASUREMENT_POINTS;
+  return src.split(',').map(p => p.trim()).filter(p => p.length > 0);
 }
 
 /**
