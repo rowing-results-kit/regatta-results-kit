@@ -595,6 +595,11 @@ section { padding-block: var(--lp-section-v); }
     object-fit: contain;
     object-position: center;
   }
+  /* 縦長ポスター素材は枠も縦長にして大きく見せる */
+  .pillar-img:has(.poster-img) {
+    aspect-ratio: 4/5;
+    max-height: 540px;
+  }
 }
 
 /* Poster & Screenshots: contain で全表示（端を切らない） */
