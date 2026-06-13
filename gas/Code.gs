@@ -2278,9 +2278,9 @@ function createTestMultiCategoryCSVs() {
  * 本番環境の Script Properties とは独立（テスト専用）。
  */
 const TEST_FIXTURES = {
-  raceName: '第17回全日本マスターズレガッタ石川県復興特別大会（テスト）',
-  venue: '石川県津幡漕艇競技場',
+  raceName: 'サンプル大会（テスト）',
+  venue: 'サンプル漕艇場',
   defaultCourseLength: 1000,
-  day1: '2026-05-23',
-  day2: '2026-05-24'
+  day1: '2025-09-14',
+  day2: '2025-09-15'
 };
