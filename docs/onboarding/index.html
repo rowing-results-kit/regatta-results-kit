@@ -993,6 +993,92 @@ p, li, td, th, caption, .ja-text {
 #step1, #step2, #step3, #step4, #step5, #step6, #step7 {
   scroll-margin-top: 5rem;
 }
+
+/* ── Real screenshot block ── */
+.screenshot-block {
+  margin-top: 0.5rem;
+}
+.screenshot-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+.screenshot-frame {
+  border: 1.5px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: var(--shadow-subtle);
+  background: var(--color-bg);
+}
+.screenshot-frame-bar {
+  background: var(--color-bg-sub);
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.screenshot-frame-bar .dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--color-border);
+}
+.screenshot-frame-bar .url-bar {
+  font-size: 0.7rem;
+  color: var(--color-muted);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.screenshot-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 420px;
+  object-fit: cover;
+  object-position: top;
+  cursor: zoom-in;
+  transition: max-height 0.2s ease;
+}
+.screenshot-frame img.expanded {
+  max-height: none;
+  cursor: zoom-out;
+}
+.screenshot-stamp {
+  font-size: 0.65rem;
+  color: var(--color-muted);
+  text-align: right;
+  padding: 0.25rem 0.5rem;
+  background: var(--color-bg-sub);
+  border-top: 1px solid var(--color-border);
+}
+.screenshot-caption {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  margin-top: 0.375rem;
+  line-height: 1.5;
+}
+.screenshot-caption strong {
+  color: var(--color-primary);
+}
+.manual-todo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  border: 1px solid #FDE68A;
+  border-radius: 4px;
+  padding: 0.25rem 0.625rem;
+  margin-bottom: 0.5rem;
+}
 </style>
 </head>
 <body>
@@ -1159,31 +1245,36 @@ p, li, td, th, caption, .ja-text {
           </div>
         </div>
         <div>
-          <!-- Screen mock: GitHub Use this template -->
-          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">画面イメージ</p>
-          <div class="screen-mock" role="img" aria-label="GitHubのUse this templateボタンの画面イメージ">
-            <div class="screen-mock-bar">
-              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-              <span class="url">github.com/RYUIYAMADA/regatta-results-kit</span>
-            </div>
-            <div class="screen-mock-body">
-              <div class="gh-repo-header">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="var(--muted)" aria-hidden="true"><path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5v-9z"/></svg>
-                <span class="gh-repo-name">RYUIYAMADA / regatta-results-kit</span>
-                <button class="gh-use-template-btn" aria-label="Use this template ボタン（ここをクリック）" style="position:relative">
-                  Use this template ▼
-                </button>
+          <!-- Real screenshot: GitHub Use this template -->
+          <div class="screenshot-block">
+            <p class="screenshot-label">実際の画面（自動更新）</p>
+            <div class="screenshot-frame">
+              <div class="screenshot-frame-bar">
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                <span class="url-bar">github.com/RYUIYAMADA/regatta-results-kit</span>
               </div>
-              <div class="mock-label" style="margin-left:auto;display:block;text-align:right">← ここをクリック</div>
-              <hr class="divider" style="margin:0.75rem 0">
-              <p style="font-size:0.78rem;color:var(--muted)">クリック後に表示されるメニュー：</p>
-              <div style="margin-top:0.5rem;background:var(--bg-sub);border-radius:4px;padding:0.5rem;font-size:0.78rem">
-                <div style="padding:0.375rem 0.5rem;font-weight:700;color:var(--navy-600);background:var(--navy-100);border-radius:3px;margin-bottom:0.25rem">
-                  Create a new repository ← 選択
-                </div>
-                <div style="padding:0.375rem 0.5rem;color:var(--muted)">Open in a codespace</div>
-              </div>
+              <img src="../assets/img/onboarding/gh-template-repo.png"
+                   alt="GitHub テンプレートリポジトリページ。右上の緑色「Use this template」ボタンが見える。"
+                   loading="lazy"
+                   onclick="this.classList.toggle('expanded')">
+              <div class="screenshot-stamp">確認日: 2026-06-13 — 毎週月曜自動更新</div>
             </div>
+            <p class="screenshot-caption">画面右上の <strong>「Use this template」</strong>（緑ボタン）→ <strong>「Create a new repository」</strong> をクリック。クリックで拡大表示できます。</p>
+          </div>
+          <div class="screenshot-block" style="margin-top:1rem">
+            <p class="screenshot-label">GitHub ログイン画面（未ログイン時）</p>
+            <div class="screenshot-frame">
+              <div class="screenshot-frame-bar">
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                <span class="url-bar">github.com/login</span>
+              </div>
+              <img src="../assets/img/onboarding/gh-login.png"
+                   alt="GitHub ログイン画面。Username or email address と Password の入力欄がある。"
+                   loading="lazy"
+                   onclick="this.classList.toggle('expanded')">
+              <div class="screenshot-stamp">確認日: 2026-06-13 — 毎週月曜自動更新</div>
+            </div>
+            <p class="screenshot-caption">先にここでログインしてから「Use this template」を押してください。クリックで拡大。</p>
           </div>
         </div>
       </div>
@@ -1256,7 +1347,24 @@ p, li, td, th, caption, .ja-text {
           </div>
         </div>
         <div>
-          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">ビルド設定の入力値</p>
+          <!-- Real screenshot: Cloudflare login -->
+          <div class="screenshot-block" style="margin-bottom:1rem">
+            <p class="screenshot-label">Cloudflare ログイン画面（実際の画面）</p>
+            <div class="screenshot-frame">
+              <div class="screenshot-frame-bar">
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                <span class="url-bar">dash.cloudflare.com/login</span>
+              </div>
+              <img src="../assets/img/onboarding/cf-login.png"
+                   alt="Cloudflare ダッシュボード ログイン画面。セキュリティ検証（Turnstile）が表示される。"
+                   loading="lazy"
+                   onclick="this.classList.toggle('expanded')">
+              <div class="screenshot-stamp">確認日: 2026-06-13 — 毎週月曜自動更新</div>
+            </div>
+            <p class="screenshot-caption">「私はロボットではありません」にチェックを入れるとログイン画面へ進みます。アカウントがない場合は「アカウントを作成」から無料で登録できます。</p>
+          </div>
+          <div class="manual-todo-badge" title="ログイン後の画面のため手動撮影が必要">手動確認待ち: Pages作成・ビルド設定画面</div>
+          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">ビルド設定の入力値（参考）</p>
           <div class="screen-mock" role="img" aria-label="Cloudflareのビルド設定画面イメージ">
             <div class="screen-mock-bar">
               <span class="dot"></span><span class="dot"></span><span class="dot"></span>
@@ -1394,7 +1502,24 @@ p, li, td, th, caption, .ja-text {
           </div>
         </div>
         <div>
-          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">Actions の3段階操作（画面イメージ）</p>
+          <!-- Real screenshot: GitHub Actions tab -->
+          <div class="screenshot-block" style="margin-bottom:1rem">
+            <p class="screenshot-label">実際の Actions タブ（自動更新）</p>
+            <div class="screenshot-frame">
+              <div class="screenshot-frame-bar">
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                <span class="url-bar">github.com/RYUIYAMADA/regatta-results-kit/actions</span>
+              </div>
+              <img src="../assets/img/onboarding/gh-actions-tab-example.png"
+                   alt="GitHub Actions タブ。左サイドバーにワークフロー一覧、右にジョブ実行履歴が表示されている。"
+                   loading="lazy"
+                   onclick="this.classList.toggle('expanded')">
+              <div class="screenshot-stamp">確認日: 2026-06-13 — 毎週月曜自動更新</div>
+            </div>
+            <p class="screenshot-caption">自分のリポジトリで「Actions」タブを開くとこのような画面になります。左サイドバーに「大会初期構築」が表示されます。クリックで拡大。</p>
+          </div>
+          <div class="manual-todo-badge" title="ログイン後の画面のため手動撮影が必要">手動確認待ち: Run workflowフォーム・エラーログ詳細画面</div>
+          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">操作の流れ（画面イメージ）</p>
 
           <!-- Step①: Actions タブ -->
           <p style="font-size:0.7rem;font-weight:700;color:var(--navy-600);margin-bottom:0.25rem">手順1：「Actions」タブをクリック</p>
@@ -1542,7 +1667,24 @@ p, li, td, th, caption, .ja-text {
           </div>
         </div>
         <div>
-          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">フォルダIDの確認方法</p>
+          <!-- Real screenshot: Google Drive login -->
+          <div class="screenshot-block" style="margin-bottom:1rem">
+            <p class="screenshot-label">Google Drive ログイン画面（実際の画面）</p>
+            <div class="screenshot-frame">
+              <div class="screenshot-frame-bar">
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                <span class="url-bar">accounts.google.com — Google ドライブに移動する</span>
+              </div>
+              <img src="../assets/img/onboarding/google-drive-login.png"
+                   alt="Google アカウント ログイン画面。メールアドレスまたは電話番号の入力欄と「次へ」ボタンがある。"
+                   loading="lazy"
+                   onclick="this.classList.toggle('expanded')">
+              <div class="screenshot-stamp">確認日: 2026-06-13 — 毎週月曜自動更新</div>
+            </div>
+            <p class="screenshot-caption">drive.google.com を開くとこの画面に遷移します。<strong>自団体のGoogleアカウント</strong>でログインしてください。</p>
+          </div>
+          <div class="manual-todo-badge" title="ログイン後の画面のため手動撮影が必要">手動確認待ち: フォルダ作成後のURL（フォルダID確認）画面</div>
+          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">フォルダIDの確認方法（参考）</p>
           <div class="screen-mock" role="img" aria-label="Google DriveのフォルダIDの確認方法画面イメージ">
             <div class="screen-mock-bar">
               <span class="dot"></span><span class="dot"></span><span class="dot"></span>
@@ -1688,7 +1830,24 @@ p, li, td, th, caption, .ja-text {
             </div>
           </div>
           <hr class="divider">
-          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">スクリプトプロパティ設定画面</p>
+          <!-- Real screenshot: GAS landing -->
+          <div class="screenshot-block" style="margin-bottom:1rem">
+            <p class="screenshot-label">Google Apps Script ランディング（実際の画面）</p>
+            <div class="screenshot-frame">
+              <div class="screenshot-frame-bar">
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                <span class="url-bar">script.google.com</span>
+              </div>
+              <img src="../assets/img/onboarding/gas-landing.png"
+                   alt="Google Apps Script のランディングページ。「シンプルなコードで Google Workspace を自動化、拡張できます。」というキャッチコピーと「Apps Script」ボタンがある。"
+                   loading="lazy"
+                   onclick="this.classList.toggle('expanded')">
+              <div class="screenshot-stamp">確認日: 2026-06-13 — 毎週月曜自動更新</div>
+            </div>
+            <p class="screenshot-caption">script.google.com はこのような画面です。「テンプレートを開く」ボタンからGASプロジェクトに直接アクセスできます（Googleログインが必要）。</p>
+          </div>
+          <div class="manual-todo-badge" title="ログイン後の画面のため手動撮影が必要">手動確認待ち: GASエディタ・スクリプトプロパティ設定画面</div>
+          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">スクリプトプロパティ設定画面（参考）</p>
           <div class="screen-mock" role="img" aria-label="GASのスクリプトプロパティ設定画面イメージ">
             <div class="screen-mock-bar">
               <span class="dot"></span><span class="dot"></span><span class="dot"></span>
@@ -1823,7 +1982,8 @@ p, li, td, th, caption, .ja-text {
           </div>
         </div>
         <div>
-          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">PAT 生成後の画面イメージ</p>
+          <div class="manual-todo-badge" title="ログイン後の画面のため手動撮影が必要">手動確認待ち: PAT作成フォーム・生成後コピー画面</div>
+          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">PAT 生成後の画面（参考）</p>
           <div class="screen-mock" role="img" aria-label="GitHub PATの生成後画面イメージ">
             <div class="screen-mock-bar">
               <span class="dot"></span><span class="dot"></span><span class="dot"></span>
@@ -1949,7 +2109,8 @@ p, li, td, th, caption, .ja-text {
           </div>
         </div>
         <div>
-          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">管理者ポータルの完了状態</p>
+          <div class="manual-todo-badge" title="ログイン後の画面のため手動撮影が必要">手動確認待ち: GASデプロイ設定・管理ポータル完了状態</div>
+          <p style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">管理者ポータルの完了状態（参考）</p>
           <div class="screen-mock" role="img" aria-label="管理者ポータルの導入完了状態画面イメージ">
             <div class="screen-mock-bar">
               <span class="dot"></span><span class="dot"></span><span class="dot"></span>
