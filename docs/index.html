@@ -306,6 +306,10 @@ section { padding-block: var(--lp-section-v); }
   grid-template-columns: 1fr;
   gap: 0;
   align-items: center;
+}
+
+/* ヒーローテキスト幅制限: container自体は全幅を保ちロゴと左端を揃える */
+.hero-text {
   max-width: 560px;
 }
 
@@ -321,6 +325,8 @@ section { padding-block: var(--lp-section-v); }
   border-radius: var(--lp-radius-full);
   border: 1px solid rgba(255,255,255,0.22);
   margin-bottom: 1.5rem;
+  /* テキスト先頭をロゴ左端基準線に揃える: 左padding(0.875rem) + dot(6px) + gap(0.5rem) = 1.75rem */
+  margin-left: calc(-0.875rem - 6px - 0.5rem);
   width: fit-content;
 }
 .hero-badge-dot {
@@ -936,6 +942,123 @@ footer {
   .hero-photo { width: 100%; opacity: 0.22; }
   .hero-photo-mask { width: 100%; background: linear-gradient(to bottom, rgba(26,106,255,0.4) 0%, rgba(26,106,255,0.1) 100%); }
 }
+
+/* === Lightbox === */
+/* ズームヒント: 成果物スクショにのみ適用 */
+.zoomable-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  cursor: zoom-in;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+}
+.zoomable-wrap:focus-visible {
+  outline: 2px solid var(--lp-primary);
+  outline-offset: 3px;
+}
+.zoomable-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(26,106,255,0) center/32px 32px no-repeat;
+  transition: background-color var(--dur-fast) var(--ease);
+  pointer-events: none;
+}
+.zoomable-wrap:hover::after {
+  background-color: rgba(0,0,0,0.08);
+}
+/* ズームアイコン（hover時） */
+.zoom-hint {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  background: rgba(255,255,255,0.92);
+  color: var(--lp-primary);
+  border-radius: var(--lp-radius);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+  pointer-events: none;
+  box-shadow: var(--lp-shadow-base);
+  z-index: 1;
+}
+.zoomable-wrap:hover .zoom-hint,
+.zoomable-wrap:focus-visible .zoom-hint {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ライトボックスオーバーレイ */
+.lb-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(10,20,50,0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-normal) var(--ease);
+}
+.lb-overlay.lb-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lb-overlay { transition: none; }
+  .lb-img-wrap { transition: none; }
+}
+.lb-img-wrap {
+  position: relative;
+  max-width: min(90vw, 1200px);
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(0.96);
+  transition: transform var(--dur-normal) var(--ease);
+}
+.lb-overlay.lb-open .lb-img-wrap {
+  transform: scale(1);
+}
+.lb-img {
+  display: block;
+  max-width: 100%;
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+}
+.lb-close {
+  position: absolute;
+  top: -2.5rem;
+  right: 0;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.85);
+  cursor: pointer;
+  padding: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--lp-radius);
+  transition: color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+.lb-close:hover { color: #fff; background: rgba(255,255,255,0.1); }
+.lb-close:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 </style>
 </head>
 <body>
@@ -1043,13 +1166,20 @@ footer {
         </div>
       </div>
       <div class="pillar-img">
-        <img
-          src="./assets/img/live-site-pc.png"
-          alt="速報サイトのPC表示画面。レース結果が一覧で表示されている"
-          width="640"
-          height="400"
-          loading="lazy"
-        >
+        <button class="zoomable-wrap" type="button" aria-label="速報サイト画面を拡大表示" data-lb-src="./assets/img/live-site-pc.png" data-lb-alt="速報サイトのPC表示画面。レース結果が一覧で表示されている">
+          <img
+            src="./assets/img/live-site-pc.png"
+            alt="速報サイトのPC表示画面。レース結果が一覧で表示されている"
+            width="640"
+            height="400"
+            loading="lazy"
+            style="width:100%;height:auto;display:block;"
+          >
+          <span class="zoom-hint" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M11 11l3 3M7 12A5 5 0 107 2a5 5 0 000 10zM9.5 4.5v5M7 7h5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            クリックで拡大
+          </span>
+        </button>
       </div>
     </div>
 
@@ -1061,14 +1191,21 @@ footer {
         <p class="pillar-desc">A4縦のPDFを自動出力。プリンターに送るだけで会場掲示が完了する。手作業でのレイアウト編集は不要。</p>
       </div>
       <div class="pillar-img">
-        <img
-          class="poster-img"
-          src="./assets/img/results-poster.png"
-          alt="自動生成された大会結果の掲示用PDF。着順・タイムが整理されたA4レイアウト（第17回全日本マスターズレガッタ 2026-05-23実物）"
-          width="640"
-          height="400"
-          loading="lazy"
-        >
+        <button class="zoomable-wrap" type="button" aria-label="掲示用PDF画面を拡大表示" data-lb-src="./assets/img/results-poster.png" data-lb-alt="自動生成された大会結果の掲示用PDF。着順・タイムが整理されたA4レイアウト（第17回全日本マスターズレガッタ 2026-05-23実物）">
+          <img
+            class="poster-img"
+            src="./assets/img/results-poster.png"
+            alt="自動生成された大会結果の掲示用PDF。着順・タイムが整理されたA4レイアウト（第17回全日本マスターズレガッタ 2026-05-23実物）"
+            width="640"
+            height="400"
+            loading="lazy"
+            style="width:100%;height:auto;display:block;"
+          >
+          <span class="zoom-hint" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M11 11l3 3M7 12A5 5 0 107 2a5 5 0 000 10zM9.5 4.5v5M7 7h5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            クリックで拡大
+          </span>
+        </button>
       </div>
     </div>
 
@@ -1080,13 +1217,20 @@ footer {
         <p class="pillar-desc">判定員が使う帳票もCSVから自動生成。大会開始前に名前・レーン・エントリー情報が揃った状態で出力される。</p>
       </div>
       <div class="pillar-img">
-        <img
-          src="./assets/img/judge-sheet.png"
-          alt="自動生成された競漕記録の実物。レース番号・着順・クルー名・500m/1000mタイムが記載（第17回全日本マスターズレガッタ 2026-05-23実物）"
-          width="640"
-          height="400"
-          loading="lazy"
-        >
+        <button class="zoomable-wrap" type="button" aria-label="審判用資料画面を拡大表示" data-lb-src="./assets/img/judge-sheet.png" data-lb-alt="自動生成された競漕記録の実物。レース番号・着順・クルー名・500m/1000mタイムが記載（第17回全日本マスターズレガッタ 2026-05-23実物）">
+          <img
+            src="./assets/img/judge-sheet.png"
+            alt="自動生成された競漕記録の実物。レース番号・着順・クルー名・500m/1000mタイムが記載（第17回全日本マスターズレガッタ 2026-05-23実物）"
+            width="640"
+            height="400"
+            loading="lazy"
+            style="width:100%;height:auto;display:block;"
+          >
+          <span class="zoom-hint" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M11 11l3 3M7 12A5 5 0 107 2a5 5 0 000 10zM9.5 4.5v5M7 7h5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            クリックで拡大
+          </span>
+        </button>
       </div>
     </div>
 
@@ -1260,13 +1404,20 @@ footer {
         </ul>
       </div>
       <div class="admin-img">
-        <img
-          src="./assets/img/admin-portal.png"
-          alt="管理者ポータルの実画面。接続テスト・自動更新状態・処理件数が表示されている"
-          width="800"
-          height="500"
-          loading="lazy"
-        >
+        <button class="zoomable-wrap" type="button" aria-label="管理者ポータル画面を拡大表示" data-lb-src="./assets/img/admin-portal.png" data-lb-alt="管理者ポータルの実画面。接続テスト・自動更新状態・処理件数が表示されている">
+          <img
+            src="./assets/img/admin-portal.png"
+            alt="管理者ポータルの実画面。接続テスト・自動更新状態・処理件数が表示されている"
+            width="800"
+            height="500"
+            loading="lazy"
+            style="width:100%;height:auto;display:block;"
+          >
+          <span class="zoom-hint" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M11 11l3 3M7 12A5 5 0 107 2a5 5 0 000 10zM9.5 4.5v5M7 7h5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            クリックで拡大
+          </span>
+        </button>
       </div>
     </div>
   </div>
@@ -1583,6 +1734,91 @@ document.querySelectorAll('.faq-q').forEach(function(btn) {
   }, { threshold: 0.08 });
 
   targets.forEach(function(el) { io.observe(el); });
+})();
+
+/* ライトボックス */
+(function() {
+  /* オーバーレイ DOM を構築 */
+  var overlay = document.createElement('div');
+  overlay.className = 'lb-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', '画像を拡大表示');
+  overlay.setAttribute('id', 'lb-overlay');
+
+  var imgWrap = document.createElement('div');
+  imgWrap.className = 'lb-img-wrap';
+
+  var closeBtn = document.createElement('button');
+  closeBtn.className = 'lb-close';
+  closeBtn.type = 'button';
+  closeBtn.setAttribute('aria-label', '閉じる');
+  closeBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+
+  var lbImg = document.createElement('img');
+  lbImg.className = 'lb-img';
+  lbImg.alt = '';
+
+  imgWrap.appendChild(closeBtn);
+  imgWrap.appendChild(lbImg);
+  overlay.appendChild(imgWrap);
+  document.body.appendChild(overlay);
+
+  var lastFocused = null;
+
+  function openLightbox(src, alt, trigger) {
+    lastFocused = trigger;
+    lbImg.src = src;
+    lbImg.alt = alt || '';
+    overlay.classList.add('lb-open');
+    document.body.style.overflow = 'hidden';
+    /* フォーカストラップ: 閉じるボタンへ */
+    setTimeout(function() { closeBtn.focus(); }, 50);
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeLightbox() {
+    overlay.classList.remove('lb-open');
+    document.body.style.overflow = '';
+    overlay.setAttribute('aria-hidden', 'true');
+    /* 元の img(trigger)へフォーカスを戻す */
+    if (lastFocused) {
+      lastFocused.focus();
+      lastFocused = null;
+    }
+    /* 画像は閉じた後にクリア（transition後） */
+    setTimeout(function() {
+      if (!overlay.classList.contains('lb-open')) { lbImg.src = ''; }
+    }, 300);
+  }
+
+  /* フォーカストラップ: overlay内のみ */
+  overlay.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { e.preventDefault(); closeLightbox(); return; }
+    if (e.key === 'Tab') {
+      /* ダイアログ内の focusable は closeBtn のみ */
+      e.preventDefault();
+      closeBtn.focus();
+    }
+  });
+
+  /* 背景クリックで閉じる */
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) { closeLightbox(); }
+  });
+
+  /* 閉じるボタン */
+  closeBtn.addEventListener('click', function(e) { e.stopPropagation(); closeLightbox(); });
+
+  /* 各 zoomable-wrap にイベントを設定 */
+  document.querySelectorAll('.zoomable-wrap').forEach(function(btn) {
+    /* button要素なので click / Enter / Space で発火 */
+    btn.addEventListener('click', function() {
+      var src = btn.getAttribute('data-lb-src');
+      var alt = btn.getAttribute('data-lb-alt');
+      openLightbox(src, alt, btn);
+    });
+  });
 })();
 </script>
 </body>
