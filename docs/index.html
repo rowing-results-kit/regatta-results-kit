@@ -215,6 +215,7 @@ section { padding-block: var(--lp-section-v); }
   align-items: center;
   justify-content: space-between;
   height: 64px;
+  padding-block: 0;
 }
 .nav-logo {
   font-size: 0.9375rem;
@@ -327,6 +328,26 @@ section { padding-block: var(--lp-section-v); }
   gap: 0.875rem;
   align-items: center;
   margin-top: 2rem;
+}
+.hero-title {
+  font-size: var(--lp-hero-size);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+  color: #fff;
+}
+/* 見出し: 意味区切りで固定改行（孤立行防止） */
+.hero-title .line {
+  display: block;
+  word-break: auto-phrase;
+}
+.hero-sub {
+  font-size: clamp(1rem, 1.8vw, 1.125rem);
+  font-weight: 400;
+  color: rgba(255,255,255,0.82);
+  line-height: 1.85;
+  margin-top: 1.25rem;
+  max-width: 28em;
 }
 .hero-note {
   font-size: 0.8125rem;
@@ -933,10 +954,10 @@ footer {
         費用0円 — Google / GitHub / Cloudflare 無料枠
       </div>
       <h1 id="hero-heading" class="hero-title">
-        大会の速報サイトを、<br>協会の手で。
+        <span class="line">大会の速報サイトを、</span><span class="line">協会の手で。</span>
       </h1>
-      <p style="font-size:clamp(1rem,1.8vw,1.125rem);font-weight:400;color:rgba(255,255,255,0.82);line-height:1.85;margin-top:1.25rem;max-width:460px;">
-        計測CSVを決まったフォルダに入れるだけ。<br>約2分後、参加者のスマホに結果が届く。
+      <p class="hero-sub">
+        <span class="line">計測CSVを決まったフォルダに入れるだけ。</span><span class="line">約2分後、参加者のスマホに結果が届く。</span>
       </p>
       <div class="hero-cta-group">
         <a href="./onboarding/" class="btn-white" aria-label="導入ガイドへ">
