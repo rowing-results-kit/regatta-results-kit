@@ -602,17 +602,12 @@ section { padding-block: var(--lp-section-v); }
     object-fit: contain;
     object-position: center;
   }
-  /* 縦長ポスター素材は枠も縦長にして大きく見せる */
-  .pillar-img:has(.poster-img) {
-    aspect-ratio: 4/5;
-    max-height: 540px;
-  }
 }
 
-/* Poster & Screenshots: contain で全表示（端を切らない） */
+/* 横長画像: モバイルで縦方向を制限して可読性を保つ */
 @media (max-width: 767px) {
-  .poster-img {
-    max-height: 400px;
+  .pillar-img img {
+    max-height: 320px;
     object-fit: contain;
     object-position: center;
   }
@@ -1189,16 +1184,15 @@ footer {
       <div class="pillar-text">
         <div class="pillar-num" aria-hidden="true">02</div>
         <h3 class="pillar-heading">掲示用資料 — 自動生成</h3>
-        <p class="pillar-desc">A4縦のPDFを自動出力。プリンターに送るだけで会場掲示が完了する。手作業でのレイアウト編集は不要。</p>
+        <p class="pillar-desc">A4横のPDFを自動出力。プリンターに送るだけで会場掲示が完了する。手作業でのレイアウト編集は不要。</p>
       </div>
       <div class="pillar-img">
         <button class="zoomable-wrap" type="button" aria-label="掲示用PDF画面を拡大表示" data-lb-src="./assets/img/results-poster.png" data-lb-alt="自動生成された大会結果の掲示用PDF。着順・タイムが整理されたA4レイアウト（サンプルデータ）">
           <img
-            class="poster-img"
             src="./assets/img/results-poster.png"
-            alt="自動生成された大会結果の掲示用PDF。着順・タイムが整理されたA4レイアウト（サンプルデータ）"
-            width="640"
-            height="400"
+            alt="自動生成された大会結果の掲示用PDF。着順・タイムが整理されたA4横レイアウト（サンプルデータ）"
+            width="1180"
+            height="840"
             loading="lazy"
             style="width:100%;height:auto;display:block;"
           >
@@ -1222,8 +1216,8 @@ footer {
           <img
             src="./assets/img/judge-sheet.png"
             alt="自動生成された競漕記録のサンプル。レース番号・着順・クルー名・500m/1000mタイムが記載（サンプルデータ）"
-            width="640"
-            height="400"
+            width="1180"
+            height="900"
             loading="lazy"
             style="width:100%;height:auto;display:block;"
           >
