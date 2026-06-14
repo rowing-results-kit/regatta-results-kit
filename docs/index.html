@@ -86,6 +86,8 @@ body {
   word-break: normal;
   overflow-wrap: anywhere;
   hanging-punctuation: first;
+  overflow-x: hidden;
+  overflow-y: scroll;
 }
 @supports (word-break: auto-phrase) {
   h1, h2, h3, h4 { word-break: auto-phrase; }
@@ -138,7 +140,7 @@ section { padding-block: var(--lp-section-v); }
   font-weight: 400;
   line-height: 1.9;
   color: var(--lp-muted);
-  max-width: 36em;
+  max-width: min(36em, 100%);
   text-wrap: pretty; /* 1〜2文字の孤立行を解消（対応ブラウザ） */
 }
 .body-text {
@@ -705,7 +707,7 @@ section { padding-block: var(--lp-section-v); }
   min-height: 1rem;
 }
 .flow-item:last-child .flow-line { display: none; }
-.flow-body { padding-top: 0.25rem; min-width: 0; }
+.flow-body { padding-top: 0.25rem; min-width: 0; overflow-wrap: anywhere; }
 .flow-title { font-size: 0.9375rem; font-weight: 700; margin-bottom: 0.25rem; color: var(--lp-text); overflow-wrap: break-word; }
 .flow-desc { font-size: 0.875rem; font-weight: 500; color: var(--lp-muted); line-height: 1.75; overflow-wrap: break-word; }
 .flow-tag {
@@ -1435,7 +1437,7 @@ footer {
 
     <div class="setup-content">
       <div>
-        <div class="flow-list" role="list" style="max-width:560px;">
+        <div class="flow-list" role="list" style="max-width:min(560px,100%);">
           <div class="flow-item" role="listitem">
             <div class="flow-connector">
               <div class="flow-num" aria-hidden="true">1</div>
