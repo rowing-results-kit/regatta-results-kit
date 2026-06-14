@@ -303,12 +303,12 @@ function renderTournamentHeader() {
   // SPEC §1: tournament.name || tournament.race_name（v2互換）
   const tournamentName = t.name || t.race_name || '';
   const el = document.getElementById('tournament-name');
-  if (el) el.textContent = '🏁 ' + tournamentName;
+  if (el) el.textContent = tournamentName;
 
   const metaEl = document.getElementById('tournament-meta');
   const dates = (t.dates || []).map(d => formatDate(d)).join('・');
   if (metaEl) {
-    metaEl.innerHTML = `<span>📅 ${h(dates)}</span><span>📍 ${h(t.venue || '')}</span>`;
+    metaEl.innerHTML = `<span>${h(dates)}</span><span>${h(t.venue || '')}</span>`;
   }
 
   // カバーエリアにも大会情報を表示
@@ -1569,7 +1569,7 @@ function showCacheWarning(ageMin) {
     banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#f59e0b;color:#fff;text-align:center;padding:8px 12px;font-size:13px;font-weight:600;';
     document.body.prepend(banner);
   }
-  banner.innerHTML = `⚡ 電波が不安定なため${ageText}前の保存データを表示しています。Wi-Fiで再読込すると最新に更新されます。<button onclick="location.reload()" style="margin-left:12px;padding:2px 10px;background:#fff;color:#92400e;border:none;border-radius:4px;cursor:pointer;font-size:12px">再読込</button>`;
+  banner.innerHTML = `[オフライン] ${ageText}前の保存データを表示しています。Wi-Fiで再読込すると最新に更新されます。<button onclick="location.reload()" style="margin-left:12px;padding:2px 10px;background:#fff;color:#92400e;border:none;border-radius:4px;cursor:pointer;font-size:12px">再読込</button>`;
 }
 
 // ========= 文字サイズ変更 =========

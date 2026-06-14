@@ -233,6 +233,9 @@ h1.page-title {
   background: #fff;
 }
 .view-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
   padding: 14px 28px;
   cursor: pointer;
   font-size: 15px;

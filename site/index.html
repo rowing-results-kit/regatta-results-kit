@@ -12,7 +12,7 @@
 <meta name="theme-color" content="{{PRIMARY_COLOR}}">
 
 <!-- favicon（外部ファイル不要のbase64 SVG） -->
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚣</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231A6AFF'/><path d='M6 20 Q16 12 26 20' stroke='%23fff' stroke-width='2.5' fill='none' stroke-linecap='round'/><path d='M10 18 L10 24 M16 16 L16 24 M22 18 L22 24' stroke='%23fff' stroke-width='2' stroke-linecap='round'/></svg>">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,9 +40,18 @@
 
   <!-- ビュー切替タブ -->
   <div class="view-tabs">
-    <div class="view-tab active" onclick="switchView('toggle', this)">🏁 種目別</div>
-    <div class="view-tab" onclick="switchView('table', this)">📊 全レース一覧</div>
-    <div class="view-tab" onclick="switchView('schedule', this)">🕐 スケジュール</div>
+    <div class="view-tab active" onclick="switchView('toggle', this)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2L3 14h10L8 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      種目別
+    </div>
+    <div class="view-tab" onclick="switchView('table', this)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="2" y="4" width="12" height="1.5" rx="0.5" fill="currentColor"/><rect x="2" y="7.25" width="12" height="1.5" rx="0.5" fill="currentColor"/><rect x="2" y="10.5" width="12" height="1.5" rx="0.5" fill="currentColor"/></svg>
+      全レース一覧
+    </div>
+    <div class="view-tab" onclick="switchView('schedule', this)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      スケジュール
+    </div>
   </div>
 
   <!-- 進行中レースバナー（JS側で更新） -->
@@ -74,7 +83,7 @@
       <!-- モバイル用: 検索+トグルボタン行 -->
       <div class="filter-top-row">
         <input type="text" class="filter-search" id="filter-crew"
-          placeholder="🔍 所属・クルー名で検索" oninput="applyFilters()"
+          placeholder="所属・クルー名で検索" oninput="applyFilters()"
           aria-label="所属・クルー名で検索">
         <button class="filter-toggle-btn" id="filter-toggle-btn"
           onclick="toggleFilterPanel()" aria-expanded="false">
