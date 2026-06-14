@@ -594,7 +594,7 @@ section { padding-block: var(--lp-section-v); }
 }
 @media (min-width: 768px) {
   .pillar-img {
-    aspect-ratio: 16/10;
+    aspect-ratio: 1414/1000; /* A4横 実比率 (2924x2066px) */
   }
   .pillar-img img {
     width: 100%;
@@ -604,10 +604,10 @@ section { padding-block: var(--lp-section-v); }
   }
 }
 
-/* 横長画像: モバイルで縦方向を制限して可読性を保つ */
+/* 横長画像(A4横 1414:1000比率): モバイルでは幅100%で自然に収まる */
 @media (max-width: 767px) {
   .pillar-img img {
-    max-height: 320px;
+    max-height: 260px; /* 375px幅 × (1000/1414) ≈ 265px */
     object-fit: contain;
     object-position: center;
   }
@@ -1190,9 +1190,9 @@ footer {
         <button class="zoomable-wrap" type="button" aria-label="掲示用PDF画面を拡大表示" data-lb-src="./assets/img/results-poster.png" data-lb-alt="自動生成された大会結果の掲示用PDF。着順・タイムが整理されたA4レイアウト（サンプルデータ）">
           <img
             src="./assets/img/results-poster.png"
-            alt="自動生成された大会結果の掲示用PDF。着順・タイムが整理されたA4縦レイアウト（サンプルデータ）"
-            width="595"
-            height="842"
+            alt="第17回全日本マスターズレガッタ 結果一覧（掲示用PDF）。レース番号・種目・着順が記載されたA4横レイアウト"
+            width="2924"
+            height="2066"
             loading="lazy"
             style="width:100%;height:auto;display:block;"
           >
@@ -1215,9 +1215,9 @@ footer {
         <button class="zoomable-wrap" type="button" aria-label="審判用資料画面を拡大表示" data-lb-src="./assets/img/judge-sheet.png" data-lb-alt="自動生成された競漕記録のサンプル。レース番号・着順・クルー名・500m/1000mタイムが記載（サンプルデータ）">
           <img
             src="./assets/img/judge-sheet.png"
-            alt="自動生成された競漕記録のサンプル。レース番号・着順・クルー名・500m/1000mタイムが記載（サンプルデータ）"
-            width="1180"
-            height="900"
+            alt="第17回全日本マスターズレガッタ 競漕記録（審判帳票）。レース番号・種目・距離・カテゴリーが記載されたA4横レイアウト"
+            width="2924"
+            height="2066"
             loading="lazy"
             style="width:100%;height:auto;display:block;"
           >
