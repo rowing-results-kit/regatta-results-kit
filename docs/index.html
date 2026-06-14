@@ -37,8 +37,8 @@
   --lp-bronze:        #92400E;
 
   /* タイポグラフィ */
-  --lp-hero-size:     clamp(1.5rem, 6.5vw, 3.5rem);
-  --lp-h1-size:       clamp(2rem, 4.5vw, 2.75rem);
+  --lp-hero-size:     clamp(2.5rem, 7vw, 4.5rem);
+  --lp-h1-size:       clamp(2.25rem, 5vw, 3.25rem);
   --lp-h2-size:       clamp(1.5rem, 3vw, 2rem);
   --lp-h3-size:       clamp(1.0625rem, 1.8vw, 1.125rem);
   --lp-body-size:     1rem;
@@ -271,19 +271,19 @@ section { padding-block: var(--lp-section-v); }
   object-fit: cover;
   object-position: center 35%;
 }
-/* グラデマスク（左を濃く・右を薄く） */
+/* グラデマスク（左側のみ。右2/3は写真が見える） */
 .hero-photo-mask {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to right, rgba(26,106,255,0.65) 0%, rgba(26,106,255,0.5) 40%, rgba(26,106,255,0.3) 70%, rgba(26,106,255,0.15) 100%);
+  background: linear-gradient(to right, rgba(26,106,255,0.82) 0%, rgba(26,106,255,0.55) 40%, rgba(26,106,255,0) 72%);
 }
-/* 全体オーバーレイ */
+/* 全体オーバーレイ（極薄。写真を殺さない） */
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(10,30,90,0.25);
+  background: rgba(10,30,90,0.08);
 }
 /* 斜め帯装飾は廃止 */
 .hero-slash {
@@ -548,7 +548,8 @@ section { padding-block: var(--lp-section-v); }
   font-weight: 900;
   letter-spacing: -0.05em;
   line-height: 1;
-  color: var(--lp-primary-100);
+  color: var(--lp-primary-light);
+  opacity: 0.55;
   font-variant-numeric: tabular-nums;
   margin-bottom: 0.5rem;
 }
@@ -935,8 +936,8 @@ footer {
 /* === Responsive utilities === */
 @media (max-width: 767px) {
   .hide-mobile { display: none !important; }
-  .hero-photo { width: 100%; opacity: 0.22; }
-  .hero-photo-mask { width: 100%; background: linear-gradient(to bottom, rgba(26,106,255,0.4) 0%, rgba(26,106,255,0.1) 100%); }
+  .hero-photo { width: 100%; opacity: 0.5; }
+  .hero-photo-mask { width: 100%; background: linear-gradient(to bottom, rgba(26,106,255,0.72) 0%, rgba(26,106,255,0.45) 60%, rgba(26,106,255,0.2) 100%); }
 }
 
 /* === Lightbox === */
@@ -1237,33 +1238,20 @@ footer {
         <p class="pillar-desc">協会が主催する複数大会を同一のURLで管理・公開。年間スケジュールと逐次結果を一覧できる。大会ごとに設定ファイルを変えるだけで使い回せる。</p>
       </div>
       <div class="pillar-img">
-        <div class="hub-mock" aria-label="年間大会ハブのイメージ">
-          <div class="hub-mock-head">
-            <div class="hub-mock-head-title">○○県ボート協会 — 2026年度大会一覧</div>
-          </div>
-          <div class="hub-mock-body">
-            <div class="hub-row">
-              <span class="hub-name">春季選手権</span>
-              <span class="hub-date">2026-04-12</span>
-              <span class="hub-status status-done">結果公開</span>
-            </div>
-            <div class="hub-row">
-              <span class="hub-name">マスターズレガッタ</span>
-              <span class="hub-date">2026-05-23</span>
-              <span class="hub-status status-done">結果公開</span>
-            </div>
-            <div class="hub-row">
-              <span class="hub-name">夏季大会</span>
-              <span class="hub-date">2026-07-19</span>
-              <span class="hub-status status-live">速報中</span>
-            </div>
-            <div class="hub-row">
-              <span class="hub-name">秋季選手権</span>
-              <span class="hub-date">2026-10-11</span>
-              <span class="hub-status status-soon">準備中</span>
-            </div>
-          </div>
-        </div>
+        <button class="zoomable-wrap" type="button" aria-label="年間大会ハブ画面を拡大表示" data-lb-src="./assets/img/hub-screenshot.png" data-lb-alt="年間大会ハブの実画面。大会一覧・ステータスバッジが表示されている">
+          <img
+            src="./assets/img/hub-screenshot.png"
+            alt="年間大会ハブの実画面。大会一覧・ステータスバッジが表示されている"
+            width="1280"
+            height="900"
+            loading="lazy"
+            style="width:100%;height:auto;display:block;"
+          >
+          <span class="zoom-hint" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M11 11l3 3M7 12A5 5 0 107 2a5 5 0 000 10zM9.5 4.5v5M7 7h5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            クリックで拡大
+          </span>
+        </button>
       </div>
     </div>
 
@@ -1274,8 +1262,7 @@ footer {
 <section id="howto" class="howto-section" aria-labelledby="howto-heading">
   <div class="container">
     <div class="section-header">
-      <div class="eyebrow">当日の運用</div>
-      <h2 id="howto-heading" class="section-title">やることは1つ</h2>
+      <h2 id="howto-heading" class="section-title">当日の操作は<wbr>1つだけ</h2>
       <p class="body-lead">CSVをドライブのフォルダに入れる。それだけ。</p>
     </div>
 
@@ -1374,7 +1361,6 @@ footer {
   <div class="container">
     <div class="admin-content">
       <div>
-        <div class="eyebrow">管理者ポータル</div>
         <h2 id="admin-heading" class="sub-title">状態をリアルタイムに確認</h2>
         <p class="body-lead" style="max-width:440px;margin-top:0.875rem;">接続状態・処理件数・最終更新時刻をダッシュボードで確認できる。CSVが正しく処理されたかをその場で判断できる。</p>
         <ul class="admin-check-list">
@@ -1424,7 +1410,7 @@ footer {
     <div class="section-header">
       <div class="eyebrow">導入の流れ</div>
       <h2 id="setup-heading" class="section-title">7ステップ</h2>
-      <p class="body-lead">各ステップにセルフチェックと詰まったときの対処方法を記載している。</p>
+      <p class="body-lead">各ステップにセルフチェックと、詰まったときの対処方法を記載している。</p>
     </div>
 
     <div class="setup-content">
@@ -1509,7 +1495,7 @@ footer {
         </div>
 
         <div class="setup-cta-box">
-          <div class="eyebrow" style="margin-bottom:0.5rem;">各ステップに画面キャプチャ + セルフチェックつき</div>
+          <p style="font-size:0.875rem;font-weight:700;color:var(--lp-primary);margin-bottom:0.5rem;">各ステップに画面キャプチャ + セルフチェックつき</p>
           <h3 class="sub-title" style="font-size:clamp(1.25rem,2.5vw,1.5rem);">詳しい手順を確認する</h3>
           <p class="body-text">詰まったときの対処方法も各ステップに記載している。</p>
           <a href="./onboarding/" class="btn-primary" style="margin-top:1.5rem;" aria-label="導入ガイドを開く">
@@ -1581,8 +1567,7 @@ footer {
 <section class="faq-section" aria-labelledby="faq-heading">
   <div class="container">
     <div class="section-header">
-      <div class="eyebrow">よくある質問</div>
-      <h2 id="faq-heading" class="section-title">FAQ</h2>
+      <h2 id="faq-heading" class="section-title">よくある質問</h2>
     </div>
     <div class="faq-list" role="list" style="max-width:720px;">
 
@@ -1684,8 +1669,8 @@ footer {
         <a href="https://github.com/rowing-results-kit/regatta-results-kit/issues/new?template=feedback.yml" class="footer-link" target="_blank" rel="noopener noreferrer">ご意見・報告</a>
       </nav>
     </div>
-    <p class="footer-copy">ボート競技大会の速報公開インフラ</p>
-    <p class="footer-copy" style="margin-top:0.5rem;">制作: RYUI YAMADA &nbsp;·&nbsp; お問い合わせ: <a href="mailto:row2014.2015.k@gmail.com" style="color:rgba(255,255,255,0.38);text-decoration:underline;transition:color 150ms cubic-bezier(0.4,0,0.2,1);" onmouseover="this.style.color='rgba(255,255,255,0.72)'" onmouseout="this.style.color='rgba(255,255,255,0.38)'">row2014.2015.k@gmail.com</a></p>
+    <p class="footer-copy">第17回全日本マスターズレガッタの速報サイト運用から生まれたキット。</p>
+    <p class="footer-copy" style="margin-top:0.375rem;">制作: RYUI YAMADA &nbsp;·&nbsp; お問い合わせ: <a href="mailto:row2014.2015.k@gmail.com" style="color:rgba(255,255,255,0.38);text-decoration:underline;transition:color 150ms cubic-bezier(0.4,0,0.2,1);" onmouseover="this.style.color='rgba(255,255,255,0.72)'" onmouseout="this.style.color='rgba(255,255,255,0.38)'">row2014.2015.k@gmail.com</a></p>
   </div>
 </footer>
 
