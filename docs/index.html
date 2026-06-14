@@ -54,9 +54,8 @@
   --lp-space-xl:      3rem;     /* 48px */
   --lp-space-2xl:     4rem;     /* 64px */
 
-  /* エフェクト — コンテンツ影は1種類のみ。--lp-shadow-lb はライトボックス拡大画像専用の例外（暗背景から浮かせる用途） */
+  /* エフェクト — コンテンツ影は --lp-shadow-base 1種類のみ。--lp-shadow-card は廃止（--lp-shadow-base に統一）。--lp-shadow-lb はライトボックス拡大画像専用の例外（暗背景から浮かせる用途） */
   --lp-shadow-base:   0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-  --lp-shadow-card:   0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
   --lp-shadow-lb:     0 8px 40px rgba(0,0,0,0.5);
   --lp-radius:        4px;
   --lp-radius-md:     6px;
@@ -139,6 +138,8 @@ section { padding-block: var(--lp-section-v); }
   font-weight: 400;
   line-height: 1.9;
   color: var(--lp-muted);
+  max-width: 36em;
+  text-wrap: pretty; /* 1〜2文字の孤立行を解消（対応ブラウザ） */
 }
 .body-text {
   font-size: var(--lp-body-size);
@@ -538,6 +539,7 @@ section { padding-block: var(--lp-section-v); }
   padding-block: clamp(3rem, 6vw, 4.5rem);
 }
 .pillar-row:first-child { padding-top: 0; }
+.pillar-row > * { min-width: 0; } /* P1-2: グリッド子のテキスト折り返し保証 */
 @media (min-width: 768px) {
   .pillar-row { grid-template-columns: 1fr 1fr; gap: 4rem; }
   .pillar-row.reverse .pillar-img { order: -1; }
@@ -658,6 +660,8 @@ section { padding-block: var(--lp-section-v); }
   gap: 3rem;
   align-items: start;
 }
+/* P1-2: グリッド子要素の min-width を 0 に。flow-title/desc のテキスト折り返しに必須 */
+.howto-content > * { min-width: 0; }
 @media (min-width: 768px) {
   .howto-content { grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
 }
@@ -701,9 +705,9 @@ section { padding-block: var(--lp-section-v); }
   min-height: 1rem;
 }
 .flow-item:last-child .flow-line { display: none; }
-.flow-body { padding-top: 0.25rem; }
-.flow-title { font-size: 0.9375rem; font-weight: 700; margin-bottom: 0.25rem; color: var(--lp-text); }
-.flow-desc { font-size: 0.875rem; font-weight: 500; color: var(--lp-muted); line-height: 1.75; }
+.flow-body { padding-top: 0.25rem; min-width: 0; }
+.flow-title { font-size: 0.9375rem; font-weight: 700; margin-bottom: 0.25rem; color: var(--lp-text); overflow-wrap: break-word; }
+.flow-desc { font-size: 0.875rem; font-weight: 500; color: var(--lp-muted); line-height: 1.75; overflow-wrap: break-word; }
 .flow-tag {
   display: inline-flex;
   align-items: center;
@@ -810,6 +814,7 @@ section { padding-block: var(--lp-section-v); }
   gap: 3rem;
   align-items: start;
 }
+.setup-content > * { min-width: 0; } /* P1-2: グリッド子のテキスト折り返し保証 */
 @media (min-width: 768px) {
   .setup-content { grid-template-columns: 5fr 4fr; gap: 4rem; }
 }
@@ -938,6 +943,22 @@ footer {
   .hide-mobile { display: none !important; }
   .hero-photo { width: 100%; opacity: 0.5; }
   .hero-photo-mask { width: 100%; background: linear-gradient(to bottom, rgba(26,106,255,0.72) 0%, rgba(26,106,255,0.45) 60%, rgba(26,106,255,0.2) 100%); }
+}
+/* P1-1: モバイル — ヒーローCTAボタンを縦積みで見切れ防止 */
+/* max-width: 640px (headlessのdeviceScaleFactor=2環境も考慮し広めに設定) */
+@media (max-width: 640px) {
+  .hero-cta-group {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem;
+  }
+  .hero-cta-group .btn-white,
+  .hero-cta-group .btn-ghost {
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+  }
 }
 
 /* === Lightbox === */
@@ -1147,7 +1168,6 @@ footer {
 <section id="features" class="pillars-section" aria-labelledby="features-heading">
   <div class="container">
     <div class="section-header">
-      <div class="eyebrow">できること</div>
       <h2 id="features-heading" class="section-title">4本柱で、大会運営を変える</h2>
     </div>
 
