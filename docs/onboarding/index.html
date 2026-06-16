@@ -104,6 +104,22 @@ p, li, td, th, caption, .ja-text {
   gap: 1rem;
   flex-wrap: wrap;
 }
+.header-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.8);
+  text-decoration: none;
+  margin-bottom: 0.375rem;
+}
+.header-back-link:hover { color: #fff; }
+.header-back-link:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.8);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
 .site-header h1 {
   font-size: clamp(1rem, 2vw, 1.125rem);
   font-weight: 700;
@@ -1173,6 +1189,10 @@ p, li, td, th, caption, .ja-text {
 <header class="site-header" role="banner">
   <div class="container">
     <div>
+      <a href="../" class="header-back-link" aria-label="概要ページへ戻る">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        概要
+      </a>
       <h1>速報サイト 導入ガイド</h1>
       <p class="subtitle">regatta-results-kit — 協会担当者向けセットアップ手順</p>
     </div>
@@ -1613,12 +1633,12 @@ p, li, td, th, caption, .ja-text {
                 </div>
                 <div class="screen-mock-body" style="padding:0.625rem">
                   <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
-                    <span style="color:var(--error);font-size:1rem;font-weight:700" aria-hidden="true">✗</span>
+                    <span style="color:var(--error);display:inline-flex;align-items:center" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg></span>
                     <span style="font-size:0.8rem;font-weight:700;color:var(--text)">大会初期構築 — 失敗</span>
                   </div>
                   <div style="background:var(--bg-sub);border-radius:4px;padding:0.5rem">
                     <div style="display:flex;align-items:center;gap:0.5rem;padding:0.375rem;cursor:pointer;border-radius:3px;background:var(--error-bg);border:1px solid #FCA5A5">
-                      <span style="color:var(--error);font-size:0.9rem" aria-hidden="true">✗</span>
+                      <span style="color:var(--error);display:inline-flex;align-items:center" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg></span>
                       <span style="font-size:0.78rem;font-weight:700;color:var(--error)">scaffold 実行</span>
                       <span style="font-size:0.7rem;color:var(--muted);margin-left:auto">← ここをクリックでログ表示</span>
                     </div>
@@ -2310,11 +2330,11 @@ p, li, td, th, caption, .ja-text {
                 <span class="test-result-text">自動更新 — <strong>稼働中</strong>（2分ごとに自動送信）</span>
               </div>
               <div class="test-result-row" role="status" aria-label="GitHub接続テスト成功">
-                <span class="test-result-badge" aria-hidden="true">✓ OK</span>
+                <span class="test-result-badge" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg> OK</span>
                 <span class="test-result-text">GitHub 接続テスト — <strong>成功</strong>（your-org/association-regatta-2027）</span>
               </div>
               <div class="test-result-row" role="status" aria-label="Drive接続テスト成功">
-                <span class="test-result-badge" aria-hidden="true">✓ OK</span>
+                <span class="test-result-badge" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg> OK</span>
                 <span class="test-result-text">Drive 接続テスト — <strong>○○レガッタ2027</strong></span>
               </div>
               <div class="mock-label" style="display:block;margin-top:0.5rem">全て緑（<span class="status-dot working" aria-label="稼働中"></span>稼働中を含む）で導入完了</div>

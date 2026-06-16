@@ -11,7 +11,7 @@
 <style>
 /* === LP Design Tokens（LP index.html と同体系） === */
 :root {
-  --lp-primary:       #1A6AFF;
+  --lp-primary:       #1560D4; /* a11y: contrast 5.74:1(white) 5.35:1(bg-sub) ≥4.5:1 */
   --lp-primary-dark:  #1255CC;
   --lp-primary-light: #5B9BFF;
   --lp-primary-50:    #EBF2FF;
@@ -758,6 +758,12 @@ ul, ol { list-style: none; }
   color: var(--lp-muted);
   line-height: 1.7;
 }
+.cta-banner-note {
+  font-size: 0.9375rem;
+  color: var(--lp-muted);
+  line-height: 1.7;
+  align-self: center;
+}
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -1258,12 +1264,7 @@ footer {
         <p class="cta-banner-title">大会一覧ハブはこちら</p>
         <p class="cta-banner-desc">年間大会の一覧・ステータス・各大会への速報リンクをまとめています。</p>
       </div>
-      <a href="../../hub/" class="btn-ghost-dark">
-        ハブを開く
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </a>
+      <p class="cta-banner-note">年間大会ハブは、各大会の速報サイト内のナビゲーションから参照できます。</p>
     </div>
 
   </div>

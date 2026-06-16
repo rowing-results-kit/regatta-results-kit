@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
 <title>大会一覧</title>
 <meta name="description" content="ボート競技大会 速報・結果一覧">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚣</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M3 17c3-2 5-2 9 0s6 2 9 0M6 14l6-9 6 9M12 5v-2'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -142,7 +142,8 @@ body {
   flex-wrap: wrap;
   gap: 6px 14px;
 }
-.card-meta-item { white-space: nowrap; }
+.card-meta-item { white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
+.card-meta-item svg { flex-shrink: 0; vertical-align: middle; }
 .card-footer {
   display: flex;
   align-items: center;
@@ -272,7 +273,8 @@ function badgeHtml(status) {
 // ===== 大会カード HTML =====
 function cardHtml(t) {
   const dateStr = fmtDates(t.dates);
-  const venue   = t.venue ? `<span class="card-meta-item">📍 ${esc(t.venue)}</span>` : '';
+  const venueIcon = `<svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2a4.5 4.5 0 0 1 4.5 4.5C12.5 10 8 14 8 14S3.5 10 3.5 6.5A4.5 4.5 0 0 1 8 2Z" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="6.5" r="1.5" stroke="currentColor" stroke-width="1.5"/></svg>`;
+  const venue   = t.venue ? `<span class="card-meta-item">${venueIcon} ${esc(t.venue)}</span>` : '';
   const badge   = badgeHtml(t.status);
   const link    = t.url
     ? `<a class="result-link" href="${esc(t.url)}" target="_blank" rel="noopener noreferrer">結果を見る <span class="result-link-arrow" aria-hidden="true">↗</span></a>`
@@ -282,7 +284,7 @@ function cardHtml(t) {
     <div class="card-name">${esc(t.name)}</div>
   </div>
   <div class="card-meta">
-    ${dateStr ? `<span class="card-meta-item">📅 ${dateStr}</span>` : ''}
+    ${dateStr ? `<span class="card-meta-item"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="2" y="3" width="12" height="12" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M2 7h12M6 1v4M10 1v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> ${dateStr}</span>` : ''}
     ${venue}
   </div>
   <div class="card-footer">
