@@ -8,7 +8,7 @@ updated: 2026-06-12
 # DESIGN.md — regatta-results-kit
 
 > Claude Code / Codex が UI を作るとき**毎回最初に読む**設計契約。
-> グローバルDS（`~/Desktop/ryui-workspace/projects/tools/ryuiyamada-design-system/`）を継承し、
+> グローバルDS（`ryuiyamada-design-system`）を継承し、
 > **このプロジェクト固有の差分と禁止ルール**をここに書く。矛盾がある場合はこのファイルが優先。
 
 ---
