@@ -1,22 +1,43 @@
 /* TEMPLATE SHARED STYLES — staff-templates/shared.css
    scaffold が config から完成版を生成する際に参照する共通CSS。
-   CSS変数: --color-primary (#2D4F2C) / --color-accent (#E8C840) は §5 brand と同名。
+   CSS変数: --color-primary (#0E4D5C) / --color-accent (#E8C840) は §5 brand と同名。
    このファイルは各テンプレートHTMLから <link rel="stylesheet" href="shared.css"> で読み込む。
 */
 
 :root {
-  --color-primary: #2D4F2C;
+  --color-primary: #0E4D5C;
   --color-accent: #E8C840;
   --color-bg: #F7F4EF;
   --color-border: #E8E3DB;
   --color-text: #333333;
   --color-text-muted: #666666;
+  --color-muted-on-sub: #5B6472; /* --color-bg 等の淡色背景上でのmutedテキスト用（コントラスト確保） */
   --color-on-primary: #ffffff;
+  --color-success: #16A34A;
+  --color-success-700: #166534; /* success-bg(#DCFCE7)上の文字色。#16A34A単体は4.5:1未達 */
+  --color-warning: #D97706;
+  --color-warning-700: #92400E; /* warning-bg(#FEF3C7)上の文字色。#D97706単体は4.5:1未達 */
+  --color-error: #DC2626;
+  --color-error-700: #B91C1C; /* error-bg(#FEE2E2)上の文字色。#DC2626単体は4.5:1未達 */
 }
 
 * { box-sizing: border-box; }
 
 html { line-break: strict; }
+
+/* 絵文字禁止（DESIGN.md §7.1）代替の線画SVGアイコン用ユーティリティ */
+.icon-inline { width: 14px; height: 14px; vertical-align: -2px; flex-shrink: 0; }
+
+/* 絵文字バッジ（完了・失敗・注意サイン）の代替テキストバッジ（DESIGN.md §7.1・8） */
+.status-chip {
+  display: inline-flex; align-items: center;
+  font-size: 0.75rem; font-weight: 700;
+  padding: 0.125rem 0.5rem; border-radius: 9999px;
+}
+.status-chip.ok { background: #DCFCE7; color: var(--color-success-700); }
+.status-chip.warn { background: #FEF3C7; color: var(--color-warning-700); }
+.status-chip.ng { background: #FEE2E2; color: var(--color-error-700); }
+.status-chip.info { background: #E0F2F7; color: var(--color-primary); }
 
 body {
   font-family: 'Noto Sans JP', sans-serif;
@@ -26,6 +47,10 @@ body {
   font-weight: 400;
   line-height: 1.7;
   margin: 0;
+  /* 空白のないCSVサンプル行等（例: race_no,event_name,...）が横スクロールを
+     起こさないよう、必要な箇所で任意の位置での折返しを許可する（DESIGN.md §5） */
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 header {
@@ -68,7 +93,7 @@ main {
 
 h2 {
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-primary);
   border-bottom: 2px solid var(--color-border);
   padding-bottom: 0.5rem;
@@ -82,7 +107,7 @@ h2:first-of-type {
 
 h3 {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text);
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
@@ -109,6 +134,15 @@ h3 {
   letter-spacing: 0.02em;
 }
 
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-wrap table {
+  min-width: max-content;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -123,7 +157,7 @@ thead {
 th {
   padding: 0.75rem 1rem;
   text-align: left;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.95rem;
 }
 
@@ -170,7 +204,8 @@ pre {
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
+  white-space: nowrap; /* 375pxの狭いテーブル列でも「必須」等が縦割れしない（P1-d） */
 }
 
 .badge-ok {
@@ -180,6 +215,17 @@ pre {
 
 .badge-ng {
   background: #c0392b;
+  color: var(--color-on-primary);
+}
+
+/* 必須/任意タグ（P1-d: schedule_input_guide.html 等で使用・未定義だったため追加） */
+.badge-req {
+  background: var(--color-error-700);
+  color: var(--color-on-primary);
+}
+
+.badge-opt {
+  background: var(--color-text-muted);
   color: var(--color-on-primary);
 }
 
@@ -236,12 +282,18 @@ a:hover {
   opacity: 0.8;
 }
 
+/* 長いURL（{{PLACEHOLDER}}含む）が狭い画面で横スクロールを起こさないようにする */
+.url-link {
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
 footer {
   background: var(--color-bg);
   border-top: 1px solid var(--color-border);
   padding: 1.5rem;
   text-align: center;
-  color: #999999;
+  color: var(--color-text-muted);
   margin-top: 2rem;
 }
 

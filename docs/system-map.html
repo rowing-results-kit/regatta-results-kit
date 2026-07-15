@@ -19,7 +19,7 @@
     --pdf-soft:#fbeceb;
     --web:#2563b8;
     --web-soft:#e8eff8;
-    --doc:#b7860b;
+    --doc:#8A6A16;
     --doc-soft:#fbf3df;
     --pre:#2D4F2C;
     --post:#7a3b16;
@@ -33,6 +33,13 @@
     font-weight:500;
     line-height:1.5;
     -webkit-font-smoothing:antialiased;
+    line-break:strict;
+    word-break:normal;
+    overflow-wrap:anywhere;
+    font-feature-settings:'palt' 1,'kern' 1;
+  }
+  @supports (word-break:auto-phrase){
+    h1,h4,.name,.note b{word-break:auto-phrase;}
   }
   .wrap{max-width:1280px;margin:0 auto;padding:24px 28px 40px;}
 
@@ -49,7 +56,11 @@
   .page-head .sub{font-size:13px;color:var(--ink-sub);margin:0;}
   .legend{display:flex;flex-wrap:wrap;gap:7px 12px;margin-left:auto;font-size:12.5px;}
   .legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
-  .legend .dot{font-size:14px;}
+  .legend .dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+  .legend .dot-pdf{background:var(--pdf);}
+  .legend .dot-web{background:var(--web);}
+  .legend .dot-doc{background:var(--doc);}
+  .icon-inline{width:14px;height:14px;vertical-align:-2px;flex:none;}
 
   /* ---- スイムレーン ---- */
   .lanes{
@@ -122,7 +133,7 @@
   .badge.doc{background:var(--doc-soft);color:var(--doc);}
   .ocard .means{font-size:11px;color:var(--ink-sub);line-height:1.4;}
   .ocard .means .fn{font-family:ui-monospace,Menlo,monospace;font-size:10px;color:var(--color-primary);}
-  .ocard .mode{font-size:10.5px;font-weight:700;}
+  .ocard .mode{font-size:10.5px;font-weight:700;display:flex;align-items:center;gap:4px;}
   .mode.auto{color:#1d6b3a;}
   .mode.manual{color:#9a3b12;}
   .ocard.wide{grid-column:1 / -1;}
@@ -174,11 +185,11 @@
       <p class="sub">入力 → 処理 → 出力。試合前に作れるもの / 結果から作るもので分けて俯瞰する1枚図</p>
     </div>
     <div class="legend">
-      <span><span class="dot">🟥</span>PDF</span>
-      <span><span class="dot">🟦</span>Webサイト反映</span>
-      <span><span class="dot">🟨</span>Excel・文書</span>
-      <span><span class="dot">⚙️</span>自動</span>
-      <span><span class="dot">👤</span>手動</span>
+      <span><span class="dot dot-pdf" aria-hidden="true"></span>PDF</span>
+      <span><span class="dot dot-web" aria-hidden="true"></span>Webサイト反映</span>
+      <span><span class="dot dot-doc" aria-hidden="true"></span>Excel・文書</span>
+      <span><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>自動</span>
+      <span><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg>手動</span>
     </div>
   </header>
 
@@ -215,7 +226,7 @@
     <!-- ========== 処理 ========== -->
     <div class="zone">
       <div class="proc">
-        <h4>⚙️ GAS メイン（Code.gs）</h4>
+        <h4><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg> GAS メイン（Code.gs）</h4>
         <ul>
           <li><span class="fn">onTrigger()</span> を2分間隔で実行</li>
           <li>計測CSV→<span class="fn">race_NNN.json</span>→サイトへPush</li>
@@ -223,7 +234,7 @@
         </ul>
       </div>
       <div class="proc">
-        <h4>⚙️👤 GAS PDF出版（pdf_publisher）</h4>
+        <h4><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> GAS PDF出版（pdf_publisher）</h4>
         <ul>
           <li><span class="fn">processPendingPDFs()</span> 個別結果PDF（自動）</li>
           <li><span class="fn">generatePreRaceBooklet()</span> 準備資料（手動）</li>
@@ -232,14 +243,14 @@
         </ul>
       </div>
       <div class="proc">
-        <h4>👤 GAS 判定員帳票（judge_form_publisher）</h4>
+        <h4><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> GAS 判定員帳票（judge_form_publisher）</h4>
         <ul>
           <li><span class="fn">generateAllJudgeForms()</span> 日別に手動生成</li>
           <li>master.json のエントリーを各レーンへ記入</li>
         </ul>
       </div>
       <div class="proc">
-        <h4>👤 ローカルツール（tools/・技術者用）</h4>
+        <h4><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> ローカルツール（tools/・技術者用）</h4>
         <ul>
           <li><span class="fn">scaffold.py</span> サイト・staff・手順書を一括生成</li>
           <li><span class="fn">generate_master.py</span> CSV→master.json</li>
@@ -248,7 +259,7 @@
         </ul>
       </div>
       <div class="proc">
-        <h4>👤 管理者ポータル（AdminPortal）</h4>
+        <h4><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> 管理者ポータル（AdminPortal）</h4>
         <ul>
           <li>association.json 更新 → ハブ掲載へ反映</li>
           <li>theme.json 更新 → サイトのデザイン反映</li>
@@ -265,50 +276,50 @@
 
         <!-- 試合前 -->
         <div class="outband pre">
-          <p class="band-title pre"><span class="tag">🏁 試合前</span>試合前に書き出せるもの</p>
+          <p class="band-title pre"><span class="tag">試合前</span>試合前に書き出せるもの</p>
           <div class="outgrid">
 
             <div class="ocard">
-              <div class="top"><span class="badge pdf">🟥 PDF</span><span class="name">判定員帳票</span></div>
+              <div class="top"><span class="badge pdf">PDF</span><span class="name">判定員帳票</span></div>
               <div class="means">GAS <span class="fn">generateAllJudgeForms</span>（日別）</div>
-              <div class="mode manual">👤 手動</div>
+              <div class="mode manual"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> 手動</div>
             </div>
 
             <div class="ocard">
-              <div class="top"><span class="badge pdf">🟥 PDF</span><span class="name">準備資料ブックレット</span></div>
+              <div class="top"><span class="badge pdf">PDF</span><span class="name">準備資料ブックレット</span></div>
               <div class="means">GAS <span class="fn">generatePreRaceBooklet</span></div>
-              <div class="mode manual">👤 手動</div>
+              <div class="mode manual"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> 手動</div>
             </div>
 
             <div class="ocard">
-              <div class="top"><span class="badge pdf">🟥 PDF</span><span class="badge doc">🟨 Excel</span></div>
+              <div class="top"><span class="badge pdf">PDF</span><span class="badge doc">Excel</span></div>
               <div class="name">競漕記録シート（空欄）</div>
               <div class="means"><span class="fn">generate_race_pdf/_xlsx</span>（結果未生成時）</div>
-              <div class="mode manual">👤 手動</div>
+              <div class="mode manual"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> 手動</div>
             </div>
 
             <div class="ocard">
-              <div class="top"><span class="badge doc">🟨 HTML</span><span class="name">スタッフ運用HTML</span></div>
+              <div class="top"><span class="badge doc">HTML</span><span class="name">スタッフ運用HTML</span></div>
               <div class="means">ローカル <span class="fn">scaffold.py</span></div>
-              <div class="mode manual">👤 手動</div>
+              <div class="mode manual"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> 手動</div>
             </div>
 
             <div class="ocard">
-              <div class="top"><span class="badge doc">🟨 文書</span><span class="name">セットアップ手順書</span></div>
+              <div class="top"><span class="badge doc">文書</span><span class="name">セットアップ手順書</span></div>
               <div class="means"><span class="fn">SETUP_GUIDE.generated.md</span></div>
-              <div class="mode manual">👤 手動</div>
+              <div class="mode manual"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> 手動</div>
             </div>
 
             <div class="ocard">
-              <div class="top"><span class="badge web">🟦 Web</span><span class="name">スケジュール / 出漕表示</span></div>
+              <div class="top"><span class="badge web">Web</span><span class="name">スケジュール / 出漕表示</span></div>
               <div class="means">サイト3ビュー（master.json 由来）</div>
-              <div class="mode auto">⚙️ 自動</div>
+              <div class="mode auto"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg> 自動</div>
             </div>
 
             <div class="ocard wide">
-              <div class="top"><span class="badge web">🟦 Web</span><span class="name">ハブ掲載（大会一覧）</span></div>
+              <div class="top"><span class="badge web">Web</span><span class="name">ハブ掲載（大会一覧）</span></div>
               <div class="means">ポータル association.json 更新 → hub/ に反映</div>
-              <div class="mode manual">👤 手動（操作）→ ⚙️ 反映</div>
+              <div class="mode manual"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> 手動（操作）→ <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg> 反映</div>
             </div>
 
           </div>
@@ -316,44 +327,44 @@
 
         <!-- 試合結果 -->
         <div class="outband post">
-          <p class="band-title post"><span class="tag">🏆 結果後</span>試合結果を元に書き出すもの</p>
+          <p class="band-title post"><span class="tag">結果後</span>試合結果を元に書き出すもの</p>
           <div class="outgrid">
 
             <div class="ocard">
-              <div class="top"><span class="badge web">🟦 Web</span><span class="name">順位 / タイム表示</span></div>
+              <div class="top"><span class="badge web">Web</span><span class="name">順位 / タイム表示</span></div>
               <div class="means">GAS <span class="fn">onTrigger</span> 計測CSV→race_NNN.json</div>
-              <div class="mode auto">⚙️ 自動（2分毎）</div>
+              <div class="mode auto"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg> 自動（2分毎）</div>
             </div>
 
             <div class="ocard">
-              <div class="top"><span class="badge pdf">🟥 PDF</span><span class="name">個別レース結果</span></div>
+              <div class="top"><span class="badge pdf">PDF</span><span class="name">個別レース結果</span></div>
               <div class="means">GAS <span class="fn">processPendingPDFs</span></div>
-              <div class="mode auto">⚙️ 自動</div>
+              <div class="mode auto"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg> 自動</div>
             </div>
 
             <div class="ocard">
-              <div class="top"><span class="badge pdf">🟥 PDF</span><span class="name">結果ブックレット</span></div>
+              <div class="top"><span class="badge pdf">PDF</span><span class="name">結果ブックレット</span></div>
               <div class="means">GAS <span class="fn">generateAllResultsBooklet</span></div>
-              <div class="mode manual">👤 手動</div>
+              <div class="mode manual"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> 手動</div>
             </div>
 
             <div class="ocard">
-              <div class="top"><span class="badge pdf">🟥 PDF</span><span class="name">結果一覧表</span></div>
+              <div class="top"><span class="badge pdf">PDF</span><span class="name">結果一覧表</span></div>
               <div class="means">GAS <span class="fn">generateResultsListPdf</span></div>
-              <div class="mode manual">👤 手動</div>
+              <div class="mode manual"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> 手動</div>
             </div>
 
             <div class="ocard">
-              <div class="top"><span class="badge pdf">🟥 PDF</span><span class="badge doc">🟨 Excel</span></div>
+              <div class="top"><span class="badge pdf">PDF</span><span class="badge doc">Excel</span></div>
               <div class="name">競漕記録シート（タイム入り）</div>
               <div class="means"><span class="fn">generate_race_pdf/_xlsx</span>（結果生成後）</div>
-              <div class="mode manual">👤 手動</div>
+              <div class="mode manual"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> 手動</div>
             </div>
 
             <div class="ocard">
-              <div class="top"><span class="badge web">🟦 Web</span><span class="name">ハブのステータス更新</span></div>
+              <div class="top"><span class="badge web">Web</span><span class="name">ハブのステータス更新</span></div>
               <div class="means">結果反映に伴い大会ステータスが進行</div>
-              <div class="mode auto">⚙️ 自動／👤一部操作</div>
+              <div class="mode auto"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg> 自動／一部操作</div>
             </div>
 
           </div>

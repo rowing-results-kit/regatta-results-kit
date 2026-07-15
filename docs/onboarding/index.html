@@ -12,17 +12,19 @@
   /* === Design Tokens: regatta-results-kit === */
   --color-primary:     #0E4D5C;
   --color-primary-600: #0B3D4A;
+  --color-primary-500: #326874;
   --color-primary-100: #E0F2F7;
   --color-accent:      #C0392B;
   --color-accent-bg:   #FDEDEC;
   --color-bg:          #FFFFFF;
   --color-bg-sub:      #F5F7F8;
   --color-text:        #1A1A2E;
-  --color-muted:       #6B7280;
+  --color-muted:       #5B6472; /* #6B7280は淡色背景で4.5:1未達のため濃度調整（P2-b） */
   --color-border:      #DDE4E8;
   --color-success:     #16A34A;
   --color-success-bg:  #DCFCE7;
   --color-warning:     #D97706;
+  --color-warning-700: #92400E;
   --color-warning-bg:  #FEF3C7;
   --color-error:       #DC2626;
   --color-error-bg:    #FEE2E2;
@@ -303,7 +305,7 @@ p, li, td, th, caption, .ja-text {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 2px;
-  background: rgba(255,255,255,0.15);
+  background: var(--color-primary-500);
   font-size: 1.125rem;
   font-weight: 700;
   flex-shrink: 0;
@@ -690,7 +692,7 @@ p, li, td, th, caption, .ja-text {
   font-size: 0.7rem;
   font-weight: 700;
   cursor: pointer;
-  min-height: 28px;
+  min-height: 44px;
   transition: background-color 100ms cubic-bezier(0.4,0,0.2,1);
 }
 .copy-btn:hover { background: var(--color-primary); color: var(--color-bg); }
@@ -751,21 +753,33 @@ p, li, td, th, caption, .ja-text {
 }
 .checklist li {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.625rem;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
 }
 .checklist li input[type="checkbox"] {
-  width: 1rem;
-  height: 1rem;
-  margin-top: 0.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
   flex-shrink: 0;
   accent-color: var(--color-primary);
   cursor: pointer;
 }
-.checklist li label { cursor: pointer; line-height: 1.6; }
+/* タップターゲット44px確保: チェックボックス自体の見た目は20pxのまま、
+   label 側に min-height + padding で当たり判定を拡張する（for/id 連動で全域クリック可）。
+   display:flex は使わない — ラベル内にテキスト+<code>が混在する項目があり、
+   flex化すると子要素が独立したflexアイテムとして扱われて折返しが崩れるため
+   （375px幅で文字が分断されるバグを visual-qa で検出・修正）。
+   垂直方向の中央揃えは親 .checklist li 側の align-items:center に委ねる。 */
+.checklist li label {
+  cursor: pointer;
+  line-height: 1.6;
+  display: block;
+  min-height: 44px;
+  padding: 0.375rem 0;
+  box-sizing: border-box;
+}
 .checklist li:has(input:checked) label {
   text-decoration: line-through;
   color: var(--muted);
@@ -792,7 +806,7 @@ p, li, td, th, caption, .ja-text {
   height: 1.25rem;
   border-radius: 2px;
   background: var(--color-warning-bg);
-  color: var(--color-warning);
+  color: var(--color-warning-700);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1126,7 +1140,7 @@ p, li, td, th, caption, .ja-text {
   cursor: pointer;
   text-decoration: none;
   transition: background 0.15s, color 0.15s;
-  min-height: 36px;
+  min-height: 44px;
 }
 .btn-ai-consult:hover,
 .btn-ai-consult:focus-visible {
@@ -1147,7 +1161,7 @@ p, li, td, th, caption, .ja-text {
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
-  min-height: 36px;
+  min-height: 44px;
   transition: background 0.15s;
 }
 .btn-ai-copy:hover,
@@ -1583,7 +1597,7 @@ p, li, td, th, caption, .ja-text {
             <ul class="checklist" role="list" aria-label="Step 3 セルフチェック">
               <li>
                 <input type="checkbox" id="c3-1">
-                <label for="c3-1">Actions タブでジョブが緑チェック（✓）になっている</label>
+                <label for="c3-1">Actions タブでジョブが緑チェックになっている</label>
               </li>
               <li>
                 <input type="checkbox" id="c3-2">
@@ -1619,7 +1633,7 @@ p, li, td, th, caption, .ja-text {
               <p class="qa-a"><strong>対処</strong>：テンプレートのコピーが古い可能性があります。Step 1 からやり直してください。</p>
             </div>
             <div class="qa-item">
-              <p class="qa-q">ジョブが赤バツ（✗）になる</p>
+              <p class="qa-q">ジョブが赤バツになる</p>
               <p class="qa-a">
                 <strong>エラーの詳細を見る手順：</strong><br>
                 Actions タブの赤バツのジョブ行をクリック → 左の「scaffold 実行」等の行をクリック → ログが展開されて<strong>日本語のエラー理由</strong>が表示されます。<br>
@@ -1725,7 +1739,7 @@ p, li, td, th, caption, .ja-text {
             <div class="screen-mock-body">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.625rem">
                 <span style="font-size:0.8rem;font-weight:700;color:var(--text)">大会初期構築（setup-tournament）</span>
-                <button class="gh-run-btn" aria-label="Run workflow ボタン（ここをクリック）" style="position:relative">
+                <button class="gh-run-btn" aria-label="Run workflow ボタン（ここをクリック）" style="position:relative" tabindex="-1" aria-hidden="true">
                   Run workflow
                 </button>
               </div>
@@ -1752,7 +1766,7 @@ p, li, td, th, caption, .ja-text {
                   <div class="gh-form-label">メインカラー（#RRGGBB）</div>
                   <input class="gh-form-input" value="#1a3a5c" readonly aria-label="メインカラーの入力例" style="color:var(--navy-600);font-weight:700">
                 </div>
-                <button style="background:var(--navy);color:#fff;font-size:0.8rem;font-weight:700;padding:0.375rem 0.875rem;border-radius:4px;border:none;width:100%;margin-top:0.5rem;min-height:32px" aria-label="Run workflowを実行するボタン">
+                <button style="background:var(--navy);color:#fff;font-size:0.8rem;font-weight:700;padding:0.375rem 0.875rem;border-radius:4px;border:none;width:100%;margin-top:0.5rem;min-height:32px" aria-label="Run workflowを実行するボタン" tabindex="-1" aria-hidden="true">
                   Run workflow
                 </button>
               </div>
@@ -2316,12 +2330,12 @@ p, li, td, th, caption, .ja-text {
             </div>
             <div class="screen-mock-body">
               <div class="portal-tab-bar" aria-label="管理者ポータルのタブ">
-                <button class="portal-tab active" aria-label="状態タブ（現在選択中）">状態</button>
-                <button class="portal-tab" aria-label="接続設定タブ">接続設定</button>
-                <button class="portal-tab" aria-label="データ投入タブ">データ投入</button>
+                <button class="portal-tab active" aria-label="状態タブ（現在選択中）" tabindex="-1" aria-hidden="true">状態</button>
+                <button class="portal-tab" aria-label="接続設定タブ" tabindex="-1" aria-hidden="true">接続設定</button>
+                <button class="portal-tab" aria-label="データ投入タブ" tabindex="-1" aria-hidden="true">データ投入</button>
               </div>
               <div style="margin-bottom:0.625rem">
-                <button style="background:var(--navy);color:#fff;font-size:0.8rem;font-weight:700;padding:0.375rem 0.875rem;border-radius:4px;border:none;min-height:32px;width:100%">
+                <button style="background:var(--navy);color:#fff;font-size:0.8rem;font-weight:700;padding:0.375rem 0.875rem;border-radius:4px;border:none;min-height:32px;width:100%" tabindex="-1" aria-hidden="true">
                   初期セットアップ実行（何度押しても安全）
                 </button>
               </div>

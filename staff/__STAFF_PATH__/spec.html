@@ -26,9 +26,9 @@
   <h1>ボート競技 速報サイト<br>システム仕様書</h1>
   <p style="opacity:0.85;margin-top:8px">{{TOURNAMENT_NAME}} {{YEAR}} 向けビルド（{{GITHUB_REPO}}）</p>
   <div class="cover-meta">
-    <span>📅 作成日: {{CREATED_DATE}}</span>
-    <span>📦 リポジトリ: {{GITHUB_REPO}}</span>
-    <span>🌐 本番URL: {{SITE_URL}}</span>
+    <span>作成日: {{CREATED_DATE}}</span>
+    <span>リポジトリ: {{GITHUB_REPO}}</span>
+    <span>本番URL: {{SITE_URL}}</span>
   </div>
 </div>
 
@@ -94,9 +94,10 @@
   </div>
 
   <h3>コンポーネント一覧</h3>
-  <table>
+  <div class="table-wrap">
+<table>
     <thead>
-      <tr><th>コンポーネント</th><th>技術・サービス</th><th>役割</th><th>費用</th></tr>
+      <tr><th scope="col">コンポーネント</th><th scope="col">技術・サービス</th><th scope="col">役割</th><th scope="col">費用</th></tr>
     </thead>
     <tbody>
       <tr><td>フロントエンド</td><td>HTML / CSS / Vanilla JS（ビルドツールなし）</td><td>レース結果表示UI</td><td>無料</td></tr>
@@ -106,6 +107,7 @@
       <tr><td>CSV投入先</td><td>Google Drive（共有フォルダ）</td><td>計測スタッフがCSVをアップロードする作業領域</td><td>無料</td></tr>
     </tbody>
   </table>
+</div>
 
   <h3>設計方針</h3>
   <ul>
@@ -180,8 +182,9 @@
     </div>
   </div>
 
-  <table style="margin-top:16px;">
-    <thead><tr><th>フェーズ</th><th>担当</th><th>所要時間</th><th>備考</th></tr></thead>
+  <div class="table-wrap">
+<table style="margin-top:16px;">
+    <thead><tr><th scope="col">フェーズ</th><th scope="col">担当</th><th scope="col">所要時間</th><th scope="col">備考</th></tr></thead>
     <tbody>
       <tr><td>① CSV生成〜アップロード</td><td>計測スタッフ</td><td>1〜2分</td><td>フォルダ・ファイル名の確認が重要</td></tr>
       <tr><td>② GASがCSV検知〜Push</td><td>GAS（自動）</td><td>0〜2分</td><td>GASトリガーのタイミングによる</td></tr>
@@ -189,6 +192,7 @@
       <tr><td><strong>合計（最短〜最大）</strong></td><td>—</td><td><strong>2〜4分</strong></td><td>CSVアップ直後にGASが動けば最短。最悪2分弱待ち</td></tr>
     </tbody>
   </table>
+</div>
 
   <hr>
   <span class="anchor" id="s0-2"></span>
@@ -264,7 +268,7 @@
   </div>
 
   <div class="callout callout-warn">
-    <div class="callout-icon">⚠️</div>
+    <div class="callout-icon"><span class="status-chip warn">注意</span></div>
     <div>実行時間が<strong>4分</strong>（CONFIG.maxExecutionMs）を超えると processPendingCSVs() 内でループを強制終了。処理途中のレースはスキップされ、次の2分後のトリガーで再試行される。</div>
   </div>
 </div>
@@ -279,16 +283,18 @@
 
   <h4>ファイル命名規則</h4>
   <p>正規表現: <code>/^(?:\d{8}_\d{6}_)?R(\d{3})_(.+)\.csv$/i</code></p>
-  <table>
-    <thead><tr><th>形式</th><th>例</th><th>備考</th></tr></thead>
+  <div class="table-wrap">
+<table>
+    <thead><tr><th scope="col">形式</th><th scope="col">例</th><th scope="col">備考</th></tr></thead>
     <tbody>
       <tr><td>推奨形式</td><td><code>R001_500m.csv</code></td><td>レース番号3桁ゼロ埋め必須</td></tr>
       <tr><td>旧形式（後方互換）</td><td><code>20260607_070000_R001_500m.csv</code></td><td>RowingTimerWebが自動付与する日時プレフィクス</td></tr>
     </tbody>
   </table>
+</div>
 
   <div class="callout callout-warn">
-    <div class="callout-icon">⚠️</div>
+    <div class="callout-icon"><span class="status-chip warn">注意</span></div>
     <div>ファイル名に含まれる計測ポイント（500m / 1000m）は、アップロード先フォルダと一致していることをGASが検証する。不一致ファイルはスキップされる（ログに記録）。</div>
   </div>
 
@@ -299,8 +305,9 @@
 <span class="val">500m</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">112834</span>,<span class="val">1:52.834</span>,<span class="num">1</span>,,,
 <span class="val">500m</span>,<span class="num">2</span>,<span class="num">1</span>,<span class="num">113201</span>,<span class="val">1:53.201</span>,<span class="num">1</span>,,,</pre>
 
-  <table>
-    <thead><tr><th>カラム</th><th>型</th><th>内容</th><th>必須</th></tr></thead>
+  <div class="table-wrap">
+<table>
+    <thead><tr><th scope="col">カラム</th><th scope="col">型</th><th scope="col">内容</th><th scope="col">必須</th></tr></thead>
     <tbody>
       <tr><td>measurement_point</td><td>string</td><td>計測ポイント名（500m / 1000m）</td><td>○</td></tr>
       <tr><td>lane</td><td>int</td><td>レーン番号（1〜）</td><td>○</td></tr>
@@ -313,15 +320,17 @@
       <tr><td>note</td><td>string</td><td>備考（DNS / DNF など）</td><td>—</td></tr>
     </tbody>
   </table>
+</div>
 
   <div class="callout callout-ok">
-    <div class="callout-icon">ℹ️</div>
+    <div class="callout-icon"><span class="status-chip info">参考</span></div>
     <div>GASはCSVの<code>formatted</code>列を無視し、<code>time_ms</code>から独自に再計算（<code>M:SS.ss</code>形式、センチ秒2桁統一）。BOM（UTF-8 BOM）は自動除去。</div>
   </div>
 
   <h4>スケジュール・エントリーCSV（大会前に1回投入）</h4>
-  <table>
-    <thead><tr><th>ファイル</th><th>投入先</th><th>主要カラム</th></tr></thead>
+  <div class="table-wrap">
+<table>
+    <thead><tr><th scope="col">ファイル</th><th scope="col">投入先</th><th scope="col">主要カラム</th></tr></thead>
     <tbody>
       <tr>
         <td><code>schedule.csv</code></td>
@@ -335,6 +344,7 @@
       </tr>
     </tbody>
   </table>
+</div>
 
   <hr>
   <span class="anchor" id="s2-2"></span>
@@ -385,7 +395,7 @@
   </ul>
 
   <div class="callout callout-warn">
-    <div class="callout-icon">⚠️</div>
+    <div class="callout-icon"><span class="status-chip warn">注意</span></div>
     <div>GitHub Personal Access TokenはGASスクリプトプロパティ（暗号化保存）に保管。コードにハードコードしてはならない。トークンスコープ: <code>repo</code>（Contents APIへの書き込みに必要）。</div>
   </div>
 
@@ -460,8 +470,9 @@
 
   <span class="anchor" id="s3-1"></span>
   <h3>3.1 ファイル構成</h3>
-  <table>
-    <thead><tr><th>ファイル</th><th>役割</th></tr></thead>
+  <div class="table-wrap">
+<table>
+    <thead><tr><th scope="col">ファイル</th><th scope="col">役割</th></tr></thead>
     <tbody>
       <tr><td><code>index.html</code></td><td>公開ページ本体（HTML骨格・ヘッダー・ナビ・フッター）</td></tr>
       <tr><td><code>css/style.css</code></td><td>全スタイル（レスポンシブ・カラーテーマ・モバイルカードレイアウト）</td></tr>
@@ -472,9 +483,10 @@
       <tr><td><code>admin/{{ADMIN_PATH}}/index.html</code></td><td>管理者ダッシュボード（URLパスがアクセス制限の代替）</td></tr>
     </tbody>
   </table>
+</div>
 
   <div class="callout callout-warn">
-    <div class="callout-icon">⚠️</div>
+    <div class="callout-icon"><span class="status-chip warn">注意</span></div>
     <div>外部ライブラリ・NPMパッケージ・ビルドツールは一切使用していない（Vanilla JS）。フレームワーク依存なし。</div>
   </div>
 
@@ -483,7 +495,7 @@
   <h3>3.2 データ取得・更新ロジック</h3>
 
   <h4>初期ロード（loadAll）</h4>
-  <ol>
+  <ol style="padding-inline-start:24px">
     <li><code>data/master.json</code> をfetch（失敗時はユーザーフレンドリーなエラー表示）</li>
     <li>スケルトンUIを先行表示（レイアウトシフト抑制）</li>
     <li>全レースの <code>data/results/race_XXX.json</code> を<strong>並列fetch</strong>（<code>Promise.allSettled</code>）</li>
@@ -501,8 +513,9 @@
   </ul>
 
   <h4>URLハッシュ対応</h4>
-  <table>
-    <thead><tr><th>ハッシュ</th><th>動作</th></tr></thead>
+  <div class="table-wrap">
+<table>
+    <thead><tr><th scope="col">ハッシュ</th><th scope="col">動作</th></tr></thead>
     <tbody>
       <tr><td><code>#view-table</code></td><td>全レース一覧ビューを表示</td></tr>
       <tr><td><code>#view-toggle</code></td><td>種目別ビューを表示</td></tr>
@@ -510,20 +523,23 @@
       <tr><td><code>#race-N</code></td><td>該当レースのトグルを開きスクロール＆ハイライト（3秒）</td></tr>
     </tbody>
   </table>
+</div>
 
   <hr>
   <span class="anchor" id="s3-3"></span>
   <h3>3.3 ビュー・UI仕様</h3>
 
   <h4>3ビュー構成</h4>
-  <table>
-    <thead><tr><th>ビュー名</th><th>内容</th></tr></thead>
+  <div class="table-wrap">
+<table>
+    <thead><tr><th scope="col">ビュー名</th><th scope="col">内容</th></tr></thead>
     <tbody>
       <tr><td>① 種目別（toggle）</td><td>event_codeでグループ化したアコーディオン。全展開・全折畳ボタン付き</td></tr>
       <tr><td>② 全レース一覧（table）</td><td>全レースを横断的に表示。列クリックでソート可能（昇順/降順切替）</td></tr>
       <tr><td>③ スケジュール（schedule）</td><td>日別タブで発艇時刻・組・ラウンドを表示</td></tr>
     </tbody>
   </table>
+</div>
 
   <h4>フィルタ機能（種目別ビュー）</h4>
   <ul>
@@ -545,7 +561,7 @@
   <h4>特殊表示</h4>
   <ul>
     <li>1〜3位: 金・銀・銅バッジ</li>
-    <li>写真判定: <code>photo_flag=true</code> で「📷写真判定」表示</li>
+    <li>写真判定: <code>photo_flag=true</code> で「写真判定」表示</li>
     <li>DNS（棄権）: エントリーにあるがCSVに含まれないレーン → 自動で「棄権」表示</li>
     <li>DNF（途中棄権）: フィニッシュタイムなし → 「途中棄権」表示</li>
     <li>YouTube埋め込み: <code>master.json</code>の<code>youtube_url</code>が設定されている場合のみ表示</li>
@@ -566,8 +582,9 @@ function h(str) {
   <hr>
   <span class="anchor" id="s3-4"></span>
   <h3>3.4 動作環境・ブラウザ対応</h3>
-  <table>
-    <thead><tr><th>プラットフォーム</th><th>対応バージョン</th><th>備考</th></tr></thead>
+  <div class="table-wrap">
+<table>
+    <thead><tr><th scope="col">プラットフォーム</th><th scope="col">対応バージョン</th><th scope="col">備考</th></tr></thead>
     <tbody>
       <tr><td>iPhone (iOS Safari)</td><td>iOS 14 以上</td><td>Safari 14+ 相当</td></tr>
       <tr><td>Android (Chrome)</td><td>Android 9 以上</td><td>Chrome 90+ 相当</td></tr>
@@ -578,6 +595,7 @@ function h(str) {
       <tr><td>Internet Explorer</td><td><strong>非対応</strong></td><td>サイトのフッターに明記</td></tr>
     </tbody>
   </table>
+</div>
   <p>使用している主要Web API: <code>fetch</code>, <code>Promise.allSettled</code>, <code>CSS Grid</code>, <code>CSS Custom Properties</code>, <code>localStorage</code>, <code>history.pushState</code></p>
 </div>
 
@@ -594,8 +612,9 @@ function h(str) {
   </ul>
 
   <h3>HTTPヘッダー設定（_headersファイル）</h3>
-  <table>
-    <thead><tr><th>ヘッダー</th><th>値</th><th>目的</th></tr></thead>
+  <div class="table-wrap">
+<table>
+    <thead><tr><th scope="col">ヘッダー</th><th scope="col">値</th><th scope="col">目的</th></tr></thead>
     <tbody>
       <tr><td>Cache-Control (default)</td><td>no-cache</td><td>HTMLは毎回再検証</td></tr>
       <tr><td>Cache-Control (data/*)</td><td>no-store, no-cache, must-revalidate</td><td>JSONは必ずサーバーから取得（速報性確保）</td></tr>
@@ -607,9 +626,10 @@ function h(str) {
       <tr><td>Referrer-Policy</td><td>strict-origin-when-cross-origin</td><td>リファラー漏洩防止</td></tr>
     </tbody>
   </table>
+</div>
 
   <div class="callout callout-warn">
-    <div class="callout-icon">⚠️</div>
+    <div class="callout-icon"><span class="status-chip warn">注意</span></div>
     <div><code>script-src 'unsafe-inline'</code> を許可している。インラインJSを使用しているためだが、CSPの効果が限定的になる。将来的にはnonceまたは<code>script-src 'self'</code>に移行することが望ましい。</div>
   </div>
 
@@ -617,19 +637,21 @@ function h(str) {
   <p>管理者ダッシュボードは <code>admin/{{ADMIN_PATH}}/index.html</code>（パスに数字列を使用）。Cloudflare Pagesはパスワード保護機能を無料プランで提供しないため、URLによるセキュリティ・バイ・オブスキュリティを採用している。</p>
 
   <div class="callout callout-ng">
-    <div class="callout-icon">🚫</div>
+    <div class="callout-icon"><span class="status-chip ng">禁止</span></div>
     <div>管理画面はHTTP認証なしのため、URLが漏洩した場合は誰でもアクセス可能。ただし管理画面は読み取り専用（操作不可）であり、機密情報は含まない（GitHub TokenはGASサーバー側のみ）。</div>
   </div>
 
   <h3>シークレット管理</h3>
-  <table>
-    <thead><tr><th>シークレット</th><th>保管場所</th><th>アクセス方法</th></tr></thead>
+  <div class="table-wrap">
+<table>
+    <thead><tr><th scope="col">シークレット</th><th scope="col">保管場所</th><th scope="col">アクセス方法</th></tr></thead>
     <tbody>
       <tr><td>GitHub Personal Access Token</td><td>GASスクリプトプロパティ（暗号化）</td><td><code>PropertiesService.getScriptProperties()</code></td></tr>
       <tr><td>Drive フォルダID</td><td>GASスクリプトプロパティ（暗号化）</td><td>同上</td></tr>
       <tr><td>管理者画面URL</td><td>関係者間で口頭・限定共有</td><td>—</td></tr>
     </tbody>
   </table>
+</div>
 </div>
 
 <!-- ===== 5. 管理者画面 ===== -->
@@ -640,8 +662,9 @@ function h(str) {
   <p>静的HTMLで完結する読み取り専用の監視ダッシュボード。JavaScriptからJSONを取得して表示。管理操作（GAS再起動など）はGASエディタで行う。</p>
 
   <h3>セクション構成</h3>
-  <table>
-    <thead><tr><th>セクション</th><th>内容</th><th>データソース</th></tr></thead>
+  <div class="table-wrap">
+<table>
+    <thead><tr><th scope="col">セクション</th><th scope="col">内容</th><th scope="col">データソース</th></tr></thead>
     <tbody>
       <tr><td>① 大会サマリー</td><td>大会名・期間・種目数・エントリー数・結果投入数</td><td>master.json</td></tr>
       <tr><td>② タイムライン</td><td>発艇予定時刻と結果投入状況を時系列で表示。現在時刻との比較でステータス色分け</td><td>master.json + results/race_XXX.json</td></tr>
@@ -651,10 +674,12 @@ function h(str) {
       <tr><td>当日チェックリスト</td><td>前日・当日・終了後のチェック項目（チェック状態をlocalStorageに保存）</td><td>localStorage</td></tr>
     </tbody>
   </table>
+</div>
 
   <h3>パイプライン監視の状態判定ロジック</h3>
-  <table>
-    <thead><tr><th>ステップ</th><th>判定条件</th><th>表示</th></tr></thead>
+  <div class="table-wrap">
+<table>
+    <thead><tr><th scope="col">ステップ</th><th scope="col">判定条件</th><th scope="col">表示</th></tr></thead>
     <tbody>
       <tr><td>① Drive CSV投入</td><td>常に「計測スタッフが手動アップ」表示</td><td>情報</td></tr>
       <tr><td>② GAS自動処理</td><td><code>last_trigger_at</code>から経過時間 ≤ 5分 → 正常、6〜10分 → 遅延、11分以上 → 停止疑い</td><td>緑 / 黄 / 赤</td></tr>
@@ -662,6 +687,7 @@ function h(str) {
       <tr><td>④ CDNデプロイ</td><td>GitHubへのPush後 約30〜60秒で自動反映（自動監視なし）</td><td>説明文のみ</td></tr>
     </tbody>
   </table>
+</div>
 
   <h3>GAS実行時間残量警告</h3>
   <p>大会期間中（<code>dates</code>に本日が含まれる場合）、経過時間から推定GAS消費時間を計算し、残量が20分未満になると警告を表示する。</p>
@@ -677,8 +703,9 @@ const remaining = Math.max(0, 90 - estimatedUsed);  <span class="comment">// 無
   <span class="anchor" id="s6"></span>
   <h2 class="section-title">6. 運用マニュアル体系</h2>
 
-  <table>
-    <thead><tr><th>ファイル</th><th>対象者</th><th>内容</th></tr></thead>
+  <div class="table-wrap">
+<table>
+    <thead><tr><th scope="col">ファイル</th><th scope="col">対象者</th><th scope="col">内容</th></tr></thead>
     <tbody>
       <tr>
         <td><code>staff/{{STAFF_PATH}}/day-manual.html</code></td>
@@ -717,6 +744,7 @@ const remaining = Math.max(0, 90 - estimatedUsed);  <span class="comment">// 無
       </tr>
     </tbody>
   </table>
+</div>
 
   <h3>人為的ミス防止の仕組み</h3>
   <ul>
@@ -734,8 +762,9 @@ const remaining = Math.max(0, 90 - estimatedUsed);  <span class="comment">// 無
   <h2 class="section-title">7. 既知の制約・リスク</h2>
 
   <h3>設計上の制約</h3>
-  <table>
-    <thead><tr><th>項目</th><th>制約内容</th><th>対策・許容判断</th></tr></thead>
+  <div class="table-wrap">
+<table>
+    <thead><tr><th scope="col">項目</th><th scope="col">制約内容</th><th scope="col">対策・許容判断</th></tr></thead>
     <tbody>
       <tr>
         <td>GAS実行時間</td>
@@ -769,10 +798,12 @@ const remaining = Math.max(0, 90 - estimatedUsed);  <span class="comment">// 無
       </tr>
     </tbody>
   </table>
+</div>
 
   <h3>障害シナリオと対処</h3>
-  <table>
-    <thead><tr><th>シナリオ</th><th>原因</th><th>対処</th></tr></thead>
+  <div class="table-wrap">
+<table>
+    <thead><tr><th scope="col">シナリオ</th><th scope="col">原因</th><th scope="col">対処</th></tr></thead>
     <tbody>
       <tr>
         <td>サイトが更新されない（4分以上）</td>
@@ -802,6 +833,7 @@ const remaining = Math.max(0, 90 - estimatedUsed);  <span class="comment">// 無
     </tbody>
   </table>
 </div>
+</div>
 
 <!-- ===== 8. セットアップ手順 ===== -->
 <div class="section">
@@ -829,7 +861,7 @@ const remaining = Math.max(0, 90 - estimatedUsed);  <span class="comment">// 無
   </ol>
 
   <div class="callout callout-ok">
-    <div class="callout-icon">✅</div>
+    <div class="callout-icon"><span class="status-chip ok">完了</span></div>
     <div>前日セットアップが完了していれば、当日は計測スタッフがCSVをアップするだけでサイトは自動更新される。エンジニアの当日常駐は不要（リモートバックアップ推奨）。</div>
   </div>
 </div>
@@ -839,9 +871,10 @@ const remaining = Math.max(0, 90 - estimatedUsed);  <span class="comment">// 無
   <span class="anchor" id="s9"></span>
   <h2 class="section-title">9. 不完全な点・リスク・改善提案（レビュー対象）</h2>
 
-  <h3>🔴 高リスク（本番障害につながる可能性）</h3>
-  <table>
-    <thead><tr><th>#</th><th>問題</th><th>影響</th><th>改善提案</th></tr></thead>
+  <h3><span class="status-chip ng">高リスク</span> 本番障害につながる可能性</h3>
+  <div class="table-wrap">
+<table>
+    <thead><tr><th scope="col">#</th><th scope="col">問題</th><th scope="col">影響</th><th scope="col">改善提案</th></tr></thead>
     <tbody>
       <tr>
         <td><del>R-1</del><br><span class="badge badge-ok">解決済</span></td>
@@ -869,10 +902,12 @@ const remaining = Math.max(0, 90 - estimatedUsed);  <span class="comment">// 無
       </tr>
     </tbody>
   </table>
+</div>
 
-  <h3 style="margin-top:20px;">🟡 中リスク（運用で回避可能だが設計上の課題）</h3>
-  <table>
-    <thead><tr><th>#</th><th>問題</th><th>影響</th><th>改善提案</th></tr></thead>
+  <h3 style="margin-top:20px;"><span class="status-chip warn">中リスク</span> 運用で回避可能だが設計上の課題</h3>
+  <div class="table-wrap">
+<table>
+    <thead><tr><th scope="col">#</th><th scope="col">問題</th><th scope="col">影響</th><th scope="col">改善提案</th></tr></thead>
     <tbody>
       <tr>
         <td>M-1</td>
@@ -912,10 +947,12 @@ const remaining = Math.max(0, 90 - estimatedUsed);  <span class="comment">// 無
       </tr>
     </tbody>
   </table>
+</div>
 
-  <h3 style="margin-top:20px;">🟢 低リスク（改善でUXが向上する）</h3>
-  <table>
-    <thead><tr><th>#</th><th>問題</th><th>改善提案</th></tr></thead>
+  <h3 style="margin-top:20px;"><span class="status-chip ok">低リスク</span> 改善でUXが向上する</h3>
+  <div class="table-wrap">
+<table>
+    <thead><tr><th scope="col">#</th><th scope="col">問題</th><th scope="col">改善提案</th></tr></thead>
     <tbody>
       <tr>
         <td>L-1</td>
@@ -944,9 +981,10 @@ const remaining = Math.max(0, 90 - estimatedUsed);  <span class="comment">// 無
       </tr>
     </tbody>
   </table>
+</div>
 
   <div class="callout callout-ok" style="margin-top:16px;">
-    <div class="callout-icon">ℹ️</div>
+    <div class="callout-icon"><span class="status-chip info">参考</span></div>
     <div>上記のうち、<strong>本番運用前に対処すべき最優先項目は R-1・R-2・M-1</strong> の3件。特にR-2（トークン有効期限）は大会前日チェックリストへの追加で即対応可能。</div>
   </div>
 </div>

@@ -52,6 +52,7 @@ CSS変数名のみを使う。HEX直書き禁止。
 /* Primary — 水面の深い青緑 */
 --color-primary:     #0E4D5C;   /* CTAボタン・リンク・インタラクティブ要素 */
 --color-primary-600: #0B3D4A;   /* hover / pressed */
+--color-primary-500: #326874;   /* primary背景上のバッジ等。半透明白の不透明代替 */
 --color-primary-100: #E0F2F7;   /* badge背景・ハイライト */
 
 /* Accent — 審判旗の赤（1画面1箇所のみ） */
@@ -76,6 +77,7 @@ CSS変数名のみを使う。HEX直書き禁止。
 /* Semantic */
 --color-success: #16A34A;
 --color-warning: #D97706;
+--color-warning-700: #92400E;   /* warning淡色背景上の文字色（コントラスト確保） */
 --color-error:   #DC2626;
 ```
 
@@ -383,6 +385,44 @@ grid-template-columns: 2fr 1fr;   /* メイン説明+補足 */
 
 ---
 
+## 14. カラートークンの主従関係（大会別ブランド）
+
+本キットには `--color-primary` を名乗るトークンが複数箇所に存在するが、**役割がまったく異なる2系統**に分かれる。混同して一括置換しないこと。
+
+### 14.1 系統A: キット自体のツールUIカラー（固定・統一対象）
+
+regatta-results-kit という**ツール自体**の管理画面・スタッフ資料・ドキュメントに使う色。全プロジェクト共通で**固定**し、大会ごとに変えない。
+
+| ファイル | 変数 | 値 |
+|---|---|---|
+| `DESIGN.md` / `tokens.json`（本キット正本） | `--color-primary` | `#0E4D5C` |
+| `staff/__STAFF_PATH__/shared.css` | `--color-primary` | `#0E4D5C` |
+| `gas/portal.html`（管理者ポータル自体のUIクロム: ヘッダー・タブ・ボタン等） | `--color-primary` | `#0E4D5C` |
+| `docs/onboarding/index.html` 他ドキュメント類 | `--color-primary` | `#0E4D5C` |
+
+これらは2026-07-16のGate1承認で `#2D4F2C`（旧グリーン）から `#0E4D5C`（水面の深い青緑）へ統一済み。
+
+### 14.2 系統B: 大会ごとにカスタマイズされるブランドカラー（可変・保護対象）
+
+**各大会の速報サイト自体**が表示する色。協会・大会ごとに `tournament.config.json` / `theme.json` 経由で自由に変更してよく、系統Aの値と一致させる必要はない（むしろ大会独自色であることが前提）。
+
+| ファイル | 該当箇所 | 例 |
+|---|---|---|
+| `site/css/style.css` | `:root { --color-primary: #24602A; }`（コメント: `brand.primary_color 相当。scaffold 生成時はここを上書き`） | 大会ごとに任意の色 |
+| `gas/portal.html` | `MOCK.portalGetTheme` のサンプル値・デザインタブのプレビュー初期値（`#2D4F2C` 等） | 大会ごとに任意の色 |
+| `docs/system-map.html` | 独立した図解用トークン（`--color-primary:#2D4F2C` 等）。本キットUIとは無関係の別配色 | 図解専用・変更不要 |
+
+**やってはいけないこと**: 系統Bの値を系統Aに合わせて機械的に置換すること（大会の独自ブランドを壊す）。今回のスプリントで系統Bの値には手を入れていない。
+
+### 14.3 判定基準
+
+迷ったら「この色は大会運営者が変えたいと思うか？」で判断する。
+- Yes（大会名・会場・ロゴに紐づく色）→ 系統B・触らない
+- No（キットの管理画面・スタッフ資料自体の見た目）→ 系統A・統一対象
+
+---
+
 ## 📜 更新履歴
 
+- 2026-07-16 — Sprint 3（公開品質）Gate1承認反映: 絵文字ゼロ化・グラデーション/backdrop-filter全廃・キットUIカラー統一（#2D4F2C→#0E4D5C）・コントラスト調整（gold/silver/warning-700等）・font-weight/radius整理・§14「カラートークンの主従関係」新設
 - 2026-06-12 — 初版。LP・onboarding の AI感特定・レーンモチーフ規定・禁止リスト制定

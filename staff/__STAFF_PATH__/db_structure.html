@@ -264,14 +264,15 @@
 
   <!-- ========= リレーション ========= -->
   <h2 class="section-title">リレーション</h2>
-  <table class="relation-table">
+  <div class="table-wrap">
+<table class="relation-table">
     <thead>
       <tr>
-        <th>親エンティティ</th>
-        <th>子エンティティ</th>
-        <th>カーディナリティ</th>
-        <th>結合キー</th>
-        <th>格納場所</th>
+        <th scope="col">親エンティティ</th>
+        <th scope="col">子エンティティ</th>
+        <th scope="col">カーディナリティ</th>
+        <th scope="col">結合キー</th>
+        <th scope="col">格納場所</th>
       </tr>
     </thead>
     <tbody>
@@ -319,6 +320,7 @@
       </tr>
     </tbody>
   </table>
+</div>
 
   <hr class="divider">
 
@@ -361,7 +363,7 @@
       <div class="flow-step-label">LIVE</div>
       <div class="flow-step-name">速報サイト</div>
       <div class="flow-step-sub">合計3分以内</div>
-      <div><span class="flow-time">✓ 完了</span></div>
+      <div><span class="flow-time">完了</span></div>
     </div>
   </div>
 
@@ -432,15 +434,16 @@
 
   <!-- ファイル命名規則 -->
   <div style="margin-bottom:24px">
-    <div style="font-size:13px;font-weight:600;color:var(--text-sub);letter-spacing:0.06em;margin-bottom:12px">
+    <div style="font-size:13px;font-weight:500;color:var(--text-sub);letter-spacing:0.06em;margin-bottom:12px">
       ファイル命名規則
     </div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
       <div style="padding:16px 20px;border-bottom:1px solid var(--border);background:#FAF8F4">
         <code style="font-size:15px;color:var(--c-race)">YYYYMMDD_HHMMSS_R<span style="color:var(--c-tourn)">NNN</span>_<span style="color:var(--c-lap)">計測ポイント</span>.csv</code>
       </div>
-      <table class="relation-table" style="margin:0">
-        <thead><tr><th>要素</th><th>内容</th><th>例</th><th>備考</th></tr></thead>
+      <div class="table-wrap">
+<table class="relation-table" style="margin:0">
+        <thead><tr><th scope="col">要素</th><th scope="col">内容</th><th scope="col">例</th><th scope="col">備考</th></tr></thead>
         <tbody>
           <tr>
             <td><code>YYYYMMDD</code></td>
@@ -468,6 +471,7 @@
           </tr>
         </tbody>
       </table>
+</div>
       <div style="padding:12px 20px;background:#F7F4EF;font-size:12px;color:var(--text-sub)">
         ファイル例: &nbsp;
         <code>20260309_002304_R001_500m.csv</code> &nbsp;/&nbsp;
@@ -478,7 +482,7 @@
 
   <!-- カラム仕様 -->
   <div style="margin-bottom:24px">
-    <div style="font-size:13px;font-weight:600;color:var(--text-sub);letter-spacing:0.06em;margin-bottom:12px">
+    <div style="font-size:13px;font-weight:500;color:var(--text-sub);letter-spacing:0.06em;margin-bottom:12px">
       CSVカラム仕様
     </div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
@@ -486,14 +490,15 @@
         ヘッダー行（1行目）: &nbsp;
         <code>measurement_point, lane, lap_index, time_ms, formatted, race_no, tie_group, photo_flag, note</code>
       </div>
-      <table class="relation-table" style="margin:0">
+      <div class="table-wrap">
+<table class="relation-table" style="margin:0">
         <thead>
           <tr>
-            <th>カラム名</th>
-            <th>型</th>
-            <th>例</th>
-            <th>用途・備考</th>
-            <th>GASでの扱い</th>
+            <th scope="col">カラム名</th>
+            <th scope="col">型</th>
+            <th scope="col">例</th>
+            <th scope="col">用途・備考</th>
+            <th scope="col">GASでの扱い</th>
           </tr>
         </thead>
         <tbody>
@@ -562,17 +567,19 @@
           </tr>
         </tbody>
       </table>
+</div>
     </div>
   </div>
 
   <!-- 処理ルール -->
   <div style="margin-bottom:24px">
-    <div style="font-size:13px;font-weight:600;color:var(--text-sub);letter-spacing:0.06em;margin-bottom:12px">
+    <div style="font-size:13px;font-weight:500;color:var(--text-sub);letter-spacing:0.06em;margin-bottom:12px">
       GASの処理ルール
     </div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
-      <table class="relation-table" style="margin:0">
-        <thead><tr><th>ルール</th><th>内容</th></tr></thead>
+      <div class="table-wrap">
+<table class="relation-table" style="margin:0">
+        <thead><tr><th scope="col">ルール</th><th scope="col">内容</th></tr></thead>
         <tbody>
           <tr>
             <td style="white-space:nowrap">全ポイント揃いで処理</td>
@@ -600,19 +607,20 @@
           </tr>
         </tbody>
       </table>
+</div>
     </div>
   </div>
 
   <!-- CSVサンプル -->
   <div style="margin-bottom:8px">
-    <div style="font-size:13px;font-weight:600;color:var(--text-sub);letter-spacing:0.06em;margin-bottom:12px">
+    <div style="font-size:13px;font-weight:500;color:var(--text-sub);letter-spacing:0.06em;margin-bottom:12px">
       CSVサンプル
     </div>
     <div style="background:#1e1e1e;border-radius:6px;padding:16px;overflow-x:auto">
       <div style="font-size:11px;letter-spacing:0.15em;color:rgba(255,255,255,0.5);margin-bottom:10px;font-family:'SF Mono','Monaco','Courier New',monospace">
         20260309_002304_R001_500m.csv
       </div>
-      <pre style="font-family:'SF Mono','Monaco','Courier New',monospace;font-size:12px;line-height:1.8;color:#d4d4d4;margin:0"><span style="color:#6ec86e">measurement_point,lane,lap_index,time_ms,formatted,race_no,tie_group,photo_flag,note</span>
+      <pre style="font-family:'SF Mono','Monaco','Courier New',monospace;font-size:12px;line-height:1.8;color:#d4d4d4;margin:0;background:transparent"><span style="color:#6ec86e">measurement_point,lane,lap_index,time_ms,formatted,race_no,tie_group,photo_flag,note</span>
 500m,1,1,112834,1:52.834,1,,,
 500m,2,1,113201,1:53.201,1,,,
 500m,3,1,111490,1:51.490,1,,,
@@ -620,7 +628,7 @@
       <div style="font-size:11px;letter-spacing:0.15em;color:rgba(255,255,255,0.5);margin:12px 0 10px;font-family:'SF Mono','Monaco','Courier New',monospace">
         20260309_002304_R001_1000m.csv
       </div>
-      <pre style="font-family:'SF Mono','Monaco','Courier New',monospace;font-size:12px;line-height:1.8;color:#d4d4d4;margin:0"><span style="color:#6ec86e">measurement_point,lane,lap_index,time_ms,formatted,race_no,tie_group,photo_flag,note</span>
+      <pre style="font-family:'SF Mono','Monaco','Courier New',monospace;font-size:12px;line-height:1.8;color:#d4d4d4;margin:0;background:transparent"><span style="color:#6ec86e">measurement_point,lane,lap_index,time_ms,formatted,race_no,tie_group,photo_flag,note</span>
 1000m,1,1,228410,3:48.410,1,,,
 1000m,2,1,231750,3:51.750,1,,,
 1000m,3,1,224880,3:44.880,1,,,

@@ -33,48 +33,28 @@ body {
   --accent:     var(--color-primary);  /* HEX直書き(#24602A) → var()参照に置換（色値不変） */
   --accent-light:#3A7E40;
   --accent-bg:  #E4F0E5;
-  --gold:       #A8831E;
+  --gold:       #8A6A16;
   --gold-bg:    #FBF6E8;
-  --silver:     #6A7F90;
+  --silver:     #57697A;
   --silver-bg:  #EDF2F5;
   --bronze:     #8F5A2E;
   --bronze-bg:  #F8EFE8;
   --live:       #C0392B;
   --live-bg:    #FDEEEC;
-  --radius:     6px;
-  --radius-lg:  10px;
+  --radius:     4px;
+  --radius-lg:  4px;
   --shadow-sm:  0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --shadow-md:  0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
 }
 
 /* ========= カバーエリア（site-header） ========= */
+/* グラデーション全廃（Gate1承認）: 単色化。--header-bg は site/js/shared.js が
+   buildHeaderGradient() でJS設定するため、そちらも別途単色化が必要（別担当ファイル・要追従） */
 .site-header {
-  background: var(--header-bg, linear-gradient(160deg, #162E16 0%, #1E4020 45%, #274F2A 75%, #2E5C32 100%));
+  background: var(--header-bg, var(--color-primary));
   padding: 36px 40px 30px;
   position: relative;
   overflow: hidden;
-}
-.site-header::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 80% 60% at 100% 0%, rgba(80,160,80,0.10) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 80% at 0% 100%, rgba(20,80,20,0.15) 0%, transparent 60%);
-  pointer-events: none;
-}
-.site-header::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    -55deg,
-    transparent,
-    transparent 60px,
-    rgba(255,255,255,0.012) 60px,
-    rgba(255,255,255,0.012) 120px
-  );
-  pointer-events: none;
 }
 .site-header-inner {
   max-width: 1170px;
@@ -111,9 +91,17 @@ body {
 
 /* ========= ページ本体 ========= */
 .notion-page {
+  /* body が display:flex; flex-direction:column の親のため、.notion-page は
+     縦方向flexの子要素になる。width:100% を明示しないと子コンテンツの内容幅で
+     縮小適合してしまい max-width:1170px; margin:0 auto が効かず幅が詰まる。
+     min-width:0 も併記し、中の固定幅要素があってもflexアイテムの既定
+     min-width:auto によるはみ出し（320pxで60px・375pxで5px）を防ぐ（P1-b） */
+  width: 100%;
+  min-width: 0;
   max-width: 1170px;
   margin: 0 auto;
   padding: 24px 32px 100px;
+  box-sizing: border-box;
 }
 
 /* ========= フィルターバー新構造 ========= */
@@ -157,7 +145,7 @@ h1.page-title {
   align-items: center;
   gap: 5px;
   padding: 4px 10px;
-  border-radius: 20px;
+  border-radius: 9999px;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.04em;
@@ -213,7 +201,7 @@ h1.page-title {
   flex-shrink: 0;
 }
 #current-race-bar .crb-name {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text);
   flex: 1;
   min-width: 0;
@@ -249,7 +237,7 @@ h1.page-title {
 .view-tab.active {
   color: var(--text);
   border-bottom-color: var(--accent);
-  font-weight: 600;
+  font-weight: 700;
 }
 .view-content { display: none; }
 .view-content.active { display: block; }
@@ -282,6 +270,8 @@ h1.page-title {
   color: var(--text);
   font-family: inherit;
   transition: border-color 0.2s ease;
+  min-height: 44px;
+  box-sizing: border-box;
 }
 .filter-select:focus {
   outline: 2px solid var(--accent);
@@ -298,6 +288,8 @@ h1.page-title {
   font-family: inherit;
   background: var(--card);
   transition: border-color 0.2s ease;
+  min-height: 44px;
+  box-sizing: border-box;
 }
 .filter-search:focus {
   outline: 2px solid var(--accent);
@@ -314,11 +306,14 @@ h1.page-title {
   color: var(--text-sub);
   font-family: inherit;
   transition: color 0.2s ease;
+  min-height: 44px;
+  box-sizing: border-box;
 }
 .filter-reset:hover { color: var(--text); }
 .filter-count {
   font-size: 12px;
-  color: var(--text-muted);
+  /* --text-muted(#A8A19A)は白背景で2.6:1しか出ずAA未達のため --text-sub(#6B6560, 5.7:1)を使用 */
+  color: var(--text-sub);
   margin-left: auto;
 }
 
@@ -366,7 +361,7 @@ h1.page-title {
   color: var(--text-muted);
   background: #F0EDE7;
   padding: 2px 8px;
-  border-radius: 20px;
+  border-radius: 9999px;
   font-family: monospace;
   letter-spacing: 0.03em;
 }
@@ -430,11 +425,11 @@ h1.page-title {
   border-left: 3px solid var(--gold);
   padding-left: 7px;
 }
-.rank-1 { background: linear-gradient(to right, var(--gold-bg), transparent 50%); }
+.rank-1 { background: var(--gold-bg); }
 .rank-2 td:first-child { color: var(--silver); }
-.rank-2 { background: linear-gradient(to right, var(--silver-bg), transparent 50%); }
+.rank-2 { background: var(--silver-bg); }
 .rank-3 td:first-child { color: var(--bronze); }
-.rank-3 { background: linear-gradient(to right, var(--bronze-bg), transparent 50%); }
+.rank-3 { background: var(--bronze-bg); }
 
 .crew-name { font-weight: 400; color: var(--text); white-space: nowrap; }
 .time-main {
@@ -453,40 +448,6 @@ h1.page-title {
 }
 
 
-/* ========= ステータスバー ========= */
-.update-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #1E2820;
-  color: #fff;
-  padding: 0 24px;
-  height: 44px;
-  font-size: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 100;
-  gap: 8px;
-  border-top: 1px solid rgba(255,255,255,0.07);
-}
-.update-bar-left {
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.update-bar-center {
-  font-size: 12px;
-  color: rgba(255,255,255,0.65);
-  text-align: center;
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 0 8px;
-}
 .hide-mobile-flex { display: flex; justify-content: center; }
 .live-dot {
   display: inline-block;
@@ -533,7 +494,6 @@ h1.page-title {
     white-space: nowrap;
   }
   .hide-mobile { display: none !important; }
-  .update-bar { font-size: 11px; padding: 0 10px; }
   .hide-mobile-flex { display: none !important; }
   .schedule-table { font-size: 13px; }
   .sc-event-name { max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
@@ -545,14 +505,14 @@ h1.page-title {
 
 /* ========= スケルトンローディング ========= */
 .skeleton {
-  background: linear-gradient(90deg, #EDE9E3 25%, #E5E0D9 50%, #EDE9E3 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+  /* グラデーション全廃（Gate1承認）: shimmerスイープ→単色の明滅アニメーションに変更 */
+  background: var(--border);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
   border-radius: var(--radius);
 }
-@keyframes shimmer {
-  0%  { background-position: 200% 0; }
-  100%{ background-position: -200% 0; }
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
 }
 .skeleton-toggle {
   height: 44px;
@@ -678,7 +638,7 @@ h1.page-title {
   background: var(--accent-bg) !important;
 }
 .schedule-next-race .sc-time {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--accent);
 }
 
@@ -705,7 +665,7 @@ h1.page-title {
 .rank {
   display: inline-block;
   font-variant-numeric: tabular-nums;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 13px;
 }
 .rank-1 { color: var(--gold); }
@@ -785,9 +745,12 @@ h1.page-title {
   }
   .filter-search {
     flex: 1;
+    /* min-width:0 が無いと flex アイテムの既定 min-width:auto（input の内在最小幅）が
+       効いて .filter-toggle-btn 分の幅を圧迫し320pxで右にはみ出す（P1-b関連） */
+    min-width: 0;
     font-size: 16px; /* iOS自動ズーム防止 */
     padding: 8px 10px;
-    min-height: 42px;
+    min-height: 44px;
     border-radius: var(--radius);
     border: 1px solid var(--border);
     background: var(--bg);
@@ -799,7 +762,7 @@ h1.page-title {
     align-items: center;
     gap: 6px;
     padding: 8px 14px;
-    min-height: 42px;
+    min-height: 44px;
     background: var(--accent);
     color: #fff;
     border: none;
@@ -844,7 +807,7 @@ h1.page-title {
   .filter-actions .filter-reset {
     font-size: 13px;
     padding: 8px 12px;
-    min-height: 36px;
+    min-height: 44px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
     background: var(--bg);
@@ -936,15 +899,15 @@ h1.page-title {
   /* カードの順位メダル色 */
   .result-table tr.rank-1 {
     border-left: 3px solid var(--gold);
-    background: linear-gradient(to right, var(--gold-bg), var(--card) 60%);
+    background: var(--gold-bg);
   }
   .result-table tr.rank-2 {
     border-left: 3px solid var(--silver);
-    background: linear-gradient(to right, var(--silver-bg), var(--card) 60%);
+    background: var(--silver-bg);
   }
   .result-table tr.rank-3 {
     border-left: 3px solid var(--bronze);
-    background: linear-gradient(to right, var(--bronze-bg), var(--card) 60%);
+    background: var(--bronze-bg);
   }
   /* rank cell のデフォルト border-left を打ち消す */
   .result-table tr.rank-1 td:first-child,
@@ -960,9 +923,6 @@ h1.page-title {
   .schedule-table { font-size: 14px; }
   .sc-event-name { max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
 
-  /* ステータスバー */
-  .update-bar { padding: 6px 12px; font-size: 11px; height: 40px; }
-  .update-bar-center { display: none; }
   #status-summary { font-size: 10px; }
 
   /* toast 位置 */
@@ -982,23 +942,25 @@ h1.page-title {
   gap: 4px;
 }
 .fs-btn {
-  background: rgba(255,255,255,0.15);
-  border: 1px solid rgba(255,255,255,0.3);
-  color: rgba(255,255,255,0.8);
+  background: var(--bg);
+  color: var(--color-primary);
+  border: 1.5px solid transparent;
   padding: 4px 10px;
-  border-radius: 20px;
+  border-radius: 4px;
   font-size: 12px;
   cursor: pointer;
   font-family: inherit;
   transition: background 0.2s;
-  min-width: 36px;
-  min-height: 32px;
+  min-width: 44px;
+  min-height: 44px;
+  font-weight: 500;
 }
-.fs-btn:hover { background: rgba(255,255,255,0.25); }
+.fs-btn:hover { background: var(--card); }
 .fs-btn.fs-btn-active {
-  background: rgba(255,255,255,0.3);
-  color: #fff;
-  font-weight: 600;
+  background: var(--card);
+  color: var(--color-primary);
+  font-weight: 700;
+  border-color: var(--color-primary);
 }
 
 /* フォントサイズクラス */
@@ -1036,7 +998,7 @@ body.fs-large .crew-name      { font-size: 18px; }
   color: var(--text);
 }
 .error-msg-title {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 15px;
   color: var(--live);
   margin-bottom: 8px;
@@ -1083,7 +1045,7 @@ body.fs-large .crew-name      { font-size: 18px; }
   align-items: baseline;
 }
 .footer-env-title {
-  font-weight: 600;
+  font-weight: 500;
   color: rgba(255,255,255,0.75);
   white-space: nowrap;
 }
@@ -1094,7 +1056,7 @@ body.fs-large .crew-name      { font-size: 18px; }
 
 /* ========= 印刷用スタイル ========= */
 @media print {
-  .filter-bar, .view-tabs, .update-bar, .toggle-arrow, #toast-container { display: none !important; }
+  .filter-bar, .view-tabs, .toggle-arrow, #toast-container { display: none !important; }
   body { background: #fff; }
   .toggle { border: 1px solid #ddd; }
   .toggle-body { display: block !important; }
@@ -1111,7 +1073,7 @@ body.fs-large .crew-name      { font-size: 18px; }
 /* エントリー個別の年齢区分（混合レース用） */
 .entry-age-group { display: inline-block; margin-left: 5px; font-size: 10px; color: var(--text-sub); background: #EEEBE5; border: 1px solid var(--border); border-radius: 3px; padding: 0 4px; vertical-align: middle; }
 /* 複数カテゴリー合同レース用 区分列 */
-.entry-category { display: inline-block; font-size: 11px; font-weight: 600; color: var(--accent); background: var(--accent-bg); border: 1px solid rgba(36,96,42,0.25); border-radius: 4px; padding: 1px 6px; vertical-align: middle; }
+.entry-category { display: inline-block; font-size: 11px; font-weight: 700; color: var(--accent); background: var(--accent-bg); border: 1px solid rgba(36,96,42,0.25); border-radius: 4px; padding: 1px 6px; vertical-align: middle; }
 .cat-rank { display: inline-block; margin-left: 4px; font-size: 10px; color: var(--text-muted); }
 .cat-col { text-align: center; white-space: nowrap; }
 
@@ -1139,7 +1101,7 @@ body.fs-large .crew-name      { font-size: 18px; }
 .day-tab.active {
   color: var(--accent);
   border-bottom-color: var(--accent);
-  font-weight: 600;
+  font-weight: 700;
 }
 .day-tab:hover:not(.active) {
   color: var(--text);
@@ -1175,7 +1137,7 @@ body.fs-large .crew-name      { font-size: 18px; }
 }
 .col-lane {
   text-align: center;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-sub);
 }
 .sc-winner-time {

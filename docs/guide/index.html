@@ -18,7 +18,7 @@
   --lp-primary-100:   #D6E6FF;
 
   --lp-text:          #1A1A2E;
-  --lp-muted:         #6B7280;
+  --lp-muted:         #5B6472; /* #6B7280は淡色背景で4.5:1未達のため濃度調整（P2-b） */
 
   --lp-bg:            #FFFFFF;
   --lp-bg-sub:        #F5F7FA;
@@ -121,9 +121,8 @@ ul, ol { list-style: none; }
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255,255,255,0.97);
+  background: var(--lp-bg);
   border-bottom: 1px solid rgba(0,0,0,0.07);
-  backdrop-filter: blur(8px);
 }
 .nav-inner {
   display: flex;
@@ -186,7 +185,7 @@ ul, ol { list-style: none; }
 
 /* === HERO === */
 .guide-hero {
-  background: linear-gradient(135deg, #0D3FCC 0%, #1A6AFF 60%, #3B8FFF 100%);
+  background: var(--lp-primary);
   padding-block: clamp(3.5rem, 8vw, 5.5rem);
   overflow: hidden;
 }

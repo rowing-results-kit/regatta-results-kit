@@ -98,43 +98,113 @@ const BREAKPOINTS = [
 // ─── CP-01 文字重なり / bounding box 検査 ────────────────────────────────────
 async function checkOverlap(url, puppeteer) {
   console.log(`\n${INFO} CP-01 文字の重なり・見切れ検査 — ${url}`);
-  const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+  // headless:'shell' = chrome-headless-shell使用。既定のheadless=new(Chrome for Testing.app)は
+  // macOSでDockにアイコンが出るため禁止（2026-07-16 龍偉ルール: Chromeを増やさない）
+  const browser = await puppeteer.launch({ headless: 'shell', args: ['--no-sandbox'] });
   let failures = 0;
 
   for (const bp of BREAKPOINTS) {
     const page = await browser.newPage();
-    // headless Chrome の実限界は ~500px。それ以下は emulation で対応
-    await page.setViewport({ width: Math.max(bp.width, 500), height: bp.height,
-      deviceScaleFactor: 1 });
-    if (bp.width < 500) {
-      // CSS viewport を強制（JS で body を縮小）
-      await page.emulateMediaFeatures([]);
-    }
+    // 2026-07-16 P1-a: Math.max(bp.width,500) クランプを撤廃。
+    // 320/375/414px は実際のモバイル幅のまま検査する（isMobile:true でタッチデバイス
+    // として正しくレイアウトさせる。従来のクランプは320/375/414が実質500pxで検査され、
+    // 真のモバイル幅での横あふれ・見切れを検出できていなかった＝偽陽性PASSの温床）。
+    await page.setViewport({
+      width: bp.width,
+      height: bp.height,
+      isMobile: bp.width < 768,
+      hasTouch: bp.width < 768,
+      deviceScaleFactor: bp.width < 768 ? 2 : 1,
+    });
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
 
     // テキストノードの bounding box を取得して重なりを検査
+    // 注意: Range.getBoundingClientRect() はテキストノードが <br> 等で複数行に
+    // 折り返された場合、全行を包む union bbox を返す。隣接要素と行間で
+    // 重なって見えて誤検知するため、getClientRects() で行単位の矩形を使う。
     const overlaps = await page.evaluate(() => {
+      // アコーディオン等（max-height:0 + overflow:hidden で畳んだ要素）の中身は、
+      // 子要素自身は本来の高さのまま描画されようとし、getClientRects() 上では
+      // 折り畳みコンテナの外（＝次の要素の位置）まで座標が伸びる。overflow:hidden な
+      // 祖先の可視領域でクリップし、可視面積が実質ゼロになった矩形は比較対象から除外する。
+      function clipToVisibleAncestors(rect, el) {
+        // el 自身（text-overflow:ellipsis 等で overflow:hidden を持つラベル本体）も
+        // クリップ対象に含める。従来は el.parentElement から開始しており、
+        // el 自身の overflow:hidden が無視され、省略記号(...)で隠れた文字が
+        // 見た目より広いテキスト矩形のまま比較され自己重複的な誤検知を生んでいた。
+        let top = rect.y, bottom = rect.y + rect.h, left = rect.x, right = rect.x + rect.w;
+        let node = el;
+        while (node && node !== document.body) {
+          const cs = window.getComputedStyle(node);
+          if (cs.overflow === 'hidden' || cs.overflowY === 'hidden' || cs.overflowX === 'hidden') {
+            const cr = node.getBoundingClientRect();
+            top = Math.max(top, cr.top);
+            bottom = Math.min(bottom, cr.bottom);
+            left = Math.max(left, cr.left);
+            right = Math.min(right, cr.right);
+          }
+          node = node.parentElement;
+        }
+        if (bottom - top <= 0.5 || right - left <= 0.5) return null; // 可視領域が実質ゼロ＝非表示
+        return { x: left, y: top, w: right - left, h: bottom - top };
+      }
+
       const rects = [];
       const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
       let node;
       while ((node = walker.nextNode())) {
         if (!node.textContent.trim()) continue;
+        // getClientRects() の各行の高さはフォントの ascent/descent メトリクス由来で、
+        // CSS の line-height（実際の行送り）より大きくなりやすい。line-height がタイトな
+        // 見出し等では、行送り上は接していないだけの隣接行が「重なっている」と誤検知される。
+        // 行の中心を保ったまま実際の line-height に合わせて高さを補正してから比較する。
+        const parentEl = node.parentElement;
+        let lineHeightPx = null;
+        if (parentEl) {
+          const lh = window.getComputedStyle(parentEl).lineHeight;
+          const v = parseFloat(lh);
+          if (lh !== 'normal' && !Number.isNaN(v)) lineHeightPx = v;
+        }
         const range = document.createRange();
         range.selectNodeContents(node);
-        const r = range.getBoundingClientRect();
-        if (r.width > 0 && r.height > 0) {
-          rects.push({ x: r.x, y: r.y, w: r.width, h: r.height, text: node.textContent.trim().slice(0, 20) });
+        const lineRects = range.getClientRects(); // 行ごとの矩形（union bboxではない）
+        // text-overflow:ellipsis な要素では、同一テキストノードに対し
+        // getClientRects() が同じ行（同じ x, y）で幅違いの矩形を複数返すことがある
+        // （省略記号計算の内部アーティファクト）。同じ行を表す重複矩形は自己重複と
+        // 誤検知するため、同一 x/y（1px許容）の矩形は1つにまとめる。
+        const nodeRects = [];
+        for (const r of lineRects) {
+          if (r.width <= 0 || r.height <= 0) continue;
+          let y = r.y, h = r.height;
+          if (lineHeightPx && lineHeightPx < h) {
+            const cy = y + h / 2;
+            h = lineHeightPx;
+            y = cy - h / 2;
+          }
+          const dup = nodeRects.find(nr => Math.abs(nr.y - y) < 1 && Math.abs(nr.x - r.x) < 1);
+          if (dup) {
+            dup.w = Math.max(dup.w, r.width); // 幅は広い方（実際のヒットテスト領域）を採用
+            continue;
+          }
+          nodeRects.push({ x: r.x, y, w: r.width, h });
+        }
+        for (const nr of nodeRects) {
+          const clipped = clipToVisibleAncestors(nr, parentEl || node.parentElement);
+          if (!clipped) continue; // overflow:hidden な祖先で完全に隠れている＝非表示
+          rects.push({ x: clipped.x, y: clipped.y, w: clipped.w, h: clipped.h, text: node.textContent.trim().slice(0, 20) });
         }
       }
       // 簡易 O(n²) 重なり検査（要素数が多い場合はサンプリング）
+      // 境界の丸め誤差・アンチエイリアスによる1〜2px程度の接触は誤検知として無視する
+      const OVERLAP_THRESHOLD_PX = 2;
       const found = [];
       const sample = rects.slice(0, 200);
       for (let i = 0; i < sample.length; i++) {
         for (let j = i + 1; j < sample.length; j++) {
           const a = sample[i], b = sample[j];
-          const overlapX = a.x < b.x + b.w && a.x + a.w > b.x;
-          const overlapY = a.y < b.y + b.h && a.y + a.h > b.y;
-          if (overlapX && overlapY) {
+          const overlapX = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
+          const overlapY = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
+          if (overlapX > OVERLAP_THRESHOLD_PX && overlapY > OVERLAP_THRESHOLD_PX) {
             found.push(`"${a.text}" ↔ "${b.text}"`);
             if (found.length >= 5) return found; // 最大5件で打ち切り
           }
@@ -144,12 +214,26 @@ async function checkOverlap(url, puppeteer) {
     });
 
     // 画面外クリップ検査
+    // 注意: 横スクロール可能なコンテナ（.table-wrap 等 overflow-x:auto/scroll）の内側で
+    // 意図的にはみ出している要素（幅の広い表など）は「クリップ」ではなく仕様どおりの
+    // 横スクロールなので誤検知として除外する。コンテナ自体が画面幅に収まっていれば
+    // ページ全体の横スクロール（CP-02 checkResponsive）は発生しないため無害。
     const clipped = await page.evaluate(() => {
       const vw = window.innerWidth;
       const issues = [];
+      function isInsideScrollableAncestor(el) {
+        let node = el.parentElement;
+        while (node && node !== document.body) {
+          const overflowX = window.getComputedStyle(node).overflowX;
+          if (overflowX === 'auto' || overflowX === 'scroll') return true;
+          node = node.parentElement;
+        }
+        return false;
+      }
       document.querySelectorAll('*').forEach(el => {
         const r = el.getBoundingClientRect();
         if (r.right > vw + 1 && r.left < vw) {
+          if (isInsideScrollableAncestor(el)) return;
           const text = el.textContent.trim().slice(0, 30);
           if (text) issues.push(text);
         }
@@ -175,20 +259,30 @@ async function checkOverlap(url, puppeteer) {
 // ─── CP-02 レスポンシブ（横スクロール）検査 ──────────────────────────────────
 async function checkResponsive(url, puppeteer) {
   console.log(`\n${INFO} CP-02 レスポンシブ / 横スクロール検査 — ${url}`);
-  const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+  // headless:'shell' = chrome-headless-shell使用。既定のheadless=new(Chrome for Testing.app)は
+  // macOSでDockにアイコンが出るため禁止（2026-07-16 龍偉ルール: Chromeを増やさない）
+  const browser = await puppeteer.launch({ headless: 'shell', args: ['--no-sandbox'] });
   let failures = 0;
 
   for (const bp of BREAKPOINTS) {
     const page = await browser.newPage();
-    await page.setViewport({ width: Math.max(bp.width, 500), height: bp.height });
+    // 2026-07-16 P1-a: Math.max(bp.width,500) クランプを撤廃。checkOverlap と同様に
+    // 真のモバイル幅で検査する。
+    await page.setViewport({
+      width: bp.width,
+      height: bp.height,
+      isMobile: bp.width < 768,
+      hasTouch: bp.width < 768,
+      deviceScaleFactor: bp.width < 768 ? 2 : 1,
+    });
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
 
     const scrollWidth = await page.evaluate(() => document.body.scrollWidth);
-    const viewportWidth = Math.max(bp.width, 500);
-    const overflow = scrollWidth - viewportWidth;
+    const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
+    const overflow = scrollWidth - clientWidth;
 
     const icon = overflow > 1 ? FAIL : PASS;
-    console.log(`  ${icon} ${bp.label} — scrollWidth: ${scrollWidth}px (overflow: ${overflow > 0 ? '+' + overflow : overflow}px)`);
+    console.log(`  ${icon} ${bp.label} — scrollWidth: ${scrollWidth}px / clientWidth: ${clientWidth}px (overflow: ${overflow > 0 ? '+' + overflow : overflow}px)`);
     if (overflow > 1) failures++;
 
     await page.close();
@@ -261,7 +355,9 @@ async function checkEmoji(target) {
 // ─── CP-08 内部リンク切れ検査 ────────────────────────────────────────────────
 async function checkLinks(url, puppeteer) {
   console.log(`\n${INFO} CP-08 内部リンク切れ検査 — ${url}`);
-  const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+  // headless:'shell' = chrome-headless-shell使用。既定のheadless=new(Chrome for Testing.app)は
+  // macOSでDockにアイコンが出るため禁止（2026-07-16 龍偉ルール: Chromeを増やさない）
+  const browser = await puppeteer.launch({ headless: 'shell', args: ['--no-sandbox'] });
   const page = await browser.newPage();
   await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
 
@@ -363,7 +459,9 @@ async function checkPii(target) {
 // ─── CP-11 アクセシビリティ検査 ──────────────────────────────────────────────
 async function checkA11y(url, puppeteer) {
   console.log(`\n${INFO} CP-11 アクセシビリティ検査 — ${url}`);
-  const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+  // headless:'shell' = chrome-headless-shell使用。既定のheadless=new(Chrome for Testing.app)は
+  // macOSでDockにアイコンが出るため禁止（2026-07-16 龍偉ルール: Chromeを増やさない）
+  const browser = await puppeteer.launch({ headless: 'shell', args: ['--no-sandbox'] });
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 800 });
   await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
@@ -390,12 +488,36 @@ async function checkA11y(url, puppeteer) {
     });
 
     // タップターゲットサイズ検査（インタラクティブ要素）
+    // 注意: チェックボックス/ラジオは見た目を20px程度に保ちつつ、
+    // <label for="..."> 側に min-height:44px 等で当たり判定を拡張する実装が
+    // 一般的なパターン（for/id 連動でラベルクリックでも入力が切り替わる）。
+    // input 自体の見た目サイズだけでなく、紐づく label の実測サイズも見て、
+    // どちらかが44×44以上あれば実質的なタップターゲットは充足しているとみなす。
+    function effectiveLabelFor(el) {
+      if (el.id) {
+        const l = document.querySelector(`label[for="${CSS.escape(el.id)}"]`);
+        if (l) return l;
+      }
+      return el.closest('label');
+    }
     const interactive = [...document.querySelectorAll('a, button, input, select, [role="button"]')];
     interactive.forEach(el => {
       const r = el.getBoundingClientRect();
-      if ((r.width > 0 || r.height > 0) && (r.width < 44 || r.height < 44)) {
-        issues.push(`タップターゲット小さい (${Math.round(r.width)}x${Math.round(r.height)}px): ${el.tagName} "${el.textContent.trim().slice(0, 20)}"`);
+      if (!(r.width > 0 || r.height > 0)) return;
+      if (r.width >= 44 && r.height >= 44) return;
+      // aria-hidden="true" かつ tabindex="-1" の要素は、装飾レプリカ（他システムの
+      // 画面イメージをスクリーンショット風に再現したモック等）としてキーボード操作・
+      // 支援技術から意図的に除外されている。実際のタップ操作対象ではないため
+      // タップターゲット検査の対象外とする。
+      if (el.getAttribute('aria-hidden') === 'true' && el.getAttribute('tabindex') === '-1') return;
+      if (el.tagName === 'INPUT' && (el.type === 'checkbox' || el.type === 'radio')) {
+        const label = effectiveLabelFor(el);
+        if (label) {
+          const lr = label.getBoundingClientRect();
+          if (lr.width >= 44 && lr.height >= 44) return; // label側で当たり判定を確保済み
+        }
       }
+      issues.push(`タップターゲット小さい (${Math.round(r.width)}x${Math.round(r.height)}px): ${el.tagName} "${el.textContent.trim().slice(0, 20)}"`);
     });
 
     // focus-visible スタイル検査（outline: none がある要素）
@@ -418,42 +540,73 @@ async function checkA11y(url, puppeteer) {
 
   let failures = results.length;
 
-  // コントラスト比検査（簡易: 背景白(#fff)基準でテキストカラーを評価）
+  // コントラスト比検査
+  // 注意: 従来は rgba() の alpha を無視して RGB だけ hex 化していたため、
+  // 半透明背景（例: rgba(255,255,255,0.15)）の実効色を誤って評価していた。
+  // 親要素を辿って alpha 合成した実効背景色を算出してから比較する。
   const contrastIssues = await page.evaluate(() => {
-    function luminance(hex) {
-      const r = parseInt(hex.slice(1, 3), 16) / 255;
-      const g = parseInt(hex.slice(3, 5), 16) / 255;
-      const b = parseInt(hex.slice(5, 7), 16) / 255;
-      const toLinear = c => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    function parseColor(str) {
+      const m = str && str.match(/rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,\s/]+([\d.]+))?\s*\)/);
+      if (!m) return null;
+      return { r: +m[1], g: +m[2], b: +m[3], a: m[4] !== undefined ? +m[4] : 1 };
+    }
+    // fg を bg の上に重ねた実効色（straight alpha合成）
+    function compositeOver(fg, bg) {
+      const a = fg.a + bg.a * (1 - fg.a);
+      if (a === 0) return { r: 255, g: 255, b: 255, a: 0 };
+      return {
+        r: (fg.r * fg.a + bg.r * bg.a * (1 - fg.a)) / a,
+        g: (fg.g * fg.a + bg.g * bg.a * (1 - fg.a)) / a,
+        b: (fg.b * fg.a + bg.b * bg.a * (1 - fg.a)) / a,
+        a,
+      };
+    }
+    // 要素から親方向へ辿り、半透明背景を合成して不透明になるまでの実効背景色を求める
+    function effectiveBgColor(el) {
+      const stack = [];
+      let node = el;
+      while (node) {
+        const c = parseColor(window.getComputedStyle(node).backgroundColor);
+        if (c && c.a > 0) {
+          stack.push(c);
+          if (c.a >= 1) break; // 不透明背景に到達したらそこで打ち切り
+        }
+        node = node.parentElement;
+      }
+      let result = { r: 255, g: 255, b: 255, a: 1 }; // 既定キャンバス色（白）
+      for (let i = stack.length - 1; i >= 0; i--) {
+        result = compositeOver(stack[i], result);
+      }
+      return result;
+    }
+    function luminance({ r, g, b }) {
+      const toLinear = c => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
       return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
     }
     function contrastRatio(l1, l2) {
       const bright = Math.max(l1, l2), dark = Math.min(l1, l2);
       return (bright + 0.05) / (dark + 0.05);
     }
+    function toHex({ r, g, b }) {
+      return '#' + [r, g, b].map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+    }
 
     const issues = [];
     document.querySelectorAll('p, span, a, button, th, td, h1, h2, h3, h4, li').forEach(el => {
       const style = window.getComputedStyle(el);
-      const color = style.color;
-      const bg = style.backgroundColor;
-      // rgba(r,g,b,a) → hex 変換
-      function rgbaToHex(rgba) {
-        const m = rgba.match(/[\d.]+/g);
-        if (!m || m.length < 3) return null;
-        return '#' + [m[0], m[1], m[2]].map(v => parseInt(v).toString(16).padStart(2, '0')).join('');
-      }
-      const fgHex = rgbaToHex(color);
-      const bgHex = rgbaToHex(bg);
-      if (!fgHex || !bgHex || bg === 'rgba(0, 0, 0, 0)') return;
-      const ratio = contrastRatio(luminance(fgHex), luminance(bgHex));
+      const fgRaw = parseColor(style.color);
+      if (!fgRaw || fgRaw.a === 0) return;
+      const bgEffective = effectiveBgColor(el);
+      if (bgEffective.a === 0) return;
+      const fgEffective = compositeOver(fgRaw, bgEffective);
+      const ratio = contrastRatio(luminance(fgEffective), luminance(bgEffective));
       const fontSize = parseFloat(style.fontSize);
       const fontWeight = parseInt(style.fontWeight);
       const isLarge = fontSize >= 18 || (fontSize >= 14 && fontWeight >= 700);
       const threshold = isLarge ? 3.0 : 4.5;
       if (ratio < threshold) {
         const text = el.textContent.trim().slice(0, 20);
-        if (text) issues.push(`コントラスト比 ${ratio.toFixed(1)} < ${threshold} (${el.tagName}): "${text}" fg=${fgHex} bg=${bgHex}`);
+        if (text) issues.push(`コントラスト比 ${ratio.toFixed(1)} < ${threshold} (${el.tagName}): "${text}" fg=${toHex(fgEffective)} bg=${toHex(bgEffective)}`);
       }
     });
     return [...new Set(issues)].slice(0, 10);
@@ -478,7 +631,9 @@ async function checkA11y(url, puppeteer) {
 // ─── screenshot ──────────────────────────────────────────────────────────────
 async function takeScreenshot(url, puppeteer) {
   console.log(`\n${INFO} full-page スクリーンショット — ${url}`);
-  const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+  // headless:'shell' = chrome-headless-shell使用。既定のheadless=new(Chrome for Testing.app)は
+  // macOSでDockにアイコンが出るため禁止（2026-07-16 龍偉ルール: Chromeを増やさない）
+  const browser = await puppeteer.launch({ headless: 'shell', args: ['--no-sandbox'] });
   const outFiles = [];
 
   for (const bp of [
@@ -486,7 +641,15 @@ async function takeScreenshot(url, puppeteer) {
     { label: 'mobile', width: 375,  height: 812 },
   ]) {
     const page = await browser.newPage();
-    await page.setViewport({ width: Math.max(bp.width, 500), height: bp.height });
+    // 2026-07-16 P1-a: checkOverlap/checkResponsive と同様、真のモバイル幅で撮影する
+    // （クランプしたままだと "mobile" と称する画像が実は500pxで描画され信頼できない）
+    await page.setViewport({
+      width: bp.width,
+      height: bp.height,
+      isMobile: bp.width < 768,
+      hasTouch: bp.width < 768,
+      deviceScaleFactor: bp.width < 768 ? 2 : 1,
+    });
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
     const filename = `checkpoint-qa-screenshot-${bp.label}-${Date.now()}.png`;
     await page.screenshot({ path: filename, fullPage: true });

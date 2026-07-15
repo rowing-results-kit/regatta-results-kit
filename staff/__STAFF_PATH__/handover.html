@@ -53,7 +53,7 @@
       </div>
 
       <div class="card">
-        <h3>🏁 速報サイトの機能</h3>
+        <h3>速報サイトの機能</h3>
         <ul class="blist">
           <li><strong>リアルタイム速報</strong> — レース終了後、最大4分以内に結果がサイトに反映される<span class="note">計測CSVのアップロードから GAS処理（最大2分）+ Cloudflareデプロイ（約1分）</span></li>
           <li><strong>種目別表示</strong> — 男子・女子・混成、予選・決勝などでフィルタリングして表示できる<span class="note">フィルタバー・検索ボックスを使って絞り込み可能</span></li>
@@ -67,7 +67,7 @@
       </div>
 
       <div class="card">
-        <h3>📋 管理者ダッシュボードの機能</h3>
+        <h3>管理者ダッシュボードの機能</h3>
         <ul class="blist">
           <li><strong>GAS稼働状態の監視</strong> — 自動処理が正常に動いているかをリアルタイムで確認できる<span class="note">最終実行から8分以内: 正常 / 15分超: 要確認（トリガー再起動が必要）</span></li>
           <li><strong>レース公開状況の確認</strong> — 全レースのうち何件がサイトに公開済みかを日別タイムラインで確認できる</li>
@@ -79,7 +79,7 @@
       </div>
 
       <div class="card">
-        <h3>⚙️ 自動化されていること（手動操作が不要なこと）</h3>
+        <h3><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg> 自動化されていること（手動操作が不要なこと）</h3>
         <ul class="blist">
           <li><strong>CSV→JSON変換</strong> — 計測システムが出力したCSVを自動でJSON形式に変換する</li>
           <li><strong>着順計算</strong> — ゴールタイムから自動で着順（1位・2位…）を計算する</li>
@@ -99,7 +99,7 @@
       <div class="card">
         <div class="flow">
           <div class="flow-step">
-            <div class="flow-icon">🏊</div>
+            <div class="flow-icon">①</div>
             <div class="flow-body">
               <div class="flow-title">レース終了 → 計測システムがCSVを出力</div>
               <div class="flow-desc">RowingTimerWebが計測データをCSVファイルとして出力する</div>
@@ -107,7 +107,7 @@
           </div>
           <div class="flow-arrow">↓</div>
           <div class="flow-step">
-            <div class="flow-icon">📁</div>
+            <div class="flow-icon">②</div>
             <div class="flow-body">
               <div class="flow-title">計測スタッフがCSVをGoogle Driveにアップロード</div>
               <div class="flow-desc">500mCSVは race_csv/500m/、1000mCSVは race_csv/1000m/ へ投入<br>500m・1000m両方が揃って初めて処理が開始される</div>
@@ -116,7 +116,7 @@
           </div>
           <div class="flow-arrow">↓ 最大2分待機</div>
           <div class="flow-step">
-            <div class="flow-icon">⚙️</div>
+            <div class="flow-icon"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></div>
             <div class="flow-body">
               <div class="flow-title">GAS（Google Apps Script）が自動検知・変換</div>
               <div class="flow-desc">2分間隔で自動実行。CSVを読み取り、タイム計算・着順判定を行い、JSON形式に変換してGitHubにPushする</div>
@@ -125,7 +125,7 @@
           </div>
           <div class="flow-arrow">↓ 約1分</div>
           <div class="flow-step">
-            <div class="flow-icon">☁️</div>
+            <div class="flow-icon">④</div>
             <div class="flow-body">
               <div class="flow-title">Cloudflare PagesがGitHubのPushを検知して自動デプロイ</div>
               <div class="flow-desc">コードが自動でビルド・公開される。操作は不要</div>
@@ -134,7 +134,7 @@
           </div>
           <div class="flow-arrow">↓</div>
           <div class="flow-step">
-            <div class="flow-icon">🌐</div>
+            <div class="flow-icon">⑤</div>
             <div class="flow-body">
               <div class="flow-title">速報サイトにレース結果が表示される</div>
               <div class="flow-desc">閲覧者がブラウザをリロードすると最新結果が表示される。自動更新通知も出る</div>
@@ -152,7 +152,7 @@
 
       <div class="role-grid">
         <div class="role-card">
-          <div class="role-title">🖥️ システム管理者<br><span style="font-weight:400;font-size:11px;color:var(--muted)">大会前・技術担当</span></div>
+          <div class="role-title">システム管理者<br><span style="font-weight:400;font-size:11px;color:var(--muted)">大会前・技術担当</span></div>
           <ul class="role-list">
             <li>大会情報の master.json 更新</li>
             <li>GASプロジェクトの設定・管理</li>
@@ -162,7 +162,7 @@
           </ul>
         </div>
         <div class="role-card">
-          <div class="role-title">📋 大会担当者<br><span style="font-weight:400;font-size:11px;color:var(--muted)">当日の運用責任者</span></div>
+          <div class="role-title">大会担当者<br><span style="font-weight:400;font-size:11px;color:var(--muted)">当日の運用責任者</span></div>
           <ul class="role-list">
             <li>大会前日のサイト確認</li>
             <li>GASトリガーの有効化・停止</li>
@@ -172,7 +172,7 @@
           </ul>
         </div>
         <div class="role-card">
-          <div class="role-title">📡 計測スタッフ<br><span style="font-weight:400;font-size:11px;color:var(--muted)">当日のCSV投入担当</span></div>
+          <div class="role-title">計測スタッフ<br><span style="font-weight:400;font-size:11px;color:var(--muted)">当日のCSV投入担当</span></div>
           <ul class="role-list">
             <li>計測システムでCSVを出力</li>
             <li>DriveにCSVをアップロード</li>
@@ -183,7 +183,7 @@
       </div>
 
       <div class="alert alert-tip" style="margin-top:1rem">
-        💡 この資料の主な読者は「大会担当者」です。計測スタッフには別途「当日担当者マニュアル」を共有してください。
+        この資料の主な読者は「大会担当者」です。計測スタッフには別途「当日担当者マニュアル」を共有してください。
       </div>
     </div>
 
@@ -193,56 +193,56 @@
       <h2>④ URL・アクセス先一覧</h2>
       <div class="card">
         <div class="url-item">
-          <div class="url-label">🌐 速報サイト（本番）</div>
+          <div class="url-label">速報サイト（本番）</div>
           <div class="url-body">
             <a class="url-link" href="https://{{SITE_URL}}" target="_blank">https://{{SITE_URL}}</a>
             <div class="url-note">観客・選手・関係者がレース結果を確認するページ。このURLを広く告知してOK</div>
           </div>
         </div>
         <div class="url-item">
-          <div class="url-label">📋 管理者ダッシュボード</div>
+          <div class="url-label">管理者ダッシュボード</div>
           <div class="url-body">
             <a class="url-link" href="https://{{SITE_URL}}/admin/{{ADMIN_PATH}}/" target="_blank">https://{{SITE_URL}}/admin/{{ADMIN_PATH}}/</a>
             <div class="url-note">大会担当者専用の運用管理画面。URLは関係者のみに共有すること（第三者に公開しない）</div>
           </div>
         </div>
         <div class="url-item">
-          <div class="url-label">📄 当日担当者マニュアル</div>
+          <div class="url-label">当日担当者マニュアル</div>
           <div class="url-body">
             <a class="url-link" href="https://{{SITE_URL}}/staff/{{STAFF_PATH}}/day-manual.html" target="_blank">https://{{SITE_URL}}/staff/{{STAFF_PATH}}/day-manual.html</a>
             <div class="url-note">計測スタッフ向けのCSVアップロード手順書。大会当日にLINE等で送付する</div>
           </div>
         </div>
         <div class="url-item">
-          <div class="url-label">📐 CSVファイル命名ルール</div>
+          <div class="url-label">CSVファイル命名ルール</div>
           <div class="url-body">
             <a class="url-link" href="https://{{SITE_URL}}/staff/{{STAFF_PATH}}/csv_naming_rules.html" target="_blank">https://{{SITE_URL}}/staff/{{STAFF_PATH}}/csv_naming_rules.html</a>
             <div class="url-note">ファイル名の形式・列の意味・テンプレートDLをまとめた資料</div>
           </div>
         </div>
         <div class="url-item">
-          <div class="url-label">📁 Google Drive（大会フォルダ）</div>
+          <div class="url-label">Google Drive（大会フォルダ）</div>
           <div class="url-body">
             <a class="url-link" href="{{DRIVE_FOLDER_URL}}" target="_blank">大会フォルダを開く</a>
             <div class="url-note">CSVの投入先。フォルダ構成: race_csv/500m・1000m/（結果CSV）、master/（スケジュール・エントリー）、processed/（処理済み）</div>
           </div>
         </div>
         <div class="url-item">
-          <div class="url-label">⚙️ Google Apps Script</div>
+          <div class="url-label"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg> Google Apps Script</div>
           <div class="url-body">
             <a class="url-link" href="https://script.google.com" target="_blank">https://script.google.com</a>
             <div class="url-note">「{{GAS_PROJECT_NAME}}」プロジェクトを開く。大会前にトリガーを有効化し、終了後に停止する</div>
           </div>
         </div>
         <div class="url-item">
-          <div class="url-label">🐙 GitHub リポジトリ</div>
+          <div class="url-label">GitHub リポジトリ</div>
           <div class="url-body">
             <a class="url-link" href="https://github.com/{{GITHUB_REPO}}" target="_blank">https://github.com/{{GITHUB_REPO}}</a>
             <div class="url-note">サイトのソースコード管理場所。GASが結果JSONをここにPushし、Cloudflareが自動でデプロイする。通常は直接操作しない</div>
           </div>
         </div>
         <div class="url-item">
-          <div class="url-label">☁️ Cloudflare Pages</div>
+          <div class="url-label">Cloudflare Pages</div>
           <div class="url-body">
             <a class="url-link" href="https://dash.cloudflare.com" target="_blank">https://dash.cloudflare.com</a>
             <div class="url-note">サイトのホスティング管理。デプロイ状況の確認時のみ使用。通常は操作不要</div>
@@ -257,34 +257,38 @@
       <h2>⑤ アカウント・認証情報</h2>
 
       <div class="alert alert-warn">
-        ⚠️ 以下の情報は厳重に管理してください。メール・LINEでの送信、第三者への共有は禁止です。
+        <span class="status-chip warn">注意</span> 以下の情報は厳重に管理してください。メール・LINEでの送信、第三者への共有は禁止です。
       </div>
 
       <div class="card">
-        <h3>🔑 各サービスのアカウント</h3>
-        <table class="tbl">
-          <thead><tr><th>サービス</th><th>アカウント</th><th>用途</th></tr></thead>
+        <h3>各サービスのアカウント</h3>
+        <div class="table-wrap">
+<table class="tbl">
+          <thead><tr><th scope="col">サービス</th><th scope="col">アカウント</th><th scope="col">用途</th></tr></thead>
           <tbody>
             <tr><td>Google（Drive / GAS）</td><td>your-email@example.com</td><td>DriveへのCSV投入、GASの管理・実行</td></tr>
             <tr><td>GitHub</td><td>{{GITHUB_REPO}} のオーナー</td><td>ソースコード管理。GASがここにPushする</td></tr>
             <tr><td>Cloudflare</td><td>your-email@example.com</td><td>サイトのホスティング・デプロイ</td></tr>
           </tbody>
         </table>
+</div>
       </div>
 
       <div class="card">
-        <h3>⚙️ GAS スクリプトプロパティ（設定済み）</h3>
+        <h3><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg> GAS スクリプトプロパティ（設定済み）</h3>
         <p style="font-size:13px;color:var(--muted);margin-bottom:1rem">
           GASプロジェクト → プロジェクトの設定（歯車）→ スクリプトプロパティ で確認・変更できます。
         </p>
-        <table class="tbl">
-          <thead><tr><th>プロパティ名</th><th>内容</th><th>変更が必要なタイミング</th></tr></thead>
+        <div class="table-wrap">
+<table class="tbl">
+          <thead><tr><th scope="col">プロパティ名</th><th scope="col">内容</th><th scope="col">変更が必要なタイミング</th></tr></thead>
           <tbody>
             <tr><td><code>GITHUB_TOKEN</code></td><td>GitHubへのPush権限トークン（ghp_...）</td><td>トークンが失効したとき（年1回程度）。GitHubの Settings → Personal access tokens で再発行</td></tr>
             <tr><td><code>DRIVE_ROOT_FOLDER_ID</code></td><td>Google DriveフォルダのID<br><code>1LA-9BOcZtxesmlY5V0BrMgotvEEB7eu3</code></td><td>Driveフォルダを変更した場合のみ</td></tr>
             <tr><td><code>MEASUREMENT_POINTS</code></td><td><code>500m,1000m</code></td><td>コース構成が変わった場合のみ</td></tr>
           </tbody>
         </table>
+</div>
       </div>
     </div>
 
@@ -374,7 +378,7 @@
       <h2>⑦ 大会当日の操作手順</h2>
 
       <div class="card">
-        <h3>🌅 開会前（最初にやること）</h3>
+        <h3>開会前（最初にやること）</h3>
         <ul class="steps">
           <li class="step">
             <div class="step-num">1</div>
@@ -418,7 +422,7 @@
       </div>
 
       <div class="card">
-        <h3>🏁 競技中（継続的にやること）</h3>
+        <h3>競技中（継続的にやること）</h3>
         <ul class="blist">
           <li><strong>管理画面を定期的に確認する</strong> — レース終了後3〜4分でサイトに反映されているか確認。「③ タイムライン」でレースが「サイト公開済み」になっているか見る<span class="note">特に最初の数レースは確実に確認すること。問題があれば早期に発見できる</span></li>
           <li><strong>GAS稼働状態を確認する</strong> — 「③ CSV自動アップロード監視」が常に緑の「正常」かを確認<span class="note">「要確認」になったらGASトリガーを再起動（一度削除して再設定）</span></li>
@@ -427,7 +431,7 @@
       </div>
 
       <div class="card">
-        <h3>🌇 大会終了後（必ずやること）</h3>
+        <h3>大会終了後（必ずやること）</h3>
         <ul class="steps">
           <li class="step">
             <div class="step-num">1</div>
@@ -459,8 +463,9 @@
       <h2>⑧ トラブル対処法</h2>
 
       <div class="card">
-        <table class="tbl">
-          <thead><tr><th>症状</th><th>まず確認すること</th><th>対処法</th></tr></thead>
+        <div class="table-wrap">
+<table class="tbl">
+          <thead><tr><th scope="col">症状</th><th scope="col">まず確認すること</th><th scope="col">対処法</th></tr></thead>
           <tbody>
             <tr>
               <td>管理画面が「要確認」になっている</td>
@@ -499,6 +504,7 @@
             </tr>
           </tbody>
         </table>
+</div>
       </div>
     </div>
 
@@ -508,7 +514,7 @@
       <h2>⑨ 現在の課題・制限事項</h2>
 
       <div class="card">
-        <h3>⚠️ 運用上の制限</h3>
+        <h3><span class="status-chip warn">注意</span> 運用上の制限</h3>
         <ul class="blist">
           <li><strong>GAS実行時間: 90分/日の上限あり</strong> — 2分×45回=90分。大会が2日間の場合も1日ごとにカウントされる。大会終了後は必ずトリガーを停止すること<span class="note">超過するとその日のGAS処理が止まる。大会中に止まった場合はシステム管理者へ連絡</span></li>
           <li><strong>CSVは500mと1000m両方が揃わないとサイトに反映されない</strong> — 1000mコースのため両ポイントの計測CSVが必要。片方だけでは保留される<span class="note">両方揃った時点で次のGAS実行（最大2分後）に処理される</span></li>
@@ -518,7 +524,7 @@
       </div>
 
       <div class="card">
-        <h3>🔮 今後の拡張予定（検討中）</h3>
+        <h3>今後の拡張予定（検討中）</h3>
         <ul class="blist">
           <li><strong>年度・大会一覧ページの追加</strong> — 複数大会の結果を年度別に一覧表示するトップページ。現在は大会ごとに個別URLでの運用<span class="note">2026年度以降、大会数が増えてきたタイミングで対応予定</span></li>
           <li><strong>過去大会のアーカイブ機能</strong> — 終了した大会の結果を永続的に保存・閲覧できる仕組み<span class="note">現状は最新大会のみ表示。過去結果参照ニーズが高まれば対応</span></li>
