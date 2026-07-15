@@ -505,7 +505,7 @@ function renderToggleView() {
 function renderRaceBlock(race) {
   const result = resultsCache[race.race_no];
   const dateStr = formatDate(race.date);
-  const ageLabel = (usedProps.hasAgeGroup && race.age_group) ? `<span class="age-group">(${race.age_group})</span>` : '';
+  const ageLabel = (usedProps.hasAgeGroup && race.age_group) ? `<span class="age-group">(${h(race.age_group)})</span>` : '';
 
   const statusBadge = result
     ? '<span class="badge badge-done">確定</span>'
@@ -838,7 +838,7 @@ function renderScheduleView() {
     }
 
     const result = resultsCache[race.race_no];
-    const ageLabel = (usedProps.hasAgeGroup && race.age_group) ? ` (${race.age_group})` : '';
+    const ageLabel = (usedProps.hasAgeGroup && race.age_group) ? ` (${h(race.age_group)})` : '';
     const isNext = race.race_no === nextRaceNo;
 
     // 状態バッジ
@@ -982,7 +982,7 @@ function renderTableView() {
     const badge = raceBadgeHTML(hasResult, { pendingClass: 'badge-pending' });
     // 裁定2: age_group は <span class="age-group"> ラップに統一
     const ageLabel = (usedProps.hasAgeGroup && race.age_group)
-      ? `<span class="age-group">(${race.age_group})</span>` : '';
+      ? `<span class="age-group">(${h(race.age_group)})</span>` : '';
     const title = `Race ${race.race_no}｜${h(race.event_name)}${ageLabel}`;
 
     // 裁定8: 結果なし時は共通ヘルパーで lane 昇順・null ガード・row-retired なし

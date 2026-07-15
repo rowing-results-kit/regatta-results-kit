@@ -15,7 +15,7 @@ from common import find_race as _find_race_common, format_race_datetime as _form
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MASTER_JSON = ROOT / "data" / "master.json"
+MASTER_JSON = ROOT / "site" / "data" / "master.json"
 TEMPLATE_XLSX = ROOT / "print_templates" / "race_record_template.xlsx"
 SHRINK_CENTER = Alignment(horizontal="center", vertical="center", wrap_text=False, shrink_to_fit=True)
 SHRINK_LEFT_CENTER = Alignment(horizontal="left", vertical="center", wrap_text=False, shrink_to_fit=True)

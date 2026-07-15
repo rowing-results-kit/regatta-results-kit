@@ -25,7 +25,120 @@
 // ============================================================
 // doGet — Web アプリのエントリポイント
 // ============================================================
+
+/**
+ * ポータルの所有者メールアドレスを返す。
+ * Script Property PORTAL_OWNER_EMAIL が優先。未設定ならスクリプト実行ユーザー
+ * （「自分として実行」デプロイではスクリプト所有者本人）を採用する。
+ * @return {string}
+ */
+function portalOwnerEmail_() {
+  var configured = PropertiesService.getScriptProperties().getProperty('PORTAL_OWNER_EMAIL');
+  if (configured) return String(configured).trim().toLowerCase();
+  try {
+    return String(Session.getEffectiveUser().getEmail() || '').trim().toLowerCase();
+  } catch (e) {
+    return '';
+  }
+}
+
+/**
+ * アクセス者がポータル所有者本人かを判定する（多層防御）。
+ *
+ * 本来は GAS のデプロイ設定（アクセスできるユーザー = 自分のみ）で守るが、
+ * 設定を誤って「全員」にしてしまうとポータルが誰でも操作できてしまう。
+ * サーバー側でも所有者照合を行い、設定ミス単独では破られないようにする。
+ *
+ * 判定:
+ *  - アクセス者が特定できて所有者と一致 → 許可
+ *  - アクセス者が特定できて所有者と不一致 → 拒否
+ *  - アクセス者が特定できない（匿名アクセス = 「全員」公開デプロイ）→ 拒否（fail-closed）
+ *
+ * @return {{allowed: boolean, reason: string}}
+ */
+function portalCheckAccess_() {
+  var owner = portalOwnerEmail_();
+  if (!owner) {
+    // 所有者が判定できない状態で開放するのは危険なので拒否する
+    return { allowed: false, reason: '所有者アカウントを特定できませんでした。' };
+  }
+
+  var active = '';
+  try {
+    active = String(Session.getActiveUser().getEmail() || '').trim().toLowerCase();
+  } catch (e) {
+    active = '';
+  }
+
+  if (!active) {
+    return {
+      allowed: false,
+      reason: 'アクセスしているアカウントを特定できませんでした。ウェブアプリのデプロイ設定が「全員」になっている可能性があります。',
+    };
+  }
+  if (active !== owner) {
+    return { allowed: false, reason: 'このポータルは所有者のみが利用できます。' };
+  }
+  return { allowed: true, reason: '' };
+}
+
+/**
+ * 所有者本人でなければ例外を投げる。
+ *
+ * ★ doGet だけの照合では不十分: google.script.run が呼べるのは
+ *   「クライアントに配信された HTML」に限らない。Web アプリの URL を知る第三者は
+ *   doGet の画面を経由せずサーバー関数を直接叩ける（公開デプロイ時）。
+ *   そのため公開サーバー関数（portal* のうち末尾 _ でないもの）は、
+ *   すべて冒頭で本関数を呼び、認可を各関数の入口で強制する。
+ * @throws {Error} 所有者でない場合
+ */
+function portalAssertAccess_() {
+  var access = portalCheckAccess_();
+  if (!access.allowed) {
+    Logger.log('[portalAssertAccess_] 認可拒否: ' + access.reason);
+    throw new Error('権限がありません。' + access.reason);
+  }
+}
+
+/**
+ * アクセス拒否画面を返す（操作 UI は一切描画しない）
+ * @param {string} reason
+ * @return {GoogleAppsScript.HTML.HtmlOutput}
+ */
+function portalDenyPage_(reason) {
+  var html =
+    '<!doctype html><html lang="ja"><head><meta charset="utf-8">' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1">' +
+    '<title>アクセスできません</title></head>' +
+    '<body style="margin:0;padding:48px 24px;font-family:-apple-system,BlinkMacSystemFont,\'Hiragino Sans\',\'Yu Gothic\',sans-serif;color:#1F2937;">' +
+    '<div style="max-width:640px;margin:0 auto;">' +
+    '<h1 style="margin:0 0 16px;font-size:28px;color:#0A1628;">このページは表示できません</h1>' +
+    '<p style="margin:0 0 16px;line-height:1.8;">' + portalEscapeHtml_(reason) + '</p>' +
+    '<p style="margin:0;line-height:1.8;color:#6B7280;">' +
+    '管理者の方へ: GAS エディタの「デプロイ」→「デプロイを管理」で、' +
+    '「次のユーザーとして実行」を<strong>自分</strong>、「アクセスできるユーザー」を<strong>自分のみ</strong>に設定してください。' +
+    '</p></div></body></html>';
+  return HtmlService.createHtmlOutput(html).setTitle('アクセスできません');
+}
+
+/** HTML エスケープ（拒否画面用） */
+function portalEscapeHtml_(text) {
+  return String(text === null || text === undefined ? '' : text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function doGet() {
+  // 多層防御: デプロイ設定に加えてサーバー側でも所有者照合する
+  var access = portalCheckAccess_();
+  if (!access.allowed) {
+    Logger.log('[doGet] アクセス拒否: ' + access.reason);
+    return portalDenyPage_(access.reason);
+  }
+
   return HtmlService.createTemplateFromFile('portal')
     .evaluate()
     .setTitle('レガッタ速報キット 管理者ポータル')
@@ -160,6 +273,7 @@ var PORTAL_HEX_RE_ = /^#[0-9A-Fa-f]{6}$/;
 /** 接続設定の現在値をマスク済みで返す（GITHUB_TOKEN は有無のみ） */
 function portalGetSettings() {
   try {
+    portalAssertAccess_(); // 認可: 所有者以外は google.script.run 直接呼び出しでも実行させない
     var props = portalProps_();
     var driveId = props.getProperty(CONFIG.props.driveFolderId) || '';
     var points = props.getProperty(CONFIG.props.measurementPoints) || '';
@@ -190,6 +304,7 @@ function portalGetSettings() {
  */
 function portalSaveSettings(obj) {
   try {
+    portalAssertAccess_(); // 認可: 所有者以外は google.script.run 直接呼び出しでも実行させない
     if (!obj || typeof obj !== 'object') throw new Error('入力が不正です');
     var props = portalProps_();
     var saved = [];
@@ -279,6 +394,7 @@ function portalSaveSettings(obj) {
  */
 function portalTestGitHub() {
   try {
+    portalAssertAccess_(); // 認可: 所有者以外は google.script.run 直接呼び出しでも実行させない
     var ctx = portalGithubCtx_();
     var url = ctx.apiBase + '/repos/' + ctx.owner + '/' + ctx.repo;
     var res = UrlFetchApp.fetch(url, {
@@ -351,6 +467,7 @@ function portalTestGitHub() {
  */
 function portalGetPatExpiry() {
   try {
+    portalAssertAccess_(); // 認可: 所有者以外は google.script.run 直接呼び出しでも実行させない
     var props = portalProps_();
     var cached = props.getProperty('PAT_EXPIRES_AT') || '';
     var patExpiresAt = cached;
@@ -398,6 +515,7 @@ function portalGetPatExpiry() {
 /** Drive 疎通テスト: フォルダ名を返す（ID 全文は返さない） */
 function portalTestDrive() {
   try {
+    portalAssertAccess_(); // 認可: 所有者以外は google.script.run 直接呼び出しでも実行させない
     var id = portalProps_().getProperty(CONFIG.props.driveFolderId) || '';
     if (!id) throw new Error('DRIVE_ROOT_FOLDER_ID が未設定です');
     var name = DriveApp.getFolderById(id).getName();
@@ -410,6 +528,7 @@ function portalTestDrive() {
 /** hub/association.json を取得して返す */
 function portalGetAssociation() {
   try {
+    portalAssertAccess_(); // 認可: 所有者以外は google.script.run 直接呼び出しでも実行させない
     var ctx = portalGithubCtx_();
     var got = portalGithubGet_(ctx, 'hub/association.json');
     if (got.text === null) {
@@ -428,6 +547,7 @@ function portalGetAssociation() {
  */
 function portalSaveAssociation(json) {
   try {
+    portalAssertAccess_(); // 認可: 所有者以外は google.script.run 直接呼び出しでも実行させない
     var obj = (typeof json === 'string') ? JSON.parse(json) : json;
     if (!obj || typeof obj !== 'object') throw new Error('JSON が不正です');
     if (!Array.isArray(obj.tournaments)) throw new Error('tournaments 配列がありません');
@@ -458,6 +578,7 @@ function portalSaveAssociation(json) {
 /** site/data/theme.json を取得（無ければ既定値） */
 function portalGetTheme() {
   try {
+    portalAssertAccess_(); // 認可: 所有者以外は google.script.run 直接呼び出しでも実行させない
     var ctx = portalGithubCtx_();
     var got = portalGithubGet_(ctx, 'site/data/theme.json');
     if (got.text === null) {
@@ -477,6 +598,7 @@ function portalGetTheme() {
 /** theme.json を保存。色は #RRGGBB のみ受理。 */
 function portalSaveTheme(theme) {
   try {
+    portalAssertAccess_(); // 認可: 所有者以外は google.script.run 直接呼び出しでも実行させない
     var obj = (typeof theme === 'string') ? JSON.parse(theme) : theme;
     if (!obj || typeof obj !== 'object') throw new Error('テーマが不正です');
     if (!PORTAL_HEX_RE_.test(obj.primary_color || '')) {
@@ -501,9 +623,43 @@ function portalSaveTheme(theme) {
   }
 }
 
+/**
+ * GitHub contents API: ディレクトリ配下のファイル一覧を返す。
+ * ファイルではなくディレクトリを指すため、portalGithubGet_（base64 デコード前提）とは別実装。
+ * @return {Array} contents API のエントリ配列（404 の場合は空配列）
+ */
+function portalGithubListDir_(ctx, path) {
+  var url = portalContentsUrl_(ctx, path) + '?ref=' + encodeURIComponent(ctx.branch);
+  var res = UrlFetchApp.fetch(url, {
+    method: 'GET',
+    headers: { Authorization: 'token ' + ctx.token, Accept: 'application/vnd.github.v3+json' },
+    muteHttpExceptions: true,
+  });
+  var code = res.getResponseCode();
+  if (code === 404) return [];
+  if (code !== 200) throw new Error('GitHub GET 失敗: HTTP ' + code + ' (' + path + ')');
+  var body = JSON.parse(res.getContentText());
+  if (!Array.isArray(body)) throw new Error('ディレクトリではありません: ' + path);
+  return body;
+}
+
+/**
+ * 公開済みレース結果 JSON の件数を GitHub から取得する。
+ * master.json には results フィールドが存在しないため、
+ * site/data/results/ の race_NNN.json を実際に数える。
+ * @return {number} 件数
+ */
+function portalCountResultJson_(ctx) {
+  var entries = portalGithubListDir_(ctx, CONFIG.github.resultsPath);
+  return entries.filter(function(entry) {
+    return entry && entry.type === 'file' && /^race_\d+\.json$/i.test(entry.name || '');
+  }).length;
+}
+
 /** 稼働状態を返す: heartbeat / トリガー有無 / レート制限 */
 function portalGetStatus() {
   try {
+    portalAssertAccess_(); // 認可: 所有者以外は google.script.run 直接呼び出しでも実行させない
     var props = portalProps_();
     // トリガー有無（onTrigger ハンドラの存在）
     var triggers = ScriptApp.getProjectTriggers();
@@ -516,6 +672,22 @@ function portalGetStatus() {
     var rateLimitedAt = props.getProperty('API_RATE_LIMITED_AT') || '';
     var lastError = props.getProperty(CONFIG.props.lastError) || '';
 
+    // 最終成功時刻（onTrigger 正常完了で更新）— 直近エラーが「今も継続中」か
+    // 「復旧済みの古いエラー」かを画面で区別するために使う
+    var lastSuccessAt = props.getProperty(CONFIG.props.lastSuccessAt) || '';
+
+    // 直近エラー履歴（新しい順・最大 CONFIG.errorHistorySize 件）
+    var errorHistory = [];
+    try {
+      var rawHistory = props.getProperty(CONFIG.props.errorHistory);
+      if (rawHistory) {
+        var parsed = JSON.parse(rawHistory);
+        if (Array.isArray(parsed)) errorHistory = parsed;
+      }
+    } catch (histErr) {
+      errorHistory = [];
+    }
+
     // 最終 heartbeat（master.json の last_trigger_at を GitHub から取得）
     var lastTrigger = '';
     var resultCount = null;
@@ -525,11 +697,14 @@ function portalGetStatus() {
       if (got.text !== null) {
         var master = JSON.parse(got.text);
         lastTrigger = master.last_trigger_at || '';
-        if (master.results && typeof master.results === 'object') {
-          resultCount = Array.isArray(master.results)
-            ? master.results.length
-            : Object.keys(master.results).length;
-        }
+      }
+      // 結果 JSON 数は master.json ではなく site/data/results/ の実ファイル数を数える
+      // （master.results は存在しないフィールドで、常に「—」表示になっていた）
+      try {
+        resultCount = portalCountResultJson_(ctx);
+      } catch (countErr) {
+        resultCount = null; // 画面では「取得不可」と表示する
+        Logger.log('[portalGetStatus] 結果JSON数の取得に失敗: ' + countErr.message);
       }
     } catch (inner) {
       // GitHub 未設定でもトリガー状態だけは返したいので握りつぶす
@@ -556,6 +731,8 @@ function portalGetStatus() {
         rateLimited: rateLimited,
         rateLimitedAt: rateLimitedAt,
         lastError: lastError,
+        lastSuccessAt: lastSuccessAt,
+        errorHistory: errorHistory,
         resultCount: resultCount,
         patExpiresAt: patExpiresAt,
         patDaysLeft: patDaysLeft,
@@ -575,6 +752,7 @@ function portalGetStatus() {
  */
 function portalGetProgression() {
   try {
+    portalAssertAccess_(); // 認可: 所有者以外は google.script.run 直接呼び出しでも実行させない
     var ctx = portalGithubCtx_();
 
     // ① registry.json を取得
@@ -619,6 +797,7 @@ function portalGetProgression() {
  */
 function portalSaveProgression(templateId) {
   try {
+    portalAssertAccess_(); // 認可: 所有者以外は google.script.run 直接呼び出しでも実行させない
     var ctx = portalGithubCtx_();
 
     // master.json を GET
@@ -664,6 +843,7 @@ function portalSaveProgression(templateId) {
  */
 function portalInitialSetup() {
   try {
+    portalAssertAccess_(); // 認可: 所有者以外は google.script.run 直接呼び出しでも実行させない
     var props = PropertiesService.getScriptProperties();
     var results = {};
 
@@ -736,6 +916,7 @@ function portalInitialSetup() {
  */
 function portalStartTrigger() {
   try {
+    portalAssertAccess_(); // 認可: 所有者以外は google.script.run 直接呼び出しでも実行させない
     var triggers = ScriptApp.getProjectTriggers();
     var hasTrigger = triggers.some(function(t) {
       return t.getHandlerFunction() === 'onTrigger';
@@ -759,6 +940,7 @@ function portalStartTrigger() {
  */
 function portalConfigJson() {
   try {
+    portalAssertAccess_(); // 認可: 所有者以外は google.script.run 直接呼び出しでも実行させない
     var tmpl = {
       GITHUB_OWNER: '',
       GITHUB_REPO: '',

@@ -161,23 +161,11 @@
     });
   }
 
-  /**
-   * primary_color からヘッダーグラデーション用の濃淡4色を生成する。
-   *   darken(p, 45%): p と #000000 を 45% 混合（最暗）
-   *   darken(p, 25%): p と #000000 を 25% 混合
-   *   p:              そのまま
-   *   lighten(p, 10%): p と #FFFFFF を 10% 混合
-   *
-   * @param {string} primary  "#RRGGBB"
-   * @returns {string}  linear-gradient(...) 文字列
-   */
-  function buildHeaderGradient(primary) {
-    var c0 = mix(primary, '#000000', 0.45);
-    var c1 = mix(primary, '#000000', 0.25);
-    var c2 = primary;
-    var c3 = mix(primary, '#FFFFFF', 0.10);
-    return 'linear-gradient(160deg, ' + c0 + ' 0%, ' + c1 + ' 45%, ' + c2 + ' 75%, ' + c3 + ' 100%)';
-  }
+  // ヘッダー帯はグラデーション禁止（design-rules.json: no-generic-gradient）のため、
+  // primary_color をそのまま単色で使う。
+  // 旧 buildHeaderGradient() は linear-gradient(160deg, ...) を組み立てて --header-bg に
+  // 注入しており、CSS 側の単色化（style.css の背景指定）を実行時に上書きしていた。
+  // 濃淡計算が不要になったため関数ごと削除し、applyTheme から primary を直接設定する。
 
   // ========= theme.json 適用 =========
   /**
@@ -190,7 +178,7 @@
    *
    * primary_color 指定時は以下の CSS 変数をまとめて上書きする:
    *   --color-primary  … ブランドプライマリ色
-   *   --header-bg      … ヘッダー帯グラデーション (darken/lighten 計算)
+   *   --header-bg      … ヘッダー帯の背景（primary の単色。グラデーション禁止のため濃淡計算なし）
    *   --accent-light   … primary を 12% ライトニング
    *   --accent-bg      … primary と #FFFFFF の 88% ミックス
    *
@@ -216,7 +204,8 @@
         if (COLOR_RE.test(theme.primary_color)) {
           var p = theme.primary_color;
           root.style.setProperty('--color-primary', p);
-          root.style.setProperty('--header-bg', buildHeaderGradient(p));
+          // グラデーション禁止のため primary をそのまま単色で適用する
+          root.style.setProperty('--header-bg', p);
           root.style.setProperty('--accent-light', mix(p, '#FFFFFF', 0.12));
           root.style.setProperty('--accent-bg',    mix(p, '#FFFFFF', 0.88));
         }

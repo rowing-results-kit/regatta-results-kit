@@ -65,9 +65,9 @@ if (typeof google === 'undefined') {
           }},
           portalSaveProgression: { ok: true, data: { template_id: 'alljapan-a' } },
           portalInitialSetup: { ok: true, data: {
-            folderResult: '✅ Drive サブフォルダ作成済み（既存）',
-            triggerResult: '✅ 自動更新 稼働開始（2分ごと）' } },
-          portalStartTrigger: { ok: true, data: { message: '✅ 自動更新 稼働開始（2分ごと）' } }
+            folderResult: 'Drive サブフォルダ作成済み（既存）',
+            triggerResult: '自動更新 稼働開始（2分ごと）' } },
+          portalStartTrigger: { ok: true, data: { message: '自動更新 稼働開始（2分ごと）' } }
         };
         function makeRunner(success, failure) {
           var handler = {};
@@ -98,7 +98,7 @@ if (typeof google === 'undefined') {
 </script>
 <style>
 :root{
-  --color-primary:#2D4F2C;
+  --color-primary:#0E4D5C;
   --color-accent:#C9A227;
   --bg:#F4F1EB;
   --card:#FFFFFF;
@@ -106,8 +106,8 @@ if (typeof google === 'undefined') {
   --text:#252220;
   --text-sub:#6B6560;
   --text-muted:#A8A19A;
-  --gold:#A8831E;--gold-bg:#FBF6E8;
-  --silver:#6A7F90;--silver-bg:#EDF2F5;
+  --gold:#8A6A16;--gold-bg:#FBF6E8;
+  --silver:#57697A;--silver-bg:#EDF2F5;
   --bronze:#8F5A2E;--bronze-bg:#F8EFE8;
   --live:#C0392B;--live-bg:#FDEEEC;
   --radius:6px;--radius-lg:10px;
@@ -117,6 +117,11 @@ body{
   margin:0;background:var(--bg);color:var(--text);
   font-family:"Noto Sans JP",-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",sans-serif;
   font-weight:500;line-height:1.6;
+  line-break:strict;word-break:normal;overflow-wrap:anywhere;
+  font-feature-settings:'palt' 1,'kern' 1;
+}
+@supports (word-break:auto-phrase){
+  h1,h2,h3{word-break:auto-phrase;}
 }
 .app-header{
   background:var(--color-primary);color:#fff;padding:18px 20px;
@@ -199,6 +204,7 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
 .badge-upcoming{background:var(--gold-bg);color:var(--gold);}
 .badge-live{background:var(--live-bg);color:var(--live);}
 .badge-final{background:#EAF0EA;color:var(--color-primary);}
+.icon-inline{width:14px;height:14px;vertical-align:-2px;flex:none;}
 
 /* ===== モーダル ===== */
 .modal-bg{
@@ -421,7 +427,7 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
         <div class="mask" id="curDrive">—</div>
         <input type="text" id="inDrive" placeholder="https://drive.google.com/drive/folders/XXXX または ID">
         <details class="help-details">
-          <summary>📖 取得方法</summary>
+          <summary>取得方法</summary>
           <div class="help-body">
             <ol>
               <li><a href="https://drive.google.com" target="_blank">drive.google.com</a> を開き、大会用フォルダを新規作成します。</li>
@@ -466,7 +472,7 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
         <input type="text" id="inToken" placeholder="github_pat_... を入力したときだけ保存されます">
         <div class="hint">トークンは保存後マスク表示されず「設定あり」のみ表示します。</div>
         <details class="help-details">
-          <summary>📖 取得方法（GitHub fine-grained PAT）</summary>
+          <summary>取得方法（GitHub fine-grained PAT）</summary>
           <div class="help-body">
             <ol>
               <li>GitHub にログインし、右上のアイコン → <strong>Settings</strong> を開きます。</li>
@@ -478,9 +484,9 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
               <li><strong>Repository access</strong> は「Only select repositories」で対象リポジトリのみを選択します。</li>
               <li><strong>Permissions → Repository permissions → Contents</strong> を <strong>Read and write</strong> に設定します。</li>
               <li><strong>Generate token</strong> をクリックし、表示されたトークン（<code>github_pat_...</code>）を今すぐコピーします。<br>
-                  <span class="warn">⚠ このページを閉じると二度と表示されません。必ず今コピーしてください。</span></li>
+                  <span class="warn">注意: このページを閉じると二度と表示されません。必ず今コピーしてください。</span></li>
             </ol>
-            <span class="warn">⚠ 全リポジトリに権限を与える Classic token は使わないでください。</span>
+            <span class="warn">注意: 全リポジトリに権限を与える Classic token は使わないでください。</span>
           </div>
         </details>
       </div>
@@ -503,7 +509,7 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
         </select>
         <div id="progressionDesc" style="margin-top:6px;font-size:12px;color:var(--text-sub);min-height:1.4em;"></div>
         <details class="help-details" id="progressionExplDetails" style="display:none;">
-          <summary>📖 このモデルの解説</summary>
+          <summary>このモデルの解説</summary>
           <div class="help-body">
             <pre id="progressionExplText" class="prog-explanation"></pre>
           </div>
@@ -612,7 +618,7 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
         <button class="btn secondary small" id="btnReloadStatus">再読み込み</button>
       </div>
       <div id="autoUpdateStatus" style="margin-bottom:12px;padding:10px 14px;border-radius:6px;background:var(--card);border:1px solid #e0ddd5;display:none;">
-        <span id="autoUpdateLabel" style="font-weight:600;font-size:14px;"></span>
+        <span id="autoUpdateLabel" style="font-weight:700;font-size:14px;"></span>
         <button class="btn small" id="btnStartTrigger" style="display:none;margin-left:12px;">開始する</button>
       </div>
       <div class="status-grid" id="statusGrid">
@@ -654,27 +660,27 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
     <div class="card">
       <p class="sm-section-title">入力 — システムに渡すデータ</p>
       <div class="sm-actor-you">
-        <div class="sm-actor-label">👤 あなたが用意する</div>
+        <div class="sm-actor-label"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> あなたが用意する</div>
         <div class="sm-cards">
           <div class="sm-card">
-            <div class="sc-head"><span class="sm-badge pre">🏁 試合前</span></div>
+            <div class="sc-head"><span class="sm-badge pre">試合前</span></div>
             <div class="sc-title">エントリー CSV</div>
             <div class="sc-body">race_no・lane・クルー名・所属。出漕表の元データ</div>
           </div>
           <div class="sm-card">
-            <div class="sc-head"><span class="sm-badge pre">🏁 試合前</span></div>
+            <div class="sc-head"><span class="sm-badge pre">試合前</span></div>
             <div class="sc-title">スケジュール CSV</div>
             <div class="sc-body">レースNo・種目・ラウンド・日付・時刻</div>
           </div>
           <div class="sm-card">
-            <div class="sc-head"><span class="sm-badge post">🏆 結果後</span></div>
+            <div class="sc-head"><span class="sm-badge post">結果後</span></div>
             <div class="sc-title">計測 CSV（BoatTimer）</div>
             <div class="sc-body">R001_500m.csv / R001_1000m.csv<br>レース後 Drive に届く実測タイム</div>
           </div>
         </div>
       </div>
       <div class="sm-actor-you">
-        <div class="sm-actor-label">👤 このポータルで設定する</div>
+        <div class="sm-actor-label"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> このポータルで設定する</div>
         <div class="sm-cards">
           <div class="sm-card">
             <div class="sc-title">大会情報・ステータス</div>
@@ -700,20 +706,20 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
     <div class="card">
       <p class="sm-section-title">処理 — 自動で動く部分（待つだけ）</p>
       <div class="sm-actor-auto">
-        <div class="sm-actor-label">⚙️ 自動で動く（GAS）</div>
+        <div class="sm-actor-label"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg> 自動で動く（GAS）</div>
         <div class="sm-cards">
           <div class="sm-card dim">
-            <div class="sc-head"><span class="sm-badge auto">⚙️ 2分間隔</span></div>
+            <div class="sc-head"><span class="sm-badge auto"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg> 2分間隔</span></div>
             <div class="sc-title dim">GAS メイン（Code.gs）</div>
             <div class="sc-body">計測CSV → race_NNN.json → サイトへPush。onTrigger() を自動実行。</div>
           </div>
           <div class="sm-card dim">
-            <div class="sc-head"><span class="sm-badge auto">⚙️ 自動</span></div>
+            <div class="sc-head"><span class="sm-badge auto"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg> 自動</span></div>
             <div class="sc-title dim">PDF 自動生成</div>
             <div class="sc-body">個別レース結果 PDF を processPendingPDFs() が Drive へ自動出力。</div>
           </div>
           <div class="sm-card dim">
-            <div class="sc-head"><span class="sm-badge manual">👤 手動起動</span></div>
+            <div class="sc-head"><span class="sm-badge manual"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> 手動起動</span></div>
             <div class="sc-title dim">PDF 冊子・帳票（GAS メニュー）</div>
             <div class="sc-body">準備資料・結果冊子・結果一覧・判定員帳票は GAS メニューからボタン操作。</div>
           </div>
@@ -727,68 +733,68 @@ textarea{resize:vertical;min-height:90px;font-family:ui-monospace,SFMono-Regular
       <div class="sm-out-split">
         <!-- 試合前 -->
         <div class="sm-out-band pre">
-          <div class="sm-band-title">🏁 試合前に書き出せるもの</div>
+          <div class="sm-band-title">試合前に書き出せるもの</div>
           <div class="sm-out-items">
             <div class="sm-out-item">
-              <div class="so-badges"><span class="sm-badge web">🟦 Web</span></div>
+              <div class="so-badges"><span class="sm-badge web">Web</span></div>
               <div class="so-info">
                 <div class="so-name">スケジュール・出漕表示</div>
-                <div class="so-mode auto">⚙️ 自動（master.json 由来）</div>
+                <div class="so-mode auto"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg> 自動（master.json 由来）</div>
               </div>
             </div>
             <div class="sm-out-item">
-              <div class="so-badges"><span class="sm-badge web">🟦 Web</span></div>
+              <div class="so-badges"><span class="sm-badge web">Web</span></div>
               <div class="so-info">
                 <div class="so-name">ハブ掲載（大会一覧）</div>
-                <div class="so-mode manual">👤 ポータル操作 → ⚙️ 自動反映</div>
+                <div class="so-mode manual"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> ポータル操作 → <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg> 自動反映</div>
               </div>
             </div>
             <div class="sm-out-item">
-              <div class="so-badges"><span class="sm-badge pdf">🟥 PDF</span></div>
+              <div class="so-badges"><span class="sm-badge pdf">PDF</span></div>
               <div class="so-info">
                 <div class="so-name">判定員帳票・準備資料ブックレット</div>
-                <div class="so-mode manual">👤 GAS メニューから手動</div>
+                <div class="so-mode manual"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> GAS メニューから手動</div>
               </div>
             </div>
             <div class="sm-out-item">
-              <div class="so-badges"><span class="sm-badge pdf">🟥 PDF</span><span class="sm-badge doc">🟨 Excel</span></div>
+              <div class="so-badges"><span class="sm-badge pdf">PDF</span><span class="sm-badge doc">Excel</span></div>
               <div class="so-info">
                 <div class="so-name">競漕記録シート（空欄）</div>
-                <div class="so-mode manual">👤 ローカルツール（技術者）</div>
+                <div class="so-mode manual"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> ローカルツール（技術者）</div>
               </div>
             </div>
           </div>
         </div>
         <!-- 結果後 -->
         <div class="sm-out-band post">
-          <div class="sm-band-title">🏆 試合結果から作るもの</div>
+          <div class="sm-band-title">試合結果から作るもの</div>
           <div class="sm-out-items">
             <div class="sm-out-item">
-              <div class="so-badges"><span class="sm-badge web">🟦 Web</span></div>
+              <div class="so-badges"><span class="sm-badge web">Web</span></div>
               <div class="so-info">
                 <div class="so-name">順位・タイム表示</div>
-                <div class="so-mode auto">⚙️ 自動（2分ごと）</div>
+                <div class="so-mode auto"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg> 自動（2分ごと）</div>
               </div>
             </div>
             <div class="sm-out-item">
-              <div class="so-badges"><span class="sm-badge pdf">🟥 PDF</span></div>
+              <div class="so-badges"><span class="sm-badge pdf">PDF</span></div>
               <div class="so-info">
                 <div class="so-name">個別レース結果 PDF</div>
-                <div class="so-mode auto">⚙️ 自動</div>
+                <div class="so-mode auto"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg> 自動</div>
               </div>
             </div>
             <div class="sm-out-item">
-              <div class="so-badges"><span class="sm-badge pdf">🟥 PDF</span></div>
+              <div class="so-badges"><span class="sm-badge pdf">PDF</span></div>
               <div class="so-info">
                 <div class="so-name">結果ブックレット・結果一覧表</div>
-                <div class="so-mode manual">👤 GAS メニューから手動</div>
+                <div class="so-mode manual"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> GAS メニューから手動</div>
               </div>
             </div>
             <div class="sm-out-item">
-              <div class="so-badges"><span class="sm-badge pdf">🟥 PDF</span><span class="sm-badge doc">🟨 Excel</span></div>
+              <div class="so-badges"><span class="sm-badge pdf">PDF</span><span class="sm-badge doc">Excel</span></div>
               <div class="so-info">
                 <div class="so-name">競漕記録シート（タイム入り）</div>
-                <div class="so-mode manual">👤 ローカルツール（技術者）</div>
+                <div class="so-mode manual"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg> ローカルツール（技術者）</div>
               </div>
             </div>
           </div>
@@ -1080,7 +1086,7 @@ function testDrive(){
   showMsg($('settingsMsg'),'Drive に接続中 …','info');
   run().withSuccessHandler(function(res){
     if(!res||!res.ok){showMsg($('settingsMsg'),'接続失敗: '+esc((res&&res.error)||''),'err');return;}
-    showMsg($('settingsMsg'),'接続成功 ✓ フォルダ名: '+esc(res.data.folderName),'ok');
+    showMsg($('settingsMsg'),'接続成功 フォルダ名: '+esc(res.data.folderName),'ok');
   }).withFailureHandler(function(e){
     showMsg($('settingsMsg'),'通信エラー: '+esc(e&&e.message),'err');
   }).portalTestDrive();
@@ -1092,11 +1098,11 @@ function testGitHub(){
   badge.style.display='none';
   run().withSuccessHandler(function(res){
     if(!res||!res.ok){
-      showMsg($('settingsMsg'),'❌ 接続NG — '+(res&&res.error?esc(res.error):'不明なエラー'),'err');
+      showMsg($('settingsMsg'),'接続NG — '+(res&&res.error?esc(res.error):'不明なエラー'),'err');
       return;
     }
     var d=res.data;
-    var msg='✅ 接続OK — リポジトリ: '+esc(d.repo)+(d.private?' (プライベート)':' (パブリック)');
+    var msg='接続OK — リポジトリ: '+esc(d.repo)+(d.private?' (プライベート)':' (パブリック)');
     showMsg($('settingsMsg'),msg,'ok');
     // PAT 期限バッジ
     if(d.patExpiresAt){
@@ -1107,7 +1113,7 @@ function testGitHub(){
         badge.style.background='#fde8e8';
         badge.style.color='#c0392b';
         badge.style.border='1px solid #e57373';
-        badge.innerHTML='⚠ <strong>PAT 期限まであと '+daysLeft+' 日</strong>です。今すぐ更新してください。<br>'+
+        badge.innerHTML='注意: <strong>PAT 期限まであと '+daysLeft+' 日</strong>です。今すぐ更新してください。<br>'+
           '→ GitHub → Settings → Developer settings → Personal access tokens で新しいトークンを生成し、'+
           '「接続設定」の GitHub Token 欄に貼り付けて保存してください。';
       } else if(daysLeft<=30){
@@ -1115,7 +1121,7 @@ function testGitHub(){
         badge.style.background='#fff8e1';
         badge.style.color='#b7770d';
         badge.style.border='1px solid #f9c846';
-        badge.innerHTML='⏰ PAT 期限まであと '+daysLeft+' 日です。早めに更新を検討してください。';
+        badge.innerHTML='参考: PAT 期限まであと '+daysLeft+' 日です。早めに更新を検討してください。';
       }
     }
   }).withFailureHandler(function(e){
@@ -1131,7 +1137,7 @@ function loadConfigJson(){
 
 function copyConfig(){
   var ta=$('configJson');ta.select();
-  try{document.execCommand('copy');showMsg($('configMsg'),'コピーしました ✓','ok');}
+  try{document.execCommand('copy');showMsg($('configMsg'),'コピーしました','ok');}
   catch(e){showMsg($('configMsg'),'コピー失敗。手動で選択してください','err');}
 }
 
@@ -1224,34 +1230,6 @@ $('btnSaveProgression').addEventListener('click', saveProgression);
    ========================================================= */
 var HEX_RE=/^#[0-9A-Fa-f]{6}$/;
 
-/* =====================================================================
-   ヘッダーグラデーション計算ヘルパー
-   shared.js と同一実装。変更時は両方を必ず更新すること
-   (shared.js ↔ portal.html applyPreview)
-   ===================================================================== */
-function _hexToRgb(hex){
-  var m=/^#([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})$/.exec(hex);
-  if(!m)return null;
-  return{r:parseInt(m[1],16),g:parseInt(m[2],16),b:parseInt(m[3],16)};
-}
-function _toHex(rgb){
-  function c(n){return('0'+Math.max(0,Math.min(255,Math.round(n))).toString(16)).slice(-2);}
-  return'#'+c(rgb.r)+c(rgb.g)+c(rgb.b);
-}
-function _mix(ca,cb,ratio){
-  var a=_hexToRgb(ca),b=_hexToRgb(cb);
-  if(!a||!b)return ca;
-  return _toHex({r:a.r+(b.r-a.r)*ratio,g:a.g+(b.g-a.g)*ratio,b:a.b+(b.b-a.b)*ratio});
-}
-function _buildHeaderGradient(p){
-  var c0=_mix(p,'#000000',0.45);
-  var c1=_mix(p,'#000000',0.25);
-  var c2=p;
-  var c3=_mix(p,'#FFFFFF',0.10);
-  return'linear-gradient(160deg,'+c0+' 0%,'+c1+' 45%,'+c2+' 75%,'+c3+' 100%)';
-}
-/* ===================================================================== */
-
 function applyPreview(){
   var p=$('tPrimary').value.trim();
   var a=$('tAccent').value.trim();
@@ -1259,7 +1237,8 @@ function applyPreview(){
   var wrap=$('previewWrap');
   if(HEX_RE.test(p)){
     wrap.style.setProperty('--pv-primary',p);
-    wrap.style.setProperty('--pv-header-bg',_buildHeaderGradient(p));
+    /* グラデーション全廃（Gate1承認）。ヘッダーは primary の単色に統一する */
+    wrap.style.setProperty('--pv-header-bg',p);
   }
   if(HEX_RE.test(a))wrap.style.setProperty('--pv-accent',a);
   wrap.style.setProperty('--preview-font',f);
@@ -1296,7 +1275,7 @@ function saveTheme(){
   showMsg($('themeMsg'),'反映中 …','info');
   run().withSuccessHandler(function(res){
     if(!res||!res.ok){showMsg($('themeMsg'),(res&&res.error)||'反映失敗','err');return;}
-    showMsg($('themeMsg'),'公開サイトに反映しました ✓','ok');
+    showMsg($('themeMsg'),'公開サイトに反映しました','ok');
   }).withFailureHandler(function(e){
     showMsg($('themeMsg'),'通信エラー: '+esc(e&&e.message),'err');
   }).portalSaveTheme(theme);
@@ -1339,7 +1318,7 @@ function startTrigger(){
     btn.disabled=false;
     btn.textContent='開始する';
     if(!res||!res.ok){showMsg($('statusMsg'),(res&&res.error)||'設定失敗','err');return;}
-    showMsg($('statusMsg'),(res.data&&res.data.message)||'✅ 自動更新 稼働開始','ok');
+    showMsg($('statusMsg'),(res.data&&res.data.message)||'自動更新 稼働開始','ok');
     loadStatus();
   }).withFailureHandler(function(e){
     btn.disabled=false;
@@ -1371,22 +1350,23 @@ function loadStatus(){
     var startBtn=$('btnStartTrigger');
     banner.style.display='';
     if(d.hasTrigger){
-      label.textContent='自動更新: 🟢 稼働中';
+      label.textContent='自動更新: 稼働中';
       label.style.color='#2D7A2D';
       startBtn.style.display='none';
     } else {
-      label.textContent='自動更新: 🔴 停止中';
+      label.textContent='自動更新: 停止中';
       label.style.color='#C0392B';
       startBtn.style.display='';
     }
     grid.textContent='';
     addStat(grid,'トリガー稼働',d.hasTrigger?'稼働中 ●':'停止中 ●',d.hasTrigger?'dot-ok':'dot-bad');
     addStat(grid,'最終ハートビート',fmtDate(d.lastTriggerAt),'');
-    addStat(grid,'結果 JSON 数',(d.resultCount==null?'—':d.resultCount+' 件'),'');
+    addStat(grid,'結果 JSON 数',(d.resultCount==null?'取得不可':d.resultCount+' 件'),(d.resultCount==null?'dot-warn':''));
+    addStat(grid,'最終成功',fmtDate(d.lastSuccessAt),'');
     addStat(grid,'API レート制限',d.rateLimited?('制限中（'+fmtDate(d.rateLimitedAt)+'〜）'):'正常',d.rateLimited?'dot-bad':'dot-ok');
     // PAT 期限表示
     if(d.patStatus==='danger'){
-      addStat(grid,'GitHub PAT 期限','⚠ あと '+d.patDaysLeft+' 日で期限切れ — 今すぐ更新してください','dot-bad');
+      addStat(grid,'GitHub PAT 期限','注意: あと '+d.patDaysLeft+' 日で期限切れ — 今すぐ更新してください','dot-bad');
     } else if(d.patStatus==='warn'){
       addStat(grid,'GitHub PAT 期限','あと '+d.patDaysLeft+' 日（30日以内）— 早めに更新を','dot-warn');
     } else if(d.patStatus==='ok'){
@@ -1394,7 +1374,25 @@ function loadStatus(){
     } else {
       addStat(grid,'GitHub PAT 期限','不明（接続設定タブの GitHub 接続テストを実行すると表示されます）','');
     }
-    if(d.lastError)addStat(grid,'直近エラー',d.lastError,'dot-bad');
+    // 直近エラー: 最終成功より前のエラーは「復旧済み（参考）」として区別する
+    // （古いエラーが大会中ずっと赤く出続けるアラート疲れを防ぐ）
+    var hist=(d.errorHistory&&d.errorHistory.length)?d.errorHistory:null;
+    if(hist){
+      var newest=hist[0];
+      var successTs=d.lastSuccessAt?new Date(d.lastSuccessAt).getTime():NaN;
+      var newestTs=newest&&newest.at?new Date(newest.at).getTime():NaN;
+      var recovered=!isNaN(successTs)&&!isNaN(newestTs)&&successTs>newestTs;
+      addStat(grid,'直近エラー',
+        (recovered?'復旧済み（参考）: ':'')+fmtDate(newest.at)+' '+newest.context+': '+newest.message,
+        recovered?'dot-warn':'dot-bad');
+      for(var i=1;i<hist.length;i++){
+        addStat(grid,'エラー履歴 '+(i+1),fmtDate(hist[i].at)+' '+hist[i].context+': '+hist[i].message,'');
+      }
+    } else if(d.lastError){
+      addStat(grid,'直近エラー',d.lastError,'dot-bad');
+    } else {
+      addStat(grid,'直近エラー','なし','dot-ok');
+    }
   }).withFailureHandler(function(e){
     showMsg($('statusMsg'),'通信エラー: '+esc(e&&e.message),'err');grid.textContent='';
   }).portalGetStatus();

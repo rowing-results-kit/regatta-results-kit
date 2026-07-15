@@ -15,7 +15,8 @@
  *   - v0.2.0 (2026/05/21): A4縦→A4横に変更、印刷範囲 A1:M8 固定
  *   - v0.1.0 (2026/05/21): 初版
  * ============================================================
- * GitHub の data/master.json から大会日ごとの判定員用帳票PDFを手動生成する。
+ * GitHub の site/data/master.json から大会日ごとの判定員用帳票PDFを手動生成する。
+ * （旧大会リポジトリ互換のため data/master.json へのフォールバックあり）
  * 既存のマスターズPDF生成GASとは完全独立。
  */
 const JUDGE_FORM_PUBLISHER_VERSION = '0.5.3 (2026/05/21)';
@@ -36,7 +37,16 @@ const DEFAULT_CONFIG = {
   OUTPUT_FOLDER_ID: ''       // Script Properties で設定必須（setupFromConfig 参照）
 };
 
-const MASTER_JSON_PATH = 'data/master.json';
+// ============================================================
+//  データ配置（data root）
+//
+//  現行のリポジトリ構成は site/data/ 配下（scaffold.py・GAS-A ともに site/data/ を生成）。
+//  旧大会リポジトリは data/ 配下だったため、site/data/ が 404 の場合のみ data/ へ
+//  フォールバックする。どちらを使ったかは必ずログに残す。
+// ============================================================
+const MASTER_JSON_PATH_PRIMARY = 'site/data/master.json';
+const MASTER_JSON_PATH_LEGACY = 'data/master.json';
+const MASTER_JSON_PATH_CANDIDATES = [MASTER_JSON_PATH_PRIMARY, MASTER_JSON_PATH_LEGACY];
 // JST_TIMEZONE は Shared.gs で定義（make build-gas で生成）
 const JUDGE_TEMPLATE_RANGE_A1 = 'A1:I7';
 const JUDGE_MAX_LANE = 6;
@@ -209,10 +219,29 @@ function composeRaceTime_(date, time) {
 
 function fetchMasterData_(config) {
   Logger.log('master.json fetch start v' + JUDGE_FORM_PUBLISHER_VERSION);
-  const text = fetchText_(buildRawUrl_(config, MASTER_JSON_PATH), config);
-  const masterData = JSON.parse(text);
-  Logger.log('master.json fetch done bytes=' + text.length);
-  return masterData;
+  let lastError = null;
+  for (let i = 0; i < MASTER_JSON_PATH_CANDIDATES.length; i++) {
+    const path = MASTER_JSON_PATH_CANDIDATES[i];
+    try {
+      const text = fetchText_(buildRawUrl_(config, path), config);
+      if (path !== MASTER_JSON_PATH_PRIMARY) {
+        Logger.log('⚠ 旧レイアウトへフォールバックしました: ' + path + ' を使用します' +
+          '（現行の標準は ' + MASTER_JSON_PATH_PRIMARY + '）。旧大会リポジトリを参照している可能性があります。');
+      } else {
+        Logger.log('master.json path = ' + path);
+      }
+      const masterData = JSON.parse(text);
+      Logger.log('master.json fetch done bytes=' + text.length);
+      return masterData;
+    } catch (e) {
+      lastError = e;
+      Logger.log(path + ' は取得できませんでした: ' + e.message);
+    }
+  }
+  throw new Error('master.json が見つかりません（' + MASTER_JSON_PATH_PRIMARY + ' と ' +
+    MASTER_JSON_PATH_LEGACY + ' の両方を確認しました）。GITHUB_REPO の設定と、' +
+    '大会リポジトリに master.json が生成済みかを確認してください。最後のエラー: ' +
+    (lastError && lastError.message ? lastError.message : lastError));
 }
 
 function testGenerateDay1() {

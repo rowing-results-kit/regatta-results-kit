@@ -145,6 +145,17 @@
     </section>
 
     <section class="step">
+      <span class="step-number">手順 6-2</span>
+      <p>新しいファイル <code>WebApp.gs</code> を作成し、このフォルダの <code>WebApp.gs</code> の内容を貼り付けます。ブラウザのボタンから帳票を作るための画面です。</p>
+    </section>
+
+    <section class="step">
+      <span class="step-number">手順 6-3</span>
+      <p>「ファイル」の追加から <strong>HTML</strong> を選び、名前を <code>webapp</code> にして作成します。中身をすべて消してから、このフォルダの <code>webapp.html</code> の内容を貼り付けます。</p>
+      <p class="warning">HTML ファイルの名前は必ず <code>webapp</code> にしてください（<code>webapp.html</code> ではありません）。名前が違うと画面が開きません。</p>
+    </section>
+
+    <section class="step">
       <span class="step-number">手順 7</span>
       <p>プロジェクト設定を開き、スクリプトプロパティに次の5つを設定します。</p>
       <ul>
@@ -190,6 +201,44 @@
     <section class="step">
       <span class="step-number">手順 13</span>
       <p>Drive の結果フォルダに <code>1.pdf</code> が作成されていることを確認します。</p>
+    </section>
+
+    <h2>帳票をブラウザから作る（ウェブアプリ）</h2>
+
+    <p>ここまでの設定で、結果ブックレット・結果一覧PDF・レース前準備資料を <strong>ブラウザのボタン</strong> から作れるようになります。スクリプトエディタで関数を選んで実行する必要はありません。</p>
+
+    <section class="step">
+      <span class="step-number">手順 14</span>
+      <p>画面右上の「デプロイ」→「新しいデプロイ」を選びます。</p>
+    </section>
+
+    <section class="step">
+      <span class="step-number">手順 15</span>
+      <p>「種類の選択」の歯車から <strong>ウェブアプリ</strong> を選びます。</p>
+    </section>
+
+    <section class="step">
+      <span class="step-number">手順 16</span>
+      <p>次のとおり設定して「デプロイ」を押します。</p>
+      <ul>
+        <li><strong>次のユーザーとして実行</strong>: <code>自分</code></li>
+        <li><strong>アクセスできるユーザー</strong>: <code>自分のみ</code></li>
+      </ul>
+      <p class="warning">「アクセスできるユーザー」を <code>全員</code> にしないでください。帳票の作成が誰にでも実行できてしまいます。なお安全のため、誤って <code>全員</code> にした場合はページ側でも操作を拒否します。</p>
+    </section>
+
+    <section class="step">
+      <span class="step-number">手順 17</span>
+      <p>初回のみ、アクセスの承認を求められます。自分の Google アカウントを選び、内容を確認して許可します。</p>
+    </section>
+
+    <section class="step">
+      <span class="step-number">手順 18</span>
+      <p>表示された <strong>ウェブアプリの URL</strong> を開きます。ボタンを押すと帳票が作られ、Drive の出力フォルダに PDF が入ります。この URL はブックマークしておくと便利です。</p>
+    </section>
+
+    <section class="note">
+      <p>コード（<code>Code.gs</code> / <code>WebApp.gs</code> / <code>webapp</code>）を更新したときは、「デプロイ」→「デプロイを管理」→ 鉛筆マーク →「バージョン」を <code>新バージョン</code> にして「デプロイ」を押してください。URL は変わりません。</p>
     </section>
 
     <h2>大会運用</h2>

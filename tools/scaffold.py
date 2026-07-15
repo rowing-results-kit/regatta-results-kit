@@ -17,6 +17,7 @@ scaffold.py — 大会設定を元にサイト・GAS をワンショット生成
 
 import argparse
 import datetime
+import html
 import json
 import os
 import re
@@ -154,17 +155,99 @@ def _detect_existing_paths(out_dir: Path) -> tuple[str | None, str | None]:
 # ---------------------------------------------------------------------------
 # ファイル内文字列置換（再帰）
 # ---------------------------------------------------------------------------
-def _replace_in_file(path: Path, mapping: dict[str, str]) -> None:
-    text = path.read_text(encoding="utf-8")
+# HTML として解釈されるファイルの拡張子。
+# これらに埋め込む値は html.escape してからでないと、大会名などの設定値経由で
+# タグ/属性を注入できてしまう（例: 大会名に <script> を入れる）。
+_HTML_SUFFIXES = {".html", ".htm"}
+
+# <script>...</script> の中身。HTML の raw text 要素であり、
+# HTMLエンティティが解釈されない = html.escape は「守れない上に値を壊す」。
+_SCRIPT_RE = re.compile(r"(<script\b[^>]*>)(.*?)(</script\s*>)", re.IGNORECASE | re.DOTALL)
+
+
+def _escape_for_html(mapping: dict[str, str]) -> dict[str, str]:
+    """置換値を HTML エスケープした mapping を返す（キーはそのまま）。"""
+    return {k: html.escape(v, quote=True) for k, v in mapping.items()}
+
+
+def _escape_for_js(mapping: dict[str, str]) -> dict[str, str]:
+    """
+    置換値を <script> 内の JS 文字列として安全な形にした mapping を返す。
+
+    <script> は raw text のため html.escape だと
+      ・守れない（&lt; はJSでは文字列 "&lt;" のまま＝タグ脱出は別途 </script> で起きる）
+      ・値が壊れる（A&Bレガッタ → A&amp;Bレガッタ がそのまま画面に出る）
+    ので、JS文字列/テンプレートリテラルを壊さないエスケープを使う。
+    """
+    def esc(v: str) -> str:
+        v = v.replace("\\", "\\\\")
+        v = v.replace("'", "\\'").replace('"', '\\"').replace("`", "\\`")
+        v = v.replace("${", "\\${")              # テンプレートリテラルの埋め込みを防ぐ
+        v = v.replace("\r", "\\r").replace("\n", "\\n")
+        # script 要素の解析状態を動かす3つのトークンを無力化する。
+        # いずれも JS 文字列としては同じ値に戻る（"\!" === "!" / "\s" === "s"）ので表示は壊れない。
+        #   </script  : 要素をその場で終了させられる
+        #   <!--      : script-data-escaped 状態に入る
+        #   <script   : さらに script-data-double-escaped 状態に入り、
+        #               テンプレート本来の </script> が要素を閉じなくなる
+        v = re.sub(r"</(script)", r"<\\/\1", v, flags=re.IGNORECASE)
+        v = v.replace("<!--", "<\\!--")
+        v = re.sub(r"<(script)", r"<\\\1", v, flags=re.IGNORECASE)
+        return v
+    return {k: esc(v) for k, v in mapping.items()}
+
+
+def _apply(text: str, mapping: dict[str, str]) -> str:
     for placeholder, value in mapping.items():
         text = text.replace(placeholder, value)
-    path.write_text(text, encoding="utf-8")
+    return text
+
+
+def _replace_in_html_text(text: str, html_mapping: dict, js_mapping: dict) -> str:
+    """
+    1つのHTMLテキストを、文脈ごとに使い分けて置換する。
+    拡張子だけで一律に決めると <script> 内の値を壊すため、
+    script 要素の中身だけ JS 用エスケープを適用する。
+    """
+    out = []
+    pos = 0
+    for m in _SCRIPT_RE.finditer(text):
+        out.append(_apply(text[pos:m.start()], html_mapping))  # 通常のHTML文脈
+        out.append(_apply(m.group(1), html_mapping))           # <script ...> 開始タグ=属性文脈
+        out.append(_apply(m.group(2), js_mapping))             # 中身=JS文脈
+        out.append(m.group(3))                                 # </script>
+        pos = m.end()
+    out.append(_apply(text[pos:], html_mapping))
+    return "".join(out)
+
+
+def _replace_in_file(path: Path, mapping: dict[str, str]) -> None:
+    text = path.read_text(encoding="utf-8")
+    path.write_text(_apply(text, mapping), encoding="utf-8")
 
 
 def _replace_in_dir(directory: Path, mapping: dict[str, str]) -> None:
+    """
+    ディレクトリ配下のテキストファイルの {{...}} を置換する。
+
+    文脈で使い分ける:
+      - HTML ファイル: HTML文脈=html.escape / <script>内=JSエスケープ
+      - それ以外（.md / .json など）: 生値
+        ※ JSON は json.dumps 側でエスケープされるため、ここで HTML エスケープすると
+          二重エスケープになる（&amp;lt; が JSON に入る）
+    """
+    html_mapping = _escape_for_html(mapping)
+    js_mapping   = _escape_for_js(mapping)
     for p in directory.rglob("*"):
         if p.is_file() and not _is_binary(p):
-            _replace_in_file(p, mapping)
+            if p.suffix.lower() in _HTML_SUFFIXES:
+                text = p.read_text(encoding="utf-8")
+                p.write_text(
+                    _replace_in_html_text(text, html_mapping, js_mapping),
+                    encoding="utf-8",
+                )
+            else:
+                _replace_in_file(p, mapping)
 
 
 def _is_binary(path: Path) -> bool:

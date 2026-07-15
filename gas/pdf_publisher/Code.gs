@@ -83,10 +83,23 @@ const DEFAULT_CONFIG = {
 
 const CACHE_KEYS = {
   master: 'PDF_PUBLISHER_MASTER_JSON',
-  resultList: 'PDF_PUBLISHER_RESULT_LIST'
+  resultList: 'PDF_PUBLISHER_RESULT_LIST',
+  dataRoot: 'PDF_PUBLISHER_DATA_ROOT'
 };
 
-const RESULT_DIR = 'data/results';
+// ============================================================
+//  データ配置（data root）の解決
+//
+//  現行のリポジトリ構成は site/data/ 配下（scaffold.py・GAS-A ともに site/data/ を生成）。
+//  旧大会リポジトリは data/ 配下だったため、site/data/ が 404 の場合のみ data/ へ
+//  フォールバックする。どちらを使ったかは必ずログに残す。
+// ============================================================
+const DATA_ROOT_PRIMARY = 'site/data';
+const DATA_ROOT_LEGACY = 'data';
+const DATA_ROOT_CANDIDATES = [DATA_ROOT_PRIMARY, DATA_ROOT_LEGACY];
+
+// 同一実行内での再解決を避けるメモ（実行ごとにリセットされる）
+let dataRootMemo_ = null;
 // JST_TIMEZONE は Shared.gs で定義（make build-gas で生成）
 const RANKING_ROW_COUNT = 8;
 const DEFAULT_INITIAL_RANKS = 6;
@@ -823,18 +836,82 @@ function moveToArchive_(folder, fileName, archiveFolderId) {
   }
 }
 
+/**
+ * master.json を取得し、あわせて data root（site/data か data）を確定する。
+ * site/data/master.json を先に試し、404 等で失敗した場合のみ data/master.json を試す。
+ * @return {{root: string, text: string}}
+ */
+function fetchMasterWithRoot_(config) {
+  let lastError = null;
+  for (let i = 0; i < DATA_ROOT_CANDIDATES.length; i++) {
+    const root = DATA_ROOT_CANDIDATES[i];
+    try {
+      const text = fetchText_(buildRawUrl_(config, root + '/master.json'), config);
+      if (root !== DATA_ROOT_PRIMARY) {
+        Logger.log('[fetchMasterWithRoot_] ⚠ 旧レイアウトへフォールバックしました: ' + root +
+          '/master.json を使用します（現行の標準は ' + DATA_ROOT_PRIMARY + '/master.json）。' +
+          '旧大会リポジトリを参照している可能性があります。');
+      } else {
+        Logger.log('[fetchMasterWithRoot_] data root = ' + root);
+      }
+      rememberDataRoot_(config, root);
+      return { root: root, text: text };
+    } catch (e) {
+      lastError = e;
+      Logger.log('[fetchMasterWithRoot_] ' + root + '/master.json は取得できませんでした: ' + e.message);
+    }
+  }
+  throw new Error('master.json が見つかりません（' + DATA_ROOT_PRIMARY + '/master.json と ' +
+    DATA_ROOT_LEGACY + '/master.json の両方を確認しました）。GITHUB_REPO の設定と、' +
+    '大会リポジトリに master.json が生成済みかを確認してください。最後のエラー: ' +
+    (lastError && lastError.message ? lastError.message : lastError));
+}
+
+/** 確定した data root を記憶する（同一実行内メモ＋短期キャッシュ） */
+function rememberDataRoot_(config, root) {
+  dataRootMemo_ = root;
+  try {
+    CacheService.getScriptCache().put(dataRootCacheKey_(config), root, 240);
+  } catch (e) {
+    Logger.log('data root キャッシュ保存失敗（処理には影響なし）: ' + e);
+  }
+}
+
+function dataRootCacheKey_(config) {
+  return CACHE_KEYS.dataRoot + '_' + config.githubRepo + '_' + config.githubBranch;
+}
+
+/**
+ * data root を返す。未解決なら master.json を取りに行って確定させる。
+ * @return {string} 'site/data' または 'data'
+ */
+function resolveDataRoot_(config) {
+  if (dataRootMemo_) return dataRootMemo_;
+  const cached = CacheService.getScriptCache().get(dataRootCacheKey_(config));
+  if (cached) {
+    dataRootMemo_ = cached;
+    return cached;
+  }
+  return fetchMasterWithRoot_(config).root;
+}
+
+/** 結果 JSON の格納ディレクトリ（data root 配下） */
+function resultDir_(config) {
+  return resolveDataRoot_(config) + '/results';
+}
+
 function fetchMasterData_(config) {
   const cache = CacheService.getScriptCache();
   const cached = cache.get(CACHE_KEYS.master);
   if (cached) return JSON.parse(cached);
 
-  const text = fetchText_(buildRawUrl_(config, 'data/master.json'), config);
+  const got = fetchMasterWithRoot_(config);
   try {
-    cache.put(CACHE_KEYS.master, text, 240);
+    cache.put(CACHE_KEYS.master, got.text, 240);
   } catch (cacheError) {
     Logger.log('master.json キャッシュ保存失敗（サイズ超過の可能性）: ' + cacheError);
   }
-  return JSON.parse(text);
+  return JSON.parse(got.text);
 }
 
 function listRaceFiles_(config) {
@@ -843,7 +920,8 @@ function listRaceFiles_(config) {
   const cached = cache.get(cacheKey);
   if (cached) return JSON.parse(cached);
 
-  const url = 'https://api.github.com/repos/' + config.githubRepo + '/contents/' + RESULT_DIR + '?ref=' + config.githubBranch;
+  const resultDir = resultDir_(config);
+  const url = 'https://api.github.com/repos/' + config.githubRepo + '/contents/' + resultDir + '?ref=' + config.githubBranch;
   const files = JSON.parse(fetchText_(url, config))
     .filter(function(item) { return item.type === 'file' && /^race_\d+\.json$/i.test(item.name); })
     .map(function(item) {
@@ -851,7 +929,7 @@ function listRaceFiles_(config) {
       return {
         raceNo: m ? parseInt(m[1], 10) : null,
         fileName: item.name,
-        downloadUrl: item.download_url || buildRawUrl_(config, RESULT_DIR + '/' + item.name),
+        downloadUrl: item.download_url || buildRawUrl_(config, resultDir + '/' + item.name),
         sha: item.sha
       };
     })
@@ -868,7 +946,7 @@ function listRaceFiles_(config) {
 
 function fetchRaceResult_(config, raceNo) {
   const fileName = 'race_' + padRaceNo_(raceNo) + '.json';
-  return JSON.parse(fetchText_(buildRawUrl_(config, RESULT_DIR + '/' + fileName), config));
+  return JSON.parse(fetchText_(buildRawUrl_(config, resultDir_(config) + '/' + fileName), config));
 }
 
 // buildRawUrl_ / fetchText_ は Shared.gs で定義（make build-gas で生成）

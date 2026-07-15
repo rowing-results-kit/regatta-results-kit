@@ -1,6 +1,6 @@
 {
   "race_no": 3,
-  "updated_at": "2026-06-12T05:02:29.000Z",
+  "updated_at": "2026-07-15T15:07:33.000Z",
   "results": [
     {
       "lane": 1,
@@ -22,7 +22,8 @@
       "split": "(1:44.33)",
       "tie_group": "",
       "photo_flag": false,
-      "note": ""
+      "note": "",
+      "status": "finish"
     },
     {
       "lane": 2,
@@ -44,7 +45,8 @@
       "split": "(1:47.88)",
       "tie_group": "1",
       "photo_flag": false,
-      "note": "同着"
+      "note": "同着",
+      "status": "finish"
     },
     {
       "lane": 4,
@@ -66,7 +68,8 @@
       "split": "(1:47.88)",
       "tie_group": "1",
       "photo_flag": true,
-      "note": "フォトフィニッシュ判定"
+      "note": "フォトフィニッシュ判定",
+      "status": "finish"
     },
     {
       "lane": 3,
@@ -88,7 +91,8 @@
       "split": "(1:51.96)",
       "tie_group": "",
       "photo_flag": false,
-      "note": ""
+      "note": "",
+      "status": "finish"
     }
   ]
 }

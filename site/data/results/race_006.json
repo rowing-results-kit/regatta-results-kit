@@ -1,0 +1,45 @@
+{
+  "race_no": 6,
+  "updated_at": "2026-07-15T15:29:30.000Z",
+  "results": [
+    {
+      "lane": 1,
+      "rank": 1,
+      "times": {
+        "500m": {
+          "time_ms": 103400,
+          "formatted": "1:43.40"
+        },
+        "1000m": {
+          "time_ms": 207300,
+          "formatted": "3:27.30"
+        }
+      },
+      "finish": {
+        "time_ms": 207300,
+        "formatted": "3:27.30"
+      },
+      "split": "(1:43.90)",
+      "tie_group": "",
+      "photo_flag": false,
+      "note": "",
+      "status": "finish"
+    },
+    {
+      "lane": 2,
+      "rank": null,
+      "times": {
+        "500m": {
+          "time_ms": 104900,
+          "formatted": "1:44.90"
+        }
+      },
+      "finish": null,
+      "split": "",
+      "tie_group": "",
+      "photo_flag": false,
+      "note": "途中棄権",
+      "status": "dnf"
+    }
+  ]
+}

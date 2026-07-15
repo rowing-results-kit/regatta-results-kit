@@ -7,7 +7,9 @@ tools/ 内スクリプトから: from common import C, log_ok, ...
 test/ 等から: sys.path.insert(0, str(TOOLS_DIR)) の後に import common
 """
 
+import codecs
 import sys
+from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # ANSIカラー定義（colorama不要）
@@ -50,6 +52,122 @@ def log_section(msg: str) -> None:
 
 def log_title(msg: str) -> None:
     print(f"{C.BOLD}{C.CYAN}  {msg}{C.RESET}\n{'='*60}{C.RESET}\n")
+
+
+# ---------------------------------------------------------------------------
+# CSV 読み込み（文字コード自動判別）
+# ---------------------------------------------------------------------------
+
+# 文字コードが判別できなかったときに表示する案内文（非エンジニア向け）
+CSV_ENCODING_HELP = (
+    "CSVをUTF-8で保存し直してください"
+    "（Excelは『CSV UTF-8（コンマ区切り）』を選択）"
+)
+
+# BOM なしのとき試行する文字コードの順序
+# utf-8-sig: UTF-8（BOM付き含む・推奨）
+# cp932    : 日本語版Excelの既定保存形式（Shift_JIS系）
+_CSV_ENCODINGS = ("utf-8-sig", "cp932")
+
+
+class CsvEncodingError(Exception):
+    """
+    CSVの文字コードを判別できなかったことを表す例外。
+
+    ※ ここで sys.exit してはならない。watch.py は長時間動く常駐プロセスで、
+       1ファイルの失敗は `except Exception` で捕まえて次のCSVに進む設計。
+       SystemExit は BaseException のため its guard をすり抜けて常駐を殺す。
+       CLI 側（__main__）でこの例外を捕まえて終了コード1に変換すること。
+    """
+
+
+def _reject_if_not_comma_separated(path, text: str, enc: str) -> None:
+    """
+    ヘッダー行がタブ区切りでコンマを含まない場合、CSVではないとみなして中断する。
+
+    Excel の「Unicode テキスト (*.txt)」は UTF-16、「テキスト (タブ区切り) (*.txt)」は
+    cp932 で、いずれも**タブ区切り**。復号自体は成功してしまうため、これを通すと
+    「必須カラムが見つかりません → レコードなし → スキップ」と流れて
+    終了コード0のまま、そのレースが黙って未公開になる（最も見つけにくい失敗）。
+    → 文字コードに関係なく全経路で検査する。
+
+    ヘッダー判定では # コメント行を読み飛ばす
+    （generate_master はコメント行を許容する仕様。コメントにタブが入っていても誤検知しない）
+    """
+    header = next(
+        (
+            ln for ln in text.splitlines()
+            if ln.strip() and not ln.lstrip().lstrip("﻿").startswith("#")
+        ),
+        "",
+    )
+    if "," not in header and "\t" in header:
+        raise CsvEncodingError(
+            f"{path.name}: タブ区切りのため読み込めません"
+            f"（{enc} で復号・Excelの『テキスト(タブ区切り)』『Unicode テキスト』形式と思われます）\n"
+            f"  {CSV_ENCODING_HELP}"
+        )
+
+
+def read_csv_text(filepath) -> str:
+    """
+    CSVファイルをテキストとして読み込む。
+
+    判別順:
+      1. BOM が UTF-16 / UTF-32 → その文字コードで復号（Excelの「Unicode テキスト」等）
+      2. UTF-8（BOM付き可）
+      3. cp932（日本語版Excelの既定保存形式）
+
+    どれでも復号できない場合は CsvEncodingError を送出する（呼び出し側で終了コード1に変換）。
+    ファイル自体が読めない場合は OSError がそのまま伝播する。
+    """
+    path = Path(filepath)
+    raw = path.read_bytes()   # OSError は呼び出し側の except Exception で扱えるよう伝播させる
+
+    # --- 1. BOM による明示判定 ---------------------------------------------
+    # cp932 はほぼ任意のバイト列を復号してしまうため、BOM がある場合は
+    # フォールバックに落ちる前にここで確定させる（UTF-16 を cp932 で読むと文字化けする）
+    for bom, enc in (
+        (codecs.BOM_UTF32_LE, "utf-32"),   # UTF-32 は UTF-16 の BOM と前方一致するため先に判定
+        (codecs.BOM_UTF32_BE, "utf-32"),
+        (codecs.BOM_UTF16_LE, "utf-16"),
+        (codecs.BOM_UTF16_BE, "utf-16"),
+    ):
+        if raw.startswith(bom):
+            try:
+                text = raw.decode(enc)
+            except UnicodeDecodeError as e:
+                raise CsvEncodingError(f"{path.name}: {enc} として復号できません") from e
+            _reject_if_not_comma_separated(path, text, enc)
+            log_warn(f"{path.name}: {enc} として読み込みました")
+            log_warn(f"  {CSV_ENCODING_HELP}")
+            return text
+
+    # --- 2. BOM なし: UTF-8 → cp932 の順で試す ------------------------------
+    for enc in _CSV_ENCODINGS:
+        try:
+            text = raw.decode(enc)
+        except UnicodeDecodeError:
+            continue
+        # NUL が含まれる = 実体は UTF-16 等。cp932 は NUL も「復号成功」にしてしまうため、
+        # ここで弾かないと文字化けしたまま静かに処理が進む
+        if "\x00" in text:
+            continue
+        # タブ区切り（＝CSVではない）を全経路で弾く。
+        # Excelの「テキスト (タブ区切り)」は cp932 なので、BOM経路だけの検査では素通りする
+        _reject_if_not_comma_separated(path, text, enc)
+        if enc != "utf-8-sig":
+            log_warn(
+                f"{path.name}: UTF-8として読めなかったため {enc}（Excel既定のShift_JIS）"
+                "として読み込みました"
+            )
+            log_warn(f"  文字化けが起きる場合は、{CSV_ENCODING_HELP}")
+        return text
+
+    raise CsvEncodingError(
+        f"{path.name}: 文字コードを判別できませんでした（UTF-8 / cp932 いずれも不可）\n"
+        f"  {CSV_ENCODING_HELP}"
+    )
 
 
 # ---------------------------------------------------------------------------

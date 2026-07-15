@@ -47,35 +47,52 @@ HTTP_PORT = 8181
 DEFAULT_CSV_DIR = PROJECT_DIR / "test" / "csv"
 
 # JSON出力先ディレクトリ
-OUTPUT_DIR = PROJECT_DIR / "data" / "results"
+# ※ 公開サイトが参照するのは site/data/results/。
+#   site・check_status・simulate_pipeline とパスを統一すること（不一致だと
+#   成功ログが出るのに速報サイトへ反映されない）
+OUTPUT_DIR = PROJECT_DIR / "site" / "data" / "results"
 
 # デフォルト計測ポイント（カンマ区切り文字列）
 DEFAULT_POINTS = "500m,1000m"
 
 
-def load_state() -> set:
+def load_state() -> tuple:
     """
-    前回の処理済みファイルリストを .watch_state.json から読み込む。
-    ファイルが存在しない・壊れている場合は空セットを返す。
+    前回の状態を .watch_state.json から読み込む。
+    ファイルが存在しない・壊れている場合は空を返す。
+
+    Returns:
+        (処理済みファイル名の set, {失敗ファイル名: [mtime, size]} の dict)
     """
     if not STATE_FILE.exists():
-        return set()
+        return set(), {}
     try:
         with open(STATE_FILE, encoding="utf-8") as f:
             data = json.load(f)
-        return set(data.get("processed_files", []))
-    except (json.JSONDecodeError, OSError):
-        return set()
+        processed = set(data.get("processed_files", []))
+        failed    = dict(data.get("failed_files", {}))
+        return processed, failed
+    except (json.JSONDecodeError, OSError, TypeError, ValueError):
+        return set(), {}
 
 
-def save_state(processed: set) -> None:
+def save_state(processed: set, failed: dict = None) -> None:
     """
-    処理済みファイルリストを .watch_state.json に保存する。
-    watch.py 終了・再起動時に同じファイルを再処理しないようにするため。
+    処理済み／失敗ファイルの状態を .watch_state.json に保存する。
+
+    失敗ファイルも永続化する理由: 失敗をRAMだけに持つと、常駐を再起動した際に
+    「起動時点の既存ファイルは処理済みとみなす」処理へ吸収され、
+    未公開のレースが二度と処理されなくなる（＝黙って消える）。
     """
     try:
         with open(STATE_FILE, "w", encoding="utf-8") as f:
-            json.dump({"processed_files": sorted(processed)}, f, ensure_ascii=False, indent=2)
+            json.dump(
+                {
+                    "processed_files": sorted(processed),
+                    "failed_files": failed or {},
+                },
+                f, ensure_ascii=False, indent=2,
+            )
     except OSError as e:
         log_error(f"状態ファイルの保存に失敗しました: {e}")
 
@@ -161,18 +178,26 @@ def process_new_file(
     push_token: str,
     push_repo: str,
     push_branch: str,
-) -> None:
+    output_dir: Path = OUTPUT_DIR,
+) -> bool:
     """
     新規CSVファイルを検出した際の処理。
 
     ファイル名を parse_csv_filename でパースし、同一レースの全計測ポイントが
     そろっているか確認してから race_XXX.json を生成する。
+
+    Returns:
+        True  … このファイルは「処理済み」にしてよい
+                （生成成功／命名規則外／他の計測ポイント待ち = 後続CSVが来れば処理される）
+        False … 失敗。処理済みにせず、CSVが更新されたら再試行させる
+                （レコード空・Push失敗など。ここで True を返すと、操作者が
+                 同名で修正版を置き直しても二度と処理されずレースが未公開になる）
     """
     # ファイル名をパース
     parsed = pipeline.parse_csv_filename(filename)
     if not parsed:
         log_watch(f"命名規則不一致のためスキップ: {filename}")
-        return
+        return True   # 対象外ファイル → 再試行不要
 
     race_no, point = parsed
     log_detect(filename)
@@ -182,7 +207,7 @@ def process_new_file(
     race_files = pipeline.collect_csv_files(csv_dir, {race_no})
     if race_no not in race_files:
         log_watch(f"  レース {race_no:03d}: 対応CSVなし（スキップ）")
-        return
+        return True   # 対象CSVなし → 再試行不要
 
     found_points = set(race_files[race_no].keys())
     required_points = set(measurement_points)
@@ -194,7 +219,7 @@ def process_new_file(
             f"（揃い済み: {sorted(found_points)} / 不足: {sorted(missing)}）"
         )
         log_watch(f"  次のCSVが届くまで待機します...")
-        return
+        return True   # 他の計測ポイント待ち → その CSV 到着時に処理される
 
     log_watch(f"  レース {race_no:03d}: 全計測ポイント揃い → JSON生成開始")
 
@@ -205,7 +230,8 @@ def process_new_file(
         records = pipeline.parse_csv(filepath)
         if not records:
             log_error(f"  {pt}: レコードが空です → スキップ")
-            return
+            log_error(f"  → {filename} は未処理のままです。CSVを修正して保存し直すと再試行します")
+            return False  # 失敗 → 処理済みにしない
         point_records[pt] = records
         log_watch(f"  {pt}: {len(records)} レコード読み込み")
 
@@ -215,17 +241,18 @@ def process_new_file(
     filename_out = f"race_{race_no:03d}.json"
 
     # ファイル出力
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    out_path = OUTPUT_DIR / filename_out
+    output_dir.mkdir(parents=True, exist_ok=True)
+    out_path = output_dir / filename_out
     out_path.write_text(json_str, encoding="utf-8")
     log_ok(f"  JSON書き出し完了: {out_path}")
 
     # 結果サマリーを表示
     for r in race_json["results"]:
-        finish_fmt = r.get("finish", {}).get("formatted", "---")
+        finish_fmt = (r.get("finish") or {}).get("formatted", "---")
         tie_str    = f" [同着:{r['tie_group']}]" if r.get("tie_group") else ""
+        rank_str   = f"{r['rank']:2d}位" if r.get("rank") is not None else "DNF"
         print(
-            f"    {C.GRAY}  {r['rank']:2d}位  レーン{r['lane']}  "
+            f"    {C.GRAY}  {rank_str}  レーン{r['lane']}  "
             f"{finish_fmt}  {r.get('split', '')}{tie_str}{C.RESET}"
         )
 
@@ -233,12 +260,23 @@ def process_new_file(
     if do_push:
         if not push_token:
             log_error("GITHUB_TOKEN / --token が未設定のためPushをスキップ")
-            return
+            return False  # Push未達 → 処理済みにしない
         if not push_repo:
             log_error("GITHUB_REPO / --repo が未設定のためPushをスキップ")
-            return
+            return False  # Push未達 → 処理済みにしない
 
-        remote_path = f"data/results/{filename_out}"
+        # Push先はローカル出力先と必ず一致させる。
+        # ※ --output でリハーサル用ディレクトリを指定したのに Push だけ
+        #   site/data/results/ 固定だと、テストデータを本番サイトへ公開してしまう
+        try:
+            rel = output_dir.resolve().relative_to(PROJECT_DIR.resolve())
+        except ValueError:
+            log_error(
+                f"  --output がリポジトリ外（{output_dir}）のため Push をスキップします"
+            )
+            log_error("  Push する場合は --output をリポジトリ内のパスにしてください")
+            return False  # Push未達 → 処理済みにしない
+        remote_path = f"{rel.as_posix()}/{filename_out}"
         try:
             pipeline.github_push_file(
                 token         = push_token,
@@ -251,6 +289,9 @@ def process_new_file(
             log_ok(f"  GitHub Push 完了: {remote_path}")
         except Exception as e:
             log_error(f"  GitHub Push 失敗: {e}")
+            return False  # Push未達 → 処理済みにせず再試行させる
+
+    return True   # 生成（＋Push）成功 → 処理済みにしてよい
 
 
 # ---------------------------------------------------------------------------
@@ -262,6 +303,7 @@ def run(args: argparse.Namespace) -> None:
     監視ループのメイン処理。Ctrl+C で終了する。
     """
     csv_dir = Path(args.csv_dir).resolve()
+    output_dir = Path(args.output).resolve()
     measurement_points = [p.strip() for p in args.points.split(",") if p.strip()]
 
     # GitHubトークン・リポジトリ（Push時）
@@ -276,7 +318,7 @@ def run(args: argparse.Namespace) -> None:
     log_watch(f"監視ディレクトリ : {csv_dir}")
     log_watch(f"計測ポイント     : {', '.join(measurement_points)}")
     log_watch(f"ポーリング間隔   : {POLL_INTERVAL}秒")
-    log_watch(f"JSON出力先       : {OUTPUT_DIR}")
+    log_watch(f"JSON出力先       : {output_dir}")
     if args.push:
         log_watch(f"GitHub Push      : 有効 (repo={push_repo or '未設定'})")
     if args.serve:
@@ -294,13 +336,23 @@ def run(args: argparse.Namespace) -> None:
         log_server(f"ブラウザで確認: http://localhost:{HTTP_PORT}")
         print()
 
-    # 前回の処理済みファイルリストを読み込む
-    persisted_files = load_state()
+    # 前回の処理済み／失敗ファイルを読み込む
+    persisted_files, persisted_failed = load_state()
     if persisted_files:
         log_watch(f"前回の処理済みファイルを復元: {len(persisted_files)} ファイル")
 
+    # 処理に失敗したファイル {ファイル名: [mtime, size]}
+    # 中身が更新されたら自動で再試行するため、処理済み扱いにはしない
+    failed_files: dict = {k: list(v) for k, v in persisted_failed.items()}
+    if failed_files:
+        log_watch(
+            f"前回失敗したファイルを復元: {len(failed_files)} ファイル "
+            f"（{', '.join(sorted(failed_files))} — CSVを保存し直すと再試行します）"
+        )
+
     # 初期ファイルリスト（起動時点の既存ファイルは処理済みとみなす）
-    current_at_start = scan_csv_files(csv_dir)
+    # ※ 前回失敗したファイルは「処理済み」に吸収しない。吸収すると未公開のまま二度と処理されない
+    current_at_start = scan_csv_files(csv_dir) - set(failed_files)
     known_files: set = persisted_files | current_at_start
     if current_at_start - persisted_files:
         log_watch(
@@ -318,11 +370,26 @@ def run(args: argparse.Namespace) -> None:
             new_files = current_files - known_files
 
             for filename in sorted(new_files):
-                # 処理済みセットに追加（2重処理防止）
-                known_files.add(filename)
-                save_state(known_files)
+                # 失敗したファイルは「処理済み」にしない。
+                # ※ 先に save_state すると、文字コード不正等で失敗したレースが
+                #   永久に再処理されず、修正版を同名で置き直しても無視される
+                #   （＝そのレースが最後まで公開されない）
+                fpath = csv_dir / filename
                 try:
-                    process_new_file(
+                    st = fpath.stat()
+                    # 更新の指紋は (mtime, size)。mtime だけだと、同一tick内の
+                    # 書き換えで「更新なし」と誤判定して再試行を取りこぼしうる
+                    # JSON に保存すると list になるため、比較も list に揃える
+                    fingerprint = [st.st_mtime, st.st_size]
+                except OSError:
+                    continue  # 消えた/読めない → 次のポーリングで再確認
+
+                # 前回失敗したファイルは、中身が更新されるまで再試行しない（ログ氾濫防止）
+                if failed_files.get(filename) == fingerprint:
+                    continue
+
+                try:
+                    ok = process_new_file(
                         filename          = filename,
                         csv_dir           = csv_dir,
                         measurement_points = measurement_points,
@@ -330,14 +397,33 @@ def run(args: argparse.Namespace) -> None:
                         push_token        = push_token,
                         push_repo         = push_repo,
                         push_branch       = push_branch,
+                        output_dir        = output_dir,
                     )
                 except Exception as e:
+                    # 常駐は止めない。処理済みにもしないので、CSVを保存し直せば自動で再試行される
+                    ok = False
                     log_error(f"処理中に例外が発生しました ({filename}): {e}")
+                    log_error(
+                        f"  → {filename} は未処理のままです。"
+                        "CSVを修正して保存し直すと自動で再試行します"
+                    )
+
+                if not ok:
+                    # 失敗は永続化する。RAMだけに持つと、再起動時に
+                    # 「起動時点の既存ファイル=処理済み」に吸収されて永久に未公開になる
+                    failed_files[filename] = list(fingerprint)
+                    save_state(known_files, failed_files)
+                    continue
+
+                # 成功したファイルだけを処理済みとして永続化する
+                known_files.add(filename)
+                failed_files.pop(filename, None)
+                save_state(known_files, failed_files)
 
     except KeyboardInterrupt:
         print(f"\n{C.CYAN}[Watch]{C.RESET} Ctrl+C を受信 → 監視を終了します")
         print(f"{C.CYAN}[Watch]{C.RESET} 処理済みファイル数: {len(known_files)}")
-        save_state(known_files)
+        save_state(known_files, failed_files)
         print(f"{C.CYAN}[Watch]{C.RESET} 状態を {STATE_FILE} に保存しました")
         print()
 
@@ -363,6 +449,16 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_POINTS,
         metavar="POINTS",
         help=f"計測ポイント（カンマ区切り。デフォルト: {DEFAULT_POINTS}）",
+    )
+    parser.add_argument(
+        "--output",
+        default=str(OUTPUT_DIR),
+        metavar="DIR",
+        help=(
+            f"JSON出力先ディレクトリ（デフォルト: {OUTPUT_DIR}）。"
+            "テストCSVでリハーサルする際は、公開用JSONを上書きしないよう "
+            "別ディレクトリを指定すること"
+        ),
     )
     parser.add_argument(
         "--push",

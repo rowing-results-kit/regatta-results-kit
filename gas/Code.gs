@@ -64,25 +64,9 @@ function runTest1to5() { createTestCSVs(); }
 /** テスト用: R006（棄権・途中棄権）のCSVをDriveに生成 */
 function runTest006() { createTestRace006(); }
 
-/** テスト用: master/フォルダにtournament.csv/schedule.csv/entries.csv(category列付き)を生成 */
-function runTestMasterData() { createTestMasterFiles(); }
-
-/** テスト用: R007(W1X DEF 複数カテゴリー) + R008(Mix2X GH 混成複数カテゴリー) の結果CSVを生成 */
-function runTestMultiCategory() { createTestMultiCategoryCSVs(); }
-
-/** テスト用: 全テストをまとめて実行（マスター作成→importMaster→全CSV生成） */
-function runTestAll() {
-  Logger.log('=== 全テスト実行開始 ===');
-  createTestMasterFiles();
-  Utilities.sleep(2000);
-  importMasterData();
-  Utilities.sleep(2000);
-  createTestCSVs();
-  createTestRace006();
-  createTestMultiCategoryCSVs();
-  Logger.log('=== 全テスト実行完了 ===');
-  Logger.log('2分以内に onTrigger が自動実行してJSONを生成します');
-}
+// ※ runTestMasterData / runTestMultiCategory / runTestAll は
+//    「テスト用マスターデータ作成」セクション（ファイル後半）に定義されている。
+//    以前はここにも同名の定義があり二重定義になっていたため削除した（後方の定義が正）。
 
 /** テスト用: マスターデータをGitHubにPush */
 function runImportMaster() { importMasterData(); }
@@ -121,10 +105,51 @@ const CONFIG = {
     measurementPoints: 'MEASUREMENT_POINTS',
     lastError: 'LAST_ERROR',
     apiRateLimited: 'API_RATE_LIMITED',
+    // 直近エラー履歴（JSON配列・最大 errorHistorySize 件のリング保持）
+    errorHistory: 'ERROR_HISTORY',
+    // onTrigger が最後に正常完了した時刻（ISO文字列）
+    lastSuccessAt: 'LAST_SUCCESS_AT',
+    // エラーメール通知の ON/OFF（'false' で無効・既定は有効）
+    errorEmailEnabled: 'ERROR_EMAIL_ENABLED',
+    // 同一エラーのメール連投を抑制するための最終送信記録（JSON）
+    errorEmailLast: 'ERROR_EMAIL_LAST',
+    // 1時間あたりの送信数カウンタ（JSON: {windowStartAt, count}）
+    errorEmailWindow: 'ERROR_EMAIL_WINDOW',
+    // getOrCreateFolder のフォルダ ID キャッシュ接頭辞
+    folderCachePrefix: 'FOLDER_ID_CACHE_',
   },
   // 最大実行時間（ミリ秒）
   maxExecutionMs: 4 * 60 * 1000,
+  // API レート制限フラグの自動解除までの待機時間（ミリ秒）
+  // ※ ここを変更すると onTrigger のスキップ判定・checkRateLimit のメッセージが同時に追従する
+  rateLimitCooldownMs: 15 * 60 * 1000,
+  // LAST_ERROR / ERROR_HISTORY に保持するエラー件数
+  errorHistorySize: 5,
+  // 同一エラーのメール通知を抑制する時間（ミリ秒）
+  errorEmailThrottleMs: 30 * 60 * 1000,
+  // 1時間あたりのエラーメール上限（種類を問わない全体の上限）
+  // ※ 同一エラーの抑制だけでは足りない: 例えば全レースのCSVが Shift_JIS 保存だと
+  //   「レースごとに別のエラー」が大量発生し、1回のトリガーで日次クォータ（無料枠100通/日）を
+  //   使い切って以降の正当な通知が届かなくなる。種類によらない上限で保護する。
+  errorEmailMaxPerHour: 6,
 };
+
+/**
+ * 今回の実行で recordError が呼ばれた回数。
+ * onTrigger の冒頭で 0 に戻し、完了時に 0 のときだけ「最終成功」を記録する。
+ * ※ レース単位のエラーは握り潰して次のレースへ進む設計のため、例外の有無だけでは
+ *   「部分的に失敗した実行」を成功と誤判定してしまう。recordError は全エラー経路が
+ *   通る唯一の窓口なので、ここを数えれば取りこぼさない。
+ */
+let runErrorCount_ = 0;
+
+/**
+ * レート制限クールダウンを「約N分」の表示用文字列にする
+ * @returns {string} 例: "15分"
+ */
+function rateLimitCooldownLabel_() {
+  return Math.round(CONFIG.rateLimitCooldownMs / 60000) + '分';
+}
 
 // ============================================================
 // 1. メイントリガー関数（2分間隔で実行）
@@ -136,6 +161,7 @@ const CONFIG = {
  */
 function onTrigger() {
   const startTime = Date.now();
+  runErrorCount_ = 0; // この実行のエラー集計をリセット
   Logger.log('[onTrigger] 開始: ' + new Date().toISOString());
 
   // 二重実行防止ロック（前の実行がまだ動いていればスキップ）
@@ -146,16 +172,16 @@ function onTrigger() {
   }
 
   try {
-    // API レート制限フラグを確認（1時間経過で自動解除）
+    // API レート制限フラグを確認（CONFIG.rateLimitCooldownMs 経過で自動解除）
     const props = PropertiesService.getScriptProperties();
     if (props.getProperty(CONFIG.props.apiRateLimited) === 'true') {
       const flaggedAt = parseInt(props.getProperty('API_RATE_LIMITED_AT') || '0', 10);
       const elapsed = Date.now() - flaggedAt;
-      if (elapsed < 15 * 60 * 1000) {
-        Logger.log('[onTrigger] API レート制限中のため処理をスキップ（残り約' + Math.ceil((15 * 60 * 1000 - elapsed) / 60000) + '分）');
+      if (elapsed < CONFIG.rateLimitCooldownMs) {
+        Logger.log('[onTrigger] API レート制限中のため処理をスキップ（残り約' + Math.ceil((CONFIG.rateLimitCooldownMs - elapsed) / 60000) + '分）');
         return;
       }
-      // 1時間経過したら自動解除
+      // クールダウン経過で自動解除
       props.deleteProperty(CONFIG.props.apiRateLimited);
       props.deleteProperty('API_RATE_LIMITED_AT');
       Logger.log('[onTrigger] API レート制限フラグを自動解除しました');
@@ -168,6 +194,20 @@ function onTrigger() {
       updateTriggerHeartbeat_();
     } catch (e) {
       Logger.log('[onTrigger] ハートビート更新失敗（処理には影響なし）: ' + e.message);
+    }
+
+    // 「最終成功」は完全成功時のみ記録する。
+    // レース単位のエラーを握って継続した実行（＝一部のレースが公開されていない）を
+    // 成功として記録すると、ポータル上で古いエラーが「復旧済み」と誤表示されてしまう。
+    if (runErrorCount_ === 0) {
+      try {
+        props.setProperty(CONFIG.props.lastSuccessAt, new Date().toISOString());
+      } catch (e) {
+        Logger.log('[onTrigger] 最終成功時刻の記録に失敗（処理には影響なし）: ' + e.message);
+      }
+    } else {
+      Logger.log('[onTrigger] この実行では ' + runErrorCount_ +
+        ' 件のエラーを記録したため「最終成功」は更新しません（部分的な失敗）');
     }
 
     const elapsed = Date.now() - startTime;
@@ -448,6 +488,13 @@ function buildAndPushRaceJSON(raceNo, files, measurementPoints, raceCourseLength
       return;
     }
     const csvContent = files['1000m'].getBlob().getDataAsString('UTF-8');
+    // 文字化けチェック: 化けたデータは公開サイトへ Push せずエラー記録して中断
+    if (!isTextDecodedCleanly_(csvContent)) {
+      const msg = mojibakeMessage_(files['1000m'].getName());
+      Logger.log('[buildAndPushRaceJSON] race_no=' + raceNo + ' ' + msg);
+      recordError('buildAndPushRaceJSON(race_no=' + raceNo + ')', new Error(msg));
+      return;
+    }
     measurementData['500m'] = parseResultCSV(csvContent);
     Logger.log('[buildAndPushRaceJSON] race_no=' + raceNo + ' 500mレース: 物理1000m CSV → 500mスロットに再ラベル rows=' + measurementData['500m'].length);
     filesToMove.push({ file: files['1000m'], point: '1000m' });
@@ -463,6 +510,14 @@ function buildAndPushRaceJSON(raceNo, files, measurementPoints, raceCourseLength
       const file = files[point];
       if (!file) continue;
       const csvContent = file.getBlob().getDataAsString('UTF-8');
+      // 文字化けチェック: 1ファイルでも化けていればレース全体の Push を中断
+      // （一部だけ正しいデータを Push すると欠けた結果が公開されるため）
+      if (!isTextDecodedCleanly_(csvContent)) {
+        const msg = mojibakeMessage_(file.getName());
+        Logger.log('[buildAndPushRaceJSON] race_no=' + raceNo + ' ' + msg);
+        recordError('buildAndPushRaceJSON(race_no=' + raceNo + ')', new Error(msg));
+        return;
+      }
       measurementData[point] = parseResultCSV(csvContent);
       Logger.log('[buildAndPushRaceJSON] race_no=' + raceNo + ' point=' + point + ' rows=' + measurementData[point].length);
       filesToMove.push({ file: file, point: point });
@@ -479,8 +534,19 @@ function buildAndPushRaceJSON(raceNo, files, measurementPoints, raceCourseLength
   pushToGitHub(path, JSON.stringify(raceJson, null, 2));
 
   // CSVを processed/ へ移動
+  // 移動に失敗したファイルは race_csv/ に残り続け、同じレースを毎回再Pushしてしまう。
+  // サイレント失敗にせずエラー記録して気づけるようにする。
   for (const item of filesToMove) {
-    moveToProcessed(item.file, item.point);
+    if (!moveToProcessed(item.file, item.point)) {
+      recordError(
+        'moveToProcessed(race_no=' + raceNo + ')',
+        new Error(
+          item.file.getName() + ' を processed/' + item.point + '/ へ移動できませんでした。' +
+          'このファイルが race_csv/ に残っている間、同じレースの再処理が繰り返されます。' +
+          'Drive で手動で processed/' + item.point + '/ へ移動してください。'
+        )
+      );
+    }
   }
 
   Logger.log('[buildAndPushRaceJSON] race_no=' + raceNo + ' (distance=' + raceCourseLength + 'm) Push完了');
@@ -788,8 +854,12 @@ function checkRateLimit(response) {
     const props = PropertiesService.getScriptProperties();
     props.setProperty(CONFIG.props.apiRateLimited, 'true');
     props.setProperty('API_RATE_LIMITED_AT', String(Date.now())); // 自動解除用タイムスタンプ
-    props.setProperty(CONFIG.props.lastError, 'API error at ' + new Date().toISOString() + ': HTTP ' + code);
-    throw new Error('GitHub API エラー: HTTP ' + code + '（1時間後に自動解除）');
+    // 記録する例外と throw する例外を同一オブジェクトにする。
+    // こうすることで recordError が付ける「記録済み」の印が上位まで伝わり、
+    // onTrigger の catch で同じ事象が二重記録・二重メールされない。
+    const err = new Error('GitHub API エラー: HTTP ' + code + '（' + rateLimitCooldownLabel_() + '後に自動解除）');
+    recordError('checkRateLimit', err);
+    throw err;
   }
 }
 
@@ -1277,7 +1347,16 @@ function readMasterFile_(folder, baseName) {
   const csvFile = findFileInFolder(folder, baseName + '.csv');
   if (csvFile) {
     Logger.log('[readMasterFile] CSV読み込み: ' + baseName + '.csv');
-    return parseMasterCSV(removeBom_(csvFile.getBlob().getDataAsString('UTF-8')));
+    const csvText = removeBom_(csvFile.getBlob().getDataAsString('UTF-8'));
+    // 文字化けチェック: 化けたマスターを取り込むと選手名・団体名が全レースに波及するため中断
+    // ※ ここでは recordError せず throw のみ。呼び出し元の importMasterData が
+    //   catch して recordError するため、記録すると履歴・メールが二重になる。
+    if (!isTextDecodedCleanly_(csvText)) {
+      const msg = mojibakeMessage_(csvFile.getName());
+      Logger.log('[readMasterFile] ' + msg);
+      throw new Error(msg);
+    }
+    return parseMasterCSV(csvText);
   }
 
   // 次にGoogleスプレッドシートを探す（拡張子なし）
@@ -1325,15 +1404,82 @@ function findFileInFolder(folder, fileName) {
  * @returns {GoogleAppsScript.Drive.Folder}
  */
 function getOrCreateFolder(parentId, name) {
-  const parentFolder = DriveApp.getFolderById(parentId);
-  const folders = parentFolder.getFoldersByName(name);
-
-  if (folders.hasNext()) {
-    return folders.next();
+  // ① キャッシュ命中なら名前検索そのものをスキップ（Drive API 呼び出し削減）
+  const props = PropertiesService.getScriptProperties();
+  const cacheKey = CONFIG.props.folderCachePrefix + parentId + '_' + name;
+  const cachedId = props.getProperty(cacheKey);
+  if (cachedId) {
+    try {
+      const cached = DriveApp.getFolderById(cachedId);
+      // ゴミ箱に入れられた場合はキャッシュを捨てて作り直しへ回す
+      if (!cached.isTrashed()) return cached;
+      Logger.log('[getOrCreateFolder] キャッシュのフォルダがゴミ箱にあるため再作成します: ' + name);
+      props.deleteProperty(cacheKey);
+    } catch (e) {
+      // 削除済み・権限喪失などでIDが引けない場合はキャッシュを捨てて作り直しへ回す
+      Logger.log('[getOrCreateFolder] キャッシュのフォルダIDが無効なため破棄: ' + name + ' (' + e.message + ')');
+      props.deleteProperty(cacheKey);
+    }
   }
 
-  Logger.log('[getOrCreateFolder] フォルダ作成: ' + name + ' in ' + parentId);
-  return parentFolder.createFolder(name);
+  // ② 既存フォルダの検索はロック無しで行う（読むだけなので競合しない）。
+  //    onTrigger は既にスクリプトロックを保持しているため、ここで無条件に
+  //    ロックを取ると入れ子になり、毎回タイムアウト待ちで実行時間を浪費する。
+  //    そのため「作成が必要なときだけ」ロックを取る。
+  const existing = findFolderByName_(parentId, name);
+  if (existing) {
+    cacheFolderId_(cacheKey, existing);
+    return existing;
+  }
+
+  // ③ 「検索して無ければ作る」は onTrigger とポータルの同時実行で重複フォルダを生む（TOCTOU）。
+  //    重複すると CSV の投入先が分裂して検知漏れになるため、作成はロックで直列化する。
+  const lock = LockService.getScriptLock();
+  const locked = lock.tryLock(10000);
+  if (!locked) {
+    // onTrigger 経由の入れ子呼び出しなど。単独実行に戻るだけで従来挙動と同等。
+    Logger.log('[getOrCreateFolder] ロック取得失敗（10秒）。ロック無しで作成を続行: ' + name);
+  }
+
+  try {
+    // ロック取得を待つ間に他の実行が作成済みの可能性があるため再確認する（TOCTOU の肝）
+    const recheck = findFolderByName_(parentId, name);
+    if (recheck) {
+      cacheFolderId_(cacheKey, recheck);
+      return recheck;
+    }
+
+    Logger.log('[getOrCreateFolder] フォルダ作成: ' + name + ' in ' + parentId);
+    const created = DriveApp.getFolderById(parentId).createFolder(name);
+    cacheFolderId_(cacheKey, created);
+    return created;
+  } finally {
+    if (locked) lock.releaseLock();
+  }
+}
+
+/**
+ * 親フォルダ配下から名前でフォルダを1件探す（無ければ null）
+ * @param {string} parentId
+ * @param {string} name
+ * @returns {GoogleAppsScript.Drive.Folder|null}
+ */
+function findFolderByName_(parentId, name) {
+  const folders = DriveApp.getFolderById(parentId).getFoldersByName(name);
+  return folders.hasNext() ? folders.next() : null;
+}
+
+/**
+ * フォルダIDを Script Properties にキャッシュする（失敗しても処理は続行）
+ * @param {string} cacheKey
+ * @param {GoogleAppsScript.Drive.Folder} folder
+ */
+function cacheFolderId_(cacheKey, folder) {
+  try {
+    PropertiesService.getScriptProperties().setProperty(cacheKey, folder.getId());
+  } catch (e) {
+    Logger.log('[getOrCreateFolder] フォルダIDのキャッシュに失敗（処理には影響なし）: ' + e.message);
+  }
 }
 
 // ============================================================
@@ -1465,18 +1611,179 @@ function removeBom_(str) {
 }
 
 /**
- * エラーをスクリプトプロパティに記録する
+ * 文字化け（UTF-8 以外で保存された CSV）を検知する。
+ *
+ * 日本語版 Excel の既定保存は Shift_JIS のため、UTF-8 として読むと選手名・団体名が
+ * 置換文字 U+FFFD（�）に化ける。化けたまま公開サイトへ Push すると誰も気づけないので、
+ * 検知したら false を返して呼び出し元でエラー記録・処理中断させる。
+ *
+ * @param {string} text - getDataAsString('UTF-8') の結果
+ * @returns {boolean} 文字化けが無ければ true
+ */
+function isTextDecodedCleanly_(text) {
+  return !(text && text.indexOf('�') !== -1);
+}
+
+/**
+ * 文字化けCSVのエラーメッセージを組み立てる（ファイル名を明記）
+ * @param {string} fileName
+ * @returns {string}
+ */
+function mojibakeMessage_(fileName) {
+  return '文字化けを検知しました: ' + fileName +
+    '（UTF-8 として読めない文字が含まれています）。' +
+    'Excel で保存した CSV は文字コードが Shift_JIS になっている可能性があります。' +
+    'Excel の「名前を付けて保存」→ ファイルの種類で「CSV UTF-8（コンマ区切り）」を選んで保存し直し、' +
+    '同じファイル名で Drive にアップロードし直してください。' +
+    'このファイルは文字化けしたデータを公開しないよう処理を中断しました。';
+}
+
+/**
+ * エラーをスクリプトプロパティに記録する。
+ *
+ * LAST_ERROR（直近1件・後方互換のため維持）に加えて、
+ * ERROR_HISTORY にタイムスタンプ付きで直近 CONFIG.errorHistorySize 件をリング保持する。
+ * ポータルは ERROR_HISTORY と LAST_SUCCESS_AT を突き合わせて
+ * 「今も壊れている」のか「直ったあとの古いエラー」なのかを区別できる。
+ *
  * @param {string} context - エラー発生箇所
  * @param {Error} e
  */
 function recordError(context, e) {
   try {
+    // 下位で既に記録済みの例外は再記録しない。
+    // 例: checkRateLimit が HTTP 403 を記録して throw → onTrigger の catch が
+    //     同じ例外を受け取る、という経路で履歴とメールが二重になるのを防ぐ。
+    if (e && e.__recordedByRecordError) {
+      Logger.log('[recordError] 下位で記録済みのためスキップ: ' + context + '（既記録: ' + e.message + '）');
+      return;
+    }
+
     const props = PropertiesService.getScriptProperties();
-    const errorInfo = '[' + new Date().toISOString() + '] ' + context + ': ' + e.message;
+    const message = (e && e.message) ? e.message : String(e);
+    const timestamp = new Date().toISOString();
+    const errorInfo = '[' + timestamp + '] ' + context + ': ' + message;
+
     props.setProperty(CONFIG.props.lastError, errorInfo);
+
+    // 直近 N 件のリング保持（新しいものが先頭）
+    let history = [];
+    try {
+      const raw = props.getProperty(CONFIG.props.errorHistory);
+      if (raw) history = JSON.parse(raw);
+      if (!Array.isArray(history)) history = [];
+    } catch (parseErr) {
+      // 壊れた履歴は捨てて作り直す（記録自体を止めない）
+      history = [];
+    }
+    history.unshift({ at: timestamp, context: context, message: message });
+    history = history.slice(0, CONFIG.errorHistorySize);
+    props.setProperty(CONFIG.props.errorHistory, JSON.stringify(history));
+
+    // この実行でエラーが起きた事実を残す（onTrigger の「完全成功」判定に使う）。
+    // レース単位で握り潰して継続する経路も必ずここを通るため、取りこぼしがない。
+    runErrorCount_++;
+
+    // 同じ例外オブジェクトが上位の catch で再記録されないよう印を付ける
+    if (e && typeof e === 'object') {
+      try { e.__recordedByRecordError = true; } catch (markErr) { /* 凍結オブジェクト等は無視 */ }
+    }
+
     Logger.log('[recordError] ' + errorInfo);
+
+    // メール通知（同一エラーの連投は抑制）
+    notifyErrorByEmail_(context, message);
   } catch (recordErr) {
     Logger.log('[recordError] エラー記録中に例外: ' + recordErr.message);
+  }
+}
+
+/**
+ * エラー発生をスクリプトオーナーへメール通知する。
+ *
+ * - Script Property ERROR_EMAIL_ENABLED = 'false' で無効化できる（既定は有効）
+ * - 同一エラー（context + message）の連続通知は CONFIG.errorEmailThrottleMs の間抑制する
+ *   （2分間隔トリガーがエラーを繰り返すとメールクォータを即使い切るため）
+ * - 通知の失敗が本処理を壊してはいけないので例外は握りつぶす
+ *
+ * @param {string} context
+ * @param {string} message
+ */
+function notifyErrorByEmail_(context, message) {
+  try {
+    const props = PropertiesService.getScriptProperties();
+    if (props.getProperty(CONFIG.props.errorEmailEnabled) === 'false') return;
+
+    const recipient = Session.getEffectiveUser().getEmail();
+    if (!recipient) return;
+
+    // 抑制判定: 同じエラーが抑制時間内に通知済みならスキップ
+    const signature = context + '|' + message;
+    try {
+      const rawLast = props.getProperty(CONFIG.props.errorEmailLast);
+      if (rawLast) {
+        const last = JSON.parse(rawLast);
+        if (last && last.signature === signature &&
+            (Date.now() - Number(last.at)) < CONFIG.errorEmailThrottleMs) {
+          Logger.log('[notifyErrorByEmail_] 同一エラーの連続通知を抑制しました');
+          return;
+        }
+      }
+    } catch (parseErr) {
+      // 抑制記録が壊れていても通知自体は行う
+    }
+
+    // 全体上限の判定（種類を問わず1時間あたり errorEmailMaxPerHour 通まで）
+    // 「エラーの種類が毎回違う」大量発生（例: 全レースのCSVが Shift_JIS）でも
+    // クォータを守り、以降の通知経路を生かし続けるためのガード。
+    var windowStart = Date.now();
+    var sentInWindow = 0;
+    try {
+      var rawWindow = props.getProperty(CONFIG.props.errorEmailWindow);
+      if (rawWindow) {
+        var win = JSON.parse(rawWindow);
+        if (win && (Date.now() - Number(win.windowStartAt)) < 60 * 60 * 1000) {
+          windowStart = Number(win.windowStartAt);
+          sentInWindow = Number(win.count) || 0;
+        }
+      }
+    } catch (parseErr) {
+      sentInWindow = 0;
+    }
+    if (sentInWindow >= CONFIG.errorEmailMaxPerHour) {
+      Logger.log('[notifyErrorByEmail_] 1時間あたりの通知上限（' + CONFIG.errorEmailMaxPerHour +
+        '通）に達したため通知をスキップしました。エラー自体はポータルの状態タブで確認できます。');
+      return;
+    }
+
+    // 送信残量を確認（クォータ切れでの例外を避ける）
+    if (MailApp.getRemainingDailyQuota() <= 0) {
+      Logger.log('[notifyErrorByEmail_] メール送信クォータ切れのため通知をスキップしました');
+      return;
+    }
+
+    MailApp.sendEmail({
+      to: recipient,
+      subject: '[レガッタ速報キット] エラー通知: ' + context,
+      body:
+        'レガッタ速報キットの自動処理でエラーが発生しました。\n\n' +
+        '発生日時: ' + Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy/MM/dd HH:mm:ss') + '\n' +
+        '発生箇所: ' + context + '\n' +
+        '内容: ' + message + '\n\n' +
+        '管理者ポータルの「状態」タブで最新の状況を確認してください。\n' +
+        '※ 同じエラーの通知は約' + Math.round(CONFIG.errorEmailThrottleMs / 60000) + '分間まとめられます。\n' +
+        '※ この通知を止めるには、スクリプトプロパティ ERROR_EMAIL_ENABLED に false を設定してください。',
+    });
+
+    props.setProperty(CONFIG.props.errorEmailLast,
+      JSON.stringify({ signature: signature, at: Date.now() }));
+    props.setProperty(CONFIG.props.errorEmailWindow,
+      JSON.stringify({ windowStartAt: windowStart, count: sentInWindow + 1 }));
+    Logger.log('[notifyErrorByEmail_] エラー通知メールを送信しました（この1時間で ' +
+      (sentInWindow + 1) + '/' + CONFIG.errorEmailMaxPerHour + ' 通）');
+  } catch (mailErr) {
+    // 通知失敗で本処理を止めない
+    Logger.log('[notifyErrorByEmail_] メール通知に失敗（処理には影響なし）: ' + mailErr.message);
   }
 }
 

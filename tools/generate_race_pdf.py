@@ -14,8 +14,8 @@ from common import find_race as _find_race_common, format_race_datetime as _form
 
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE_PATH = ROOT / "print_templates" / "race_record_template.html"
-MASTER_PATH = ROOT / "data" / "master.json"
-RESULTS_DIR = ROOT / "data" / "results"
+MASTER_PATH = ROOT / "site" / "data" / "master.json"
+RESULTS_DIR = ROOT / "site" / "data" / "results"
 OUTPUT_DIR = ROOT / "print_templates"
 CHROME_PATH = Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
 

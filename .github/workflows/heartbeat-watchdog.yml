@@ -1,9 +1,12 @@
 name: GAS heartbeat watchdog
 
 on:
-  # 2026大会終了につき定期実行停止（2026-06-12）。次大会前に schedule を復活させる:
-  # schedule:
-  #   - cron: '*/10 * * * *'
+  # 定期実行は常時ONにしておく（2026-07-15 再有効化）。
+  # 大会が近くない期間に無駄打ちしないよう、ジョブ側で site/data/master.json の
+  # 大会日程を読み「大会前日〜最終日翌日」以外は即 exit する（下の「大会期間ガード」）。
+  # → 大会終了後に schedule をコメントアウトする運用（＝次大会で復活を忘れる事故）は不要。
+  schedule:
+    - cron: '*/10 * * * *'
   workflow_dispatch:
     inputs:
       dry_run:
@@ -50,46 +53,56 @@ jobs:
           now_ts=$(date +%s)
           now_jst=$(TZ=Asia/Tokyo date '+%Y/%m/%d %H:%M:%S JST')
 
-          # tournament.config.json から日付を読み取る（vars.TOURNAMENT_START/END 廃止）
-          CONFIG_FILE="tournament.config.json"
+          # ------------------------------------------------------------
+          # 大会期間ガード
+          #   site/data/master.json の tournament.dates（大会日程）を読み、
+          #   「大会前日〜最終日翌日」の外なら監視せず即終了する。
+          #   これにより schedule は常時ONのままでよく、平常時は無駄打ちせず、
+          #   大会日程を入れれば自動で監視が生きる（復活忘れ事故の防止）。
+          # ------------------------------------------------------------
+          CONFIG_FILE="site/data/master.json"
           TOURNAMENT_START=""
           TOURNAMENT_END=""
 
           if [ -f "$CONFIG_FILE" ]; then
-            TOURNAMENT_START=$(python3 -c "
-          import json, sys
-          try:
-              c = json.load(open('$CONFIG_FILE'))
-              dates = c.get('tournament', {}).get('dates', [])
-              print(dates[0] if len(dates) >= 1 else '')
-          except Exception:
-              print('')
-          ")
-            TOURNAMENT_END=$(python3 -c "
-          import json, sys
-          try:
-              c = json.load(open('$CONFIG_FILE'))
-              dates = c.get('tournament', {}).get('dates', [])
-              print(dates[-1] if len(dates) >= 1 else '')
-          except Exception:
-              print('')
-          ")
+            # 日程の最初と最後を取り出す（"YYYY-MM-DD YYYY-MM-DD" の1行）。
+            # ※ python は必ず1行で書く。-c に渡すコードを字下げすると IndentationError になり、
+            #    try/except でも捕捉できない（コンパイル時エラー）ため常に空になる。
+            DATES=$(python3 -c "import json;c=json.load(open('$CONFIG_FILE'));d=sorted(x for x in c.get('tournament',{}).get('dates',[]) if x);print(d[0]+' '+d[-1]) if d else print('')" 2>/dev/null || true)
+            TOURNAMENT_START=$(echo "$DATES" | awk '{print $1}')
+            TOURNAMENT_END=$(echo "$DATES" | awk '{print $2}')
           fi
 
           if [ -z "$TOURNAMENT_START" ] || [ -z "$TOURNAMENT_END" ]; then
-            echo "tournament.config.json が存在しないか日付が未設定のため監視をスキップします"
+            echo "status=SKIP: ${CONFIG_FILE} に大会日程(tournament.dates)が無いため監視をスキップします"
             exit 0
           fi
 
-          period_start_ts=$(TZ=Asia/Tokyo date -d "${TOURNAMENT_START} 12:00:00" +%s)
-          period_end_ts=$(TZ=Asia/Tokyo date -d "${TOURNAMENT_END} 00:00:00" +%s)
+          # 大会初日 00:00 / 最終日 23:59:59（JST）
+          # ※ "+1 day" 等の相対指定は date が数値タイムゾーンと解釈しうるため使わず、秒で加減算する
+          #    （日本にサマータイムは無いので 86400 秒＝1日で正確）
+          race_days_start_ts=$(TZ=Asia/Tokyo date -d "${TOURNAMENT_START} 00:00:00" +%s)
+          race_days_end_ts=$(TZ=Asia/Tokyo date -d "${TOURNAMENT_END} 23:59:59" +%s)
 
-          if [ "$now_ts" -ge "$period_start_ts" ] && [ "$now_ts" -lt "$period_end_ts" ]; then
+          # 監視ウィンドウ: 大会前日 00:00 〜 最終日翌日 23:59:59（JST）
+          window_start_ts=$((race_days_start_ts - 86400))
+          window_end_ts=$((race_days_end_ts + 86400))
+
+          echo "tournament_dates=${TOURNAMENT_START}〜${TOURNAMENT_END}"
+          echo "watch_window=$(TZ=Asia/Tokyo date -d "@${window_start_ts}" '+%Y/%m/%d %H:%M')〜$(TZ=Asia/Tokyo date -d "@${window_end_ts}" '+%Y/%m/%d %H:%M') JST"
+
+          if [ "$now_ts" -lt "$window_start_ts" ] || [ "$now_ts" -gt "$window_end_ts" ]; then
+            echo "status=SKIP: 大会期間外のため監視をスキップします (now=${now_jst})"
+            exit 0
+          fi
+
+          # 大会当日（初日00:00〜最終日23:59:59）は閾値を厳しく、前日・翌日は緩めにする
+          if [ "$now_ts" -ge "$race_days_start_ts" ] && [ "$now_ts" -le "$race_days_end_ts" ]; then
             threshold_minutes=15
             period_label="大会期間"
           else
             threshold_minutes=30
-            period_label="通常期間"
+            period_label="大会前日・翌日"
           fi
 
           last_ts=$(git log origin/main --grep="$MESSAGE_PATTERN" -1 --format=%at || true)

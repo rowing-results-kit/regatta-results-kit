@@ -20,7 +20,14 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
-      - name: E2Eテスト実行
+      - name: E2Eテスト実行（既存JSONの検証）
         run: python3 test/e2e_test.py --skip-pipeline
         # --skip-pipeline オプション: CSV→JSON変換をスキップしてJSONのみ検証
         # 雛形状態（schedule が空配列）の場合は test/e2e_test.py 内でスキップ扱いになる
+
+      - name: E2Eテスト実行（CSV→JSON変換パイプライン）
+        run: python3 test/e2e_test.py
+        # --skip-pipeline だけだと、test/csv から JSON を生成する経路
+        # （DNF艇を status:'dnf' で残す・完走艇に status:'finish' を付ける契約）が
+        # CI で一度も実行されず、退行しても緑のまま通ってしまうため必ず両方走らせる。
+        # test/e2e_test.py は標準ライブラリのみに依存し、ファイルを書き出さない。

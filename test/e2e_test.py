@@ -68,7 +68,17 @@ ROOT_DIR = PROJECT_DIR
 CSV_DIR = TEST_DIR / "csv"
 
 # テスト対象レース（CSV に存在するレース番号）
-TEST_RACES = [1, 2, 3]
+# Race 6 は DNF（フィニッシュタイムなし）艇を含むケース
+TEST_RACES = [1, 2, 3, 6]
+
+# DNF艇を含むテストレース（test_dnf で検証）
+DNF_TEST_RACE = 6
+
+# DNF_TEST_RACE で DNF になるレーン（500m のみ計測・1000m なし）
+# ※ site/data/master.json の Race 6 は レーン1・2 のみエントリーがある。
+#   エントリーの無いレーンを使うと app.js の描画時に落ちてしまい
+#   「画面に出るか」を検証できないため、必ずエントリー実在レーンを使うこと。
+DNF_TEST_LANES = [2]
 
 # 計測ポイント
 MEASUREMENT_POINTS = ["500m", "1000m"]
@@ -185,8 +195,11 @@ def test_pipeline(result: TestResult, verbose: bool) -> dict:
             if verbose:
                 for r in race_json["results"]:
                     finish_fmt = (r.get("finish") or {}).get("formatted", "---")
+                    rank_str = (
+                        f"{r['rank']:2d}位" if r.get("rank") is not None else "DNF"
+                    )
                     print(
-                        f"  {C.GRAY}  {r['rank']:2d}位  レーン{r['lane']}  "
+                        f"  {C.GRAY}  {rank_str}  レーン{r['lane']}  "
                         f"{finish_fmt}  {r.get('split','')}{C.RESET}"
                     )
     return generated
@@ -197,10 +210,13 @@ def test_schema(result: TestResult, generated: dict, verbose: bool) -> None:
     テスト2: JSONスキーマ検証
     生成されたJSONが必須フィールドを持つか確認する。
     - トップレベル: race_no, updated_at, results[]
-    - 各result: lane, rank, times, finish, split
+    - 各result: lane, rank, times, finish, split, status
+
+    status はパイプライン・GAS本番の双方が必ず出力する契約のため、
+    --skip-pipeline（既存JSON検証）でも例外なく必須とする。
     """
     top_required    = ["race_no", "updated_at", "results"]
-    result_required = ["lane", "rank", "times", "finish", "split"]
+    result_required = ["lane", "rank", "times", "finish", "split", "status"]
 
     for race_no, race_json in generated.items():
         filename = f"race_{race_no:03d}.json"
@@ -288,7 +304,7 @@ def test_ranking(result: TestResult, generated: dict, verbose: bool) -> None:
                     print(
                         f"  {C.GRAY}  rank={r['rank']}  "
                         f"lane={r['lane']}  "
-                        f"finish_ms={r.get('finish',{}).get('time_ms')}{C.RESET}"
+                        f"finish_ms={(r.get('finish') or {}).get('time_ms')}{C.RESET}"
                     )
 
 
@@ -348,6 +364,90 @@ def test_tie(result: TestResult, generated: dict, verbose: bool) -> None:
                 f"同着グループの順位が不一致: {ranks}",
             )
             all_ok = False
+
+
+def test_dnf(result: TestResult, generated: dict, verbose: bool) -> None:
+    """
+    テスト9: DNF（途中棄権）検証
+    フィニッシュタイムのない艇が結果から消えず、status='dnf' で残るか確認する。
+    GAS本番（gas/Code.gs buildRaceJson）と同じ扱いであることを担保する。
+    """
+    race_no = DNF_TEST_RACE
+    if race_no not in generated:
+        result.fail(f"DNF: Race {race_no}", "Race6のデータが生成されていません")
+        return
+
+    results = generated[race_no].get("results", [])
+    by_lane = {r["lane"]: r for r in results}
+
+    # 0. 前提の担保: DNF艇のレーンが master.json にエントリーとして存在すること。
+    #    app.js は entries に無いレーンを描画時に落とすため、ここが崩れると
+    #    JSONにDNF艇が居ても「画面から消える」= 直したはずのバグが再発する。
+    if MASTER_JSON_PATH.exists():
+        master = json.loads(MASTER_JSON_PATH.read_text(encoding="utf-8"))
+        race = next(
+            (r for r in master.get("schedule", []) if r.get("race_no") == race_no), None
+        )
+        if race is not None:
+            entry_lanes = {e.get("lane") for e in race.get("entries", [])}
+            missing_entry = [ln for ln in DNF_TEST_LANES if ln not in entry_lanes]
+            if missing_entry:
+                result.fail(
+                    f"DNF: Race {race_no} 前提崩れ",
+                    f"DNF検証レーン{missing_entry} が master.json のエントリーに存在しません"
+                    f"（実在レーン: {sorted(l for l in entry_lanes if l is not None)}）"
+                    "→ 画面に描画されないため検証が無意味になります",
+                )
+                return
+
+    # 1. DNF艇が結果から消えていないこと
+    missing_lanes = [ln for ln in DNF_TEST_LANES if ln not in by_lane]
+    if missing_lanes:
+        result.fail(
+            f"DNF: Race {race_no}",
+            f"DNF艇が結果から消えています: レーン{missing_lanes}"
+            "（フィニッシュタイムなしでも結果に残す必要あり）",
+        )
+        return
+
+    # 2. DNF艇の status/rank/finish が正しいこと
+    dnf_errors = []
+    for ln in DNF_TEST_LANES:
+        r = by_lane[ln]
+        if r.get("status") != "dnf":
+            dnf_errors.append(f"レーン{ln}: status={r.get('status')!r}（期待: 'dnf'）")
+        if r.get("rank") is not None:
+            dnf_errors.append(f"レーン{ln}: rank={r.get('rank')!r}（期待: None）")
+        if r.get("finish") is not None:
+            dnf_errors.append(f"レーン{ln}: finish={r.get('finish')!r}（期待: None）")
+
+    # 3. 完走艇に status='finish' が付いていること
+    finish_lanes = [ln for ln in by_lane if ln not in DNF_TEST_LANES]
+    for ln in finish_lanes:
+        r = by_lane[ln]
+        if r.get("status") != "finish":
+            dnf_errors.append(
+                f"レーン{ln}: status={r.get('status')!r}（期待: 'finish'）"
+            )
+        if r.get("rank") is None:
+            dnf_errors.append(f"レーン{ln}: 完走艇なのに rank が None です")
+
+    if dnf_errors:
+        result.fail(
+            f"DNF: Race {race_no}",
+            ", ".join(dnf_errors[:3]) + ("..." if len(dnf_errors) > 3 else ""),
+        )
+    else:
+        result.ok(
+            f"DNF: Race {race_no} DNF艇が status='dnf' で保持されている",
+            f"DNF={len(DNF_TEST_LANES)}艇 / 完走={len(finish_lanes)}艇",
+        )
+        if verbose:
+            for r in results:
+                print(
+                    f"  {C.GRAY}  レーン{r['lane']}  status={r.get('status')}  "
+                    f"rank={r.get('rank')}{C.RESET}"
+                )
 
 
 def test_time_format(result: TestResult, generated: dict, verbose: bool) -> None:
@@ -617,7 +717,10 @@ def run(args: argparse.Namespace) -> int:
         # テスト4: 同着検証（パイプライン実行時のみ）
         test_tie(result, generated, verbose)
 
-    # テスト2: スキーマ検証
+        # テスト9: DNF検証（パイプライン実行時のみ／DNF用CSVが前提）
+        test_dnf(result, generated, verbose)
+
+    # テスト2: スキーマ検証（status は常に必須）
     test_schema(result, generated, verbose)
 
     # テスト3: ランキング検証

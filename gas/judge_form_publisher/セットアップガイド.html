@@ -97,7 +97,8 @@
       <h2>初期セットアップ</h2>
       <ol>
         <li>Apps Script Editor で新規プロジェクトを作成し、名前を <code>マスターズ判定員帳票</code> にします。</li>
-        <li><code>Code.gs</code>、<code>Setup.gs</code>、<code>appsscript.json</code> を貼り付けます。</li>
+        <li><code>Code.gs</code>、<code>Setup.gs</code>、<code>WebApp.gs</code>、<code>appsscript.json</code> を貼り付けます。</li>
+        <li>「ファイル」の追加から <strong>HTML</strong> を選び、名前を <code>webapp</code>（<code>webapp.html</code> ではありません）にして作成し、<code>webapp.html</code> の内容を貼り付けます。</li>
         <li>スクリプトプロパティを設定します。<code>GITHUB_TOKEN</code> は既存GASと同じ値を使います。</li>
         <li><code>saveSetup()</code> を実行します。</li>
         <li><code>testGenerateDay1()</code> で 2026/05/23 のPDFを生成し、Drive を確認します。</li>
@@ -117,9 +118,23 @@
       </ul>
     </section>
 
+    <section>
+      <h2>帳票をブラウザから作る（ウェブアプリ）</h2>
+      <p>スクリプトエディタを開かずに、<span class="accent">ブラウザのボタン</span>から判定員帳票を作れます。次の手順で1回だけデプロイしてください。</p>
+      <ol>
+        <li>画面右上の「デプロイ」→「新しいデプロイ」を選びます。</li>
+        <li>「種類の選択」の歯車から <strong>ウェブアプリ</strong> を選びます。</li>
+        <li><strong>次のユーザーとして実行</strong> を <code>自分</code>、<strong>アクセスできるユーザー</strong> を <code>自分のみ</code> に設定して「デプロイ」を押します。</li>
+        <li>初回のみアクセスの承認を求められます。自分の Google アカウントを選んで許可します。</li>
+        <li>表示された <strong>ウェブアプリの URL</strong> を開きます。ボタンを押すと帳票が作られ、Drive の出力フォルダに PDF が入ります。URL はブックマークしておくと便利です。</li>
+      </ol>
+      <p><span class="accent">「アクセスできるユーザー」を <code>全員</code> にしないでください。</span> 帳票の作成が誰にでも実行できてしまいます。なお安全のため、誤って <code>全員</code> にした場合はページ側でも操作を拒否します。</p>
+      <p>コード（<code>Code.gs</code> / <code>WebApp.gs</code> / <code>webapp</code>）を更新したときは、「デプロイ」→「デプロイを管理」→ 鉛筆マーク →「バージョン」を <code>新バージョン</code> にして「デプロイ」を押してください。URL は変わりません。</p>
+    </section>
+
     <section class="notice">
       <h2>運用メモ</h2>
-      <p><span class="accent">トリガーは作成しません。</span> 判定員帳票が必要なタイミングで <code>testGenerateDay1()</code>、<code>testGenerateDay2()</code>、または <code>generateAllJudgeForms()</code> を手動実行してください。</p>
+      <p><span class="accent">トリガーは作成しません。</span> 判定員帳票が必要なタイミングで、上記のウェブアプリのボタンを押すか、<code>testGenerateDay1()</code>、<code>testGenerateDay2()</code>、<code>generateAllJudgeForms()</code> を手動実行してください。</p>
       <p>出力ファイル名は <code>判定員帳票_YYYY-MM-DD.pdf</code> です。同名ファイルが出力先フォルダにある場合はゴミ箱へ移動してから新規作成します。</p>
     </section>
   </main>

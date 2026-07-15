@@ -18,7 +18,7 @@ except ImportError:
 
 FONT_PATH = "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc"
 FONT_BOLD_PATH = "/System/Library/Fonts/ヒラギノ角ゴシック W6.ttc"
-MASTER_URL = "https://raw.githubusercontent.com/{{GITHUB_REPO}}/main/data/master.json"
+MASTER_URL = "https://raw.githubusercontent.com/{{GITHUB_REPO}}/main/site/data/master.json"
 
 if HAS_REPORTLAB:
     pdfmetrics.registerFont(TTFont("Hiragino", FONT_PATH, subfontIndex=0))
@@ -30,7 +30,7 @@ def fetch_master():
         with urllib.request.urlopen(MASTER_URL, timeout=30) as response:
             body = response.read().decode("utf-8")
     except Exception:
-        with open("data/master.json", encoding="utf-8") as f:
+        with open("site/data/master.json", encoding="utf-8") as f:
             body = f.read()
     with open("/tmp/master.json", "w", encoding="utf-8") as f:
         f.write(body)
