@@ -32,3 +32,5 @@
 - README v0.1.0 vs VERSION 0.9.2 整合・CHANGELOG新設・SPEC-hub-v1等のstale解消
 - hub/association.json のCI検証・publisher 2本のrecordError実装・staffインラインHEX残存・portal残余コントラスト7件
 - engine既知残: assignLanes中央寄せ不一致・ProgressionError未実装・masters-regatta-2026側の同系バグ
+- pipeline既知残（要設計判断・eng-tools 3巡目報告）: 失敗再試行キーがCSV単位mtime／複数行引用フィールドで行番号ズレ／`--serve`+`--output`時のプレビューが本番JSON表示／test_dnfが実大会master.jsonと結合しCIが赤くなりうる／全艇DNFレースはGAS=公開・Python=スキップの乖離
+- site/admin ページの japanese-typesetting（line-break:strict・palt）未適用（内部ページ・低優先）
