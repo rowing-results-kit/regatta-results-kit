@@ -2,7 +2,7 @@
 
 ## 起動コマンド
 ```bash
-cd ~/Desktop/ryui-workspace/projects/rowing/regatta-results-kit && claude
+cd /path/to/regatta-results-kit && claude
 ```
 
 ## 品質ゲート

@@ -176,13 +176,24 @@
 |---|---|
 | `TEMPLATE_SHEET_ID` | PDF テンプレートの Spreadsheet ID |
 | `PDF_OUTPUT_FOLDER_ID` | PDF 出力先 Drive フォルダ ID |
-| その他 | オンボーディングサイトの表を参照 |
+| `PDF_ARCHIVE_FOLDER_ID` | PDF アーカイブ先 Drive フォルダ ID |
+| `PRE_RACE_BOOKLET_FOLDER_ID` | レース前配布冊子の出力先 Drive フォルダ ID |
+| `BOOKLET_TEMPLATE_GID` | 冊子テンプレートのシート GID（URL の `gid=` の数値） |
 
-> `GITHUB_REPO` は GitHub リポジトリの URL から自動設定されます（スクリプトプロパティへの手入力は不要です）。
+> `GITHUB_REPO` は GitHub リポジトリの URL から自動設定されます（スクリプトプロパティへの手入力は不要です）。`GITHUB_BRANCH` は `main` が既定です。`GITHUB_TOKEN` はステップ 6 の後に設定します。
 
 ### GAS-C（判定員帳票）— 任意
 
-GAS-B と同様の手順。
+1. オンボーディングサイトに記載のリンク（GAS-C テンプレート）を開く
+2. **"コピーを作成"** → 名前を入力
+3. スクリプトプロパティに以下を入力（**GAS-B とはフォルダのキー名が異なります**。`PDF_OUTPUT_FOLDER_ID` ではなく `OUTPUT_FOLDER_ID`）:
+
+| プロパティ名 | 値 |
+|---|---|
+| `TEMPLATE_SHEET_ID` | 判定員帳票テンプレートの Spreadsheet ID |
+| `OUTPUT_FOLDER_ID` | 帳票の出力先 Drive フォルダ ID |
+
+> `GITHUB_REPO` は GitHub リポジトリの URL から自動設定されます。`GITHUB_TOKEN` はステップ 6 の後に設定します。
 
 **所要時間**: GAS-A のみなら 10分、B・C も含めると 20〜30分
 

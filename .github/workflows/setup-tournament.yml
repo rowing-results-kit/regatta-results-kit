@@ -292,7 +292,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add site/ staff/ tournament.config.json docs/SETUP_GUIDE.generated.md 2>/dev/null || true
+          git add site/ staff/ docs/SETUP_GUIDE.generated.md 2>/dev/null || true
+          # tournament.config.json は .gitignore 対象のため -f で明示的にステージ（サイレント除外を防止）
+          git add -f tournament.config.json 2>/dev/null || true
 
           if git diff --cached --quiet; then
             echo "変更なし、コミットをスキップします（2回目以降の実行）"
