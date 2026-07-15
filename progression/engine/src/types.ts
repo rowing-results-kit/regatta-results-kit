@@ -1,8 +1,16 @@
 /** String alias for progression source identifiers such as `1.HT`. */
 export type Identifier = string;
 
-/** Result status values understood by the progression engine. */
-export type Status = "finish" | "DNS" | "DNF" | "DQ" | "dns" | "dnf" | "dq";
+/**
+ * Result status values understood by the progression engine.
+ *
+ * Kept as a closed union on purpose. `normalizeStatus` fails closed (SPEC §6.1), so an
+ * unrecognized value silently scratches a crew at runtime — this union is the only
+ * thing that catches a typo like "finsh" at build time. Widening it with `string` would
+ * remove that net. Values arriving as untyped JSON still reach `normalizeStatus`, whose
+ * parameter deliberately accepts `string`.
+ */
+export type Status = "finish" | "DNS" | "DNF" | "DQ" | "EXC" | "unknown" | "dns" | "dnf" | "dq" | "exc";
 
 /** Root template for one competition progression table. */
 export interface ProgressionTemplate {
@@ -81,6 +89,10 @@ export interface Result {
   finish_rank?: number;
   status: Status;
   tie_group?: string;
+  /** Photo-finish pending marker (SPEC §2.1 / §5.4). */
+  photo_flag?: boolean;
+  /** Free-text note carried through from the source data (SPEC §2.1). */
+  note?: string;
   input_order?: number;
 }
 

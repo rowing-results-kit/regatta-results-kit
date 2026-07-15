@@ -88,6 +88,6 @@ export class ProgressionEngine {
 
   /** Applies assignment rules directly to an already-built source map. */
   computeFromSources(entriesCount: number, sources: Map<string, Boat>) {
-    return computeAdvancementFromSources(this.selectPattern(entriesCount), sources);
+    return computeAdvancementFromSources(this.selectPattern(entriesCount), sources, this.template.lanes);
   }
 }

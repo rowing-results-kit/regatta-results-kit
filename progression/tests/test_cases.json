@@ -18,10 +18,12 @@
     "source": "PDF source expression such as 1.HT, 1.1.H, 2.3.S",
     "status_order": [
       "finish",
-      "dns",
       "dnf",
-      "dq"
+      "dq",
+      "dns",
+      "unknown"
     ],
+    "status_policy": "許可リスト（SPEC §6.1）。finish 以外（EXC・未知コード・綴り誤り = unknown を含む）は進出対象外。status_order は非完漕どうしの決定的な並び順を与えるのみで、進出可否には関与しない",
     "tie_policy": "keep tied crews in the same tie_group and preserve deterministic input_order inside that group until an official tie-break is supplied",
     "skip_if": "the target race is not created when it has only one assigned crew"
   },
@@ -325,7 +327,7 @@
     },
     {
       "id": "edge-A-pattern2-dns-dnf-dq",
-      "description": "A版 パターン2: DNS/DNF/DQを含む予選で正常完漕艇を先に順位付けし、DNS艇をFB末尾に置く",
+      "description": "A版 パターン2: DNS/DNF/DQは進出対象外とし、残る完漕艇だけで繰り上げる",
       "template": "alljapan-2026-A",
       "pattern": 2,
       "input": {
@@ -351,24 +353,28 @@
       },
       "expected": {
         "classification_notes": [
-          "H1/H2 winners crew_A and crew_B are protected as 1.1.H and 2.1.H",
-          "DNF, DQ, DNS are ordered after finishers by status_order"
+          "SPEC_engine.md §5.1 step3 / §6 / §5.2 からの手計算。実装出力の転記ではない。",
+          "1. 各組 status==='finish' のみ着順対象: H1完漕=A(1),C(2),E(3),G(4) [I:dnf/K:dns除外] / H2完漕=B(1),D(2),F(3),H(4),L(5) [J:dq除外]",
+          "2. protected rank={1}。1着をタイム順に並べ A(200000)<B(205000) → 1.1.H=crew_A, 2.1.H=crew_B ※この `N.M.H` 解釈（N=1着群のタイム順位／M=着順）はテンプレートとエンジンの実装semanticsであり、SPEC §3.1の記述（N=着順/M=組番号）とは食い違う。SPEC側の記述誤りとして要修正（本テストの進出可否には影響せず）",
+          "3. 残る完漕艇をタイム昇順でHT付番: C(210000)=1.HT, D(215000)=2.HT, E(220000)=3.HT, F(225000)=4.HT, G(230000)=5.HT, H(235000)=6.HT, L(250000)=7.HT",
+          "4. tail枠=全12行-protected2枠=10。完漕tailは7艇のため 8.HT/9.HT/10.HT は占有者なし（§6『対象外艇を除外した後に上からN艇を取る』）",
+          "5. FA=[1:3.HT,2:1.HT,3:1.1.H,4:2.1.H,5:2.HT,6:4.HT] → 満員6艇なのでテンプレのbnをそのまま使う: E,C,A,B,D,F",
+          "6. FB=[1:9.HT,2:7.HT,3:5.HT,4:6.HT,5:8.HT,6:10.HT] → 8/9/10.HTが欠員で G(5.HT)/H(6.HT)/L(7.HT) の3艇。§5.2『レーンは中央から外側へ』の推奨順 [3,4,2,5,1,6] の先頭3枠を速い順に与える → 1位G=bn3, 2位H=bn4, 3位L=bn2（レーン2/3/4）",
+          "検算: 入力の完漕9艇(A,B,C,D,E,F,G,H,L) = FA 6艇 + FB 3艇。完漕艇の消滅なし・DNF/DQ/DNS(I,J,K)はレーンを得ない"
         ],
         "races": {
           "FA": [
-            { "bn": 1, "crew_id": "crew_F", "source": "3.HT" },
+            { "bn": 1, "crew_id": "crew_E", "source": "3.HT" },
             { "bn": 2, "crew_id": "crew_C", "source": "1.HT" },
             { "bn": 3, "crew_id": "crew_A", "source": "1.1.H" },
             { "bn": 4, "crew_id": "crew_B", "source": "2.1.H" },
             { "bn": 5, "crew_id": "crew_D", "source": "2.HT" },
-            { "bn": 6, "crew_id": "crew_G", "source": "4.HT" }
+            { "bn": 6, "crew_id": "crew_F", "source": "4.HT" }
           ],
           "FB": [
-            { "bn": 1, "crew_id": "crew_J", "source": "9.HT" },
-            { "bn": 2, "crew_id": "crew_I", "source": "7.HT" },
-            { "bn": 3, "crew_id": "crew_L", "source": "5.HT" },
-            { "bn": 4, "crew_id": "crew_H", "source": "6.HT" },
-            { "bn": 5, "crew_id": "crew_K", "source": "10.HT" }
+            { "bn": 2, "crew_id": "crew_L", "source": "7.HT" },
+            { "bn": 3, "crew_id": "crew_G", "source": "5.HT" },
+            { "bn": 4, "crew_id": "crew_H", "source": "6.HT" }
           ]
         }
       }
@@ -452,12 +458,17 @@
         }
       },
       "expected": {
+        "classification_notes": [
+          "9艇: HT対象 = 9 − 2(直接進出) = 7艇 → HT 1〜7 が実在。FA=HT1〜4+1着2艇の満員6艇。FB=[1:9.HT,2:7.HT,3:5.HT,4:6.HT,5:8.HT,6:10.HT] のうち 5/6/7.HT のみ実在で3艇",
+          "§5.2『レーンは中央から外側へ』の推奨順 [3,4,2,5,1,6](6レーン) の先頭3枠を速い順に与える → 1位G(5.HT)=bn3, 2位H(6.HT)=bn4, 3位I(7.HT)=bn2 → レーン2/3/4",
+          "※旧期待値のレーン3/4/5は、削除した3艇専用の再センタリング分岐(recenterThreeBoatHeatTailFinal)の出力転記だった"
+        ],
         "races": {
           "FA": ["3.HT", "1.HT", "1.1.H", "2.1.H", "2.HT", "4.HT"],
           "FB": [
+            { "bn": 2, "crew_id": "crew_I", "source": "7.HT" },
             { "bn": 3, "crew_id": "crew_G", "source": "5.HT" },
-            { "bn": 4, "crew_id": "crew_H", "source": "6.HT" },
-            { "bn": 5, "crew_id": "crew_I", "source": "7.HT" }
+            { "bn": 4, "crew_id": "crew_H", "source": "6.HT" }
           ]
         }
       }
@@ -469,13 +480,18 @@
       "pattern": 3,
       "input": { "entries_count": 15, "fixture": "synthetic_ranked_sources" },
       "expected": {
+        "classification_notes": [
+          "15艇: HT対象 = 15 − 6(直接進出) = 9艇 → HT 1〜9 が実在。FC=[1:11.HT,2:9.HT,3:7.HT,4:8.HT,5:10.HT,6:12.HT] のうち 7/8/9.HT のみ実在で3艇",
+          "§5.2『レーンは中央から外側へ割り当てる』の推奨順 [3,4,2,5,1,6](6レーン) の先頭3枠を速い順に与える → 1位=bn3 / 2位=bn4 / 3位=bn2 → レーン2/3/4",
+          "※旧期待値のレーン3/4/5は、削除した3艇専用の再センタリング分岐(recenterThreeBoatHeatTailFinal)の出力転記だった"
+        ],
         "races": {
           "S1": ["4.HT", "2.2.H", "1.1.H", "3.1.H", "2.HT", "6.HT"],
           "S2": ["3.HT", "3.2.H", "2.1.H", "1.2.H", "1.HT", "5.HT"],
           "FC": [
+            { "bn": 2, "source": "9.HT" },
             { "bn": 3, "source": "7.HT" },
-            { "bn": 4, "source": "8.HT" },
-            { "bn": 5, "source": "9.HT" }
+            { "bn": 4, "source": "8.HT" }
           ]
         }
       }
@@ -487,15 +503,25 @@
       "pattern": 4,
       "input": { "entries_count": 22, "fixture": "synthetic_ranked_sources" },
       "expected": {
+        "classification_notes": [
+          "SPEC_engine.md §5.1 resolveHeatTimeRank / §6 / §5.2 からの手計算。実装出力の転記ではない。",
+          "1. テンプレ構造: 予選H=4組。直接進出枠は各組1着の 1.1.H/2.1.H/3.1.H/4.1.H = 4枠。S=直接進出4艇+HT1〜8の12艇、FC=HT9〜14、FD=HT15〜20。満員時 4+8+6+6=24=entries_max で辻褄が合う",
+          "2. 22艇では HT対象 = 22 − 4(直接進出) = 18艇 → HTランクは 1〜18 のみ実在。19.HT/20.HT は指す艇が存在しない（§5.1なら RANK_NOT_FOUND・§6『対象外艇を除外した後に上からN艇を取る』）",
+          "3. S1/S2 は HT1〜8、FC は HT9〜14 のみ使うため22艇でも全ランク実在=満員6艇のまま不変",
+          "4. FD テンプレ [1:19.HT, 2:17.HT, 3:15.HT, 4:16.HT, 5:18.HT, 6:20.HT] のうち 19.HT/20.HT が不在 → 残るのは 15/16/17/18.HT の4艇",
+          "5. §5.2 の推奨レーン順 [3,4,2,5,1,6] の先頭4枠を速い順に与える → 1位15.HT=bn3, 2位16.HT=bn4, 3位17.HT=bn2, 4位18.HT=bn5（レーン2/3/4/5）。FDテンプレのbnと偶然一致する（テンプレ自体が同じ中央外向き順で書かれているため）",
+          "検算: 22艇 = 直接進出4 + S行きHT8 + FC 6 + FD 4。テストケース記述『22艇の中間人数でFDが4艇になる』と一致",
+          "※旧期待値の先頭 19.HT は inferTailLimit のハードコード分岐(entries 19-24かつ22艇→上限19)が捏造した幻ランクで、FDは実際には5艇を出力していた。projectRaceの部分一致が5行目を隠蔽していた"
+        ],
         "races": {
           "S1": ["6.HT", "2.HT", "1.1.H", "3.1.H", "4.HT", "7.HT"],
           "S2": ["5.HT", "1.HT", "2.1.H", "4.1.H", "3.HT", "8.HT"],
           "FC": ["13.HT", "11.HT", "9.HT", "10.HT", "12.HT", "14.HT"],
           "FD": [
-            { "bn": 1, "source": "19.HT" },
             { "bn": 2, "source": "17.HT" },
             { "bn": 3, "source": "15.HT" },
-            { "bn": 4, "source": "16.HT" }
+            { "bn": 4, "source": "16.HT" },
+            { "bn": 5, "source": "18.HT" }
           ]
         }
       }
@@ -507,15 +533,20 @@
       "pattern": 5,
       "input": { "entries_count": 27, "fixture": "synthetic_ranked_sources" },
       "expected": {
+        "classification_notes": [
+          "27艇: HT対象 = 27 − 10(直接進出) = 17艇 → HT 1〜17 が実在。FE=[1:19.HT,2:17.HT,3:15.HT,4:16.HT,5:18.HT,6:20.HT] のうち 15/16/17.HT のみ実在で3艇",
+          "§5.2『レーンは中央から外側へ割り当てる』の推奨順 [3,4,2,5,1,6](6レーン) の先頭3枠を速い順に与える → 1位=bn3 / 2位=bn4 / 3位=bn2 → レーン2/3/4",
+          "※旧期待値のレーン3/4/5は、削除した3艇専用の再センタリング分岐(recenterThreeBoatHeatTailFinal)の出力転記だった"
+        ],
         "races": {
           "Q1": ["10.HT", "4.2.H", "1.1.H", "5.1.H", "6.HT", "14.HT"],
           "Q2": ["9.HT", "5.2.H", "2.1.H", "1.2.H", "5.HT", "13.HT"],
           "Q3": ["8.HT", "1.HT", "3.1.H", "2.2.H", "4.HT", "12.HT"],
           "Q4": ["7.HT", "2.HT", "4.1.H", "3.2.H", "3.HT", "11.HT"],
           "FE": [
+            { "bn": 2, "source": "17.HT" },
             { "bn": 3, "source": "15.HT" },
-            { "bn": 4, "source": "16.HT" },
-            { "bn": 5, "source": "17.HT" }
+            { "bn": 4, "source": "16.HT" }
           ]
         }
       }
@@ -527,6 +558,11 @@
       "pattern": 7,
       "input": { "entries_count": 39, "fixture": "synthetic_ranked_sources" },
       "expected": {
+        "classification_notes": [
+          "39艇: HT対象 = 39 − 7(直接進出) = 32艇 → HT 1〜32 が実在。FG=[1:34.HT,2:32.HT,3:30.HT,4:31.HT,5:33.HT,6:35.HT] のうち 30/31/32.HT のみ実在で3艇",
+          "§5.2『レーンは中央から外側へ割り当てる』の推奨順 [3,4,2,5,1,6](6レーン) の先頭3枠を速い順に与える → 1位=bn3 / 2位=bn4 / 3位=bn2 → レーン2/3/4",
+          "※旧期待値のレーン3/4/5は、削除した3艇専用の再センタリング分岐(recenterThreeBoatHeatTailFinal)の出力転記だった"
+        ],
         "races": {
           "Q1": ["13.HT", "2.HT", "1.1.H", "5.1.H", "9.HT", "17.HT"],
           "Q2": ["12.HT", "3.HT", "2.1.H", "6.1.H", "8.HT", "16.HT"],
@@ -535,9 +571,9 @@
           "FE": ["22.HT", "20.HT", "18.HT", "19.HT", "21.HT", "23.HT"],
           "FF": ["28.HT", "26.HT", "24.HT", "25.HT", "27.HT", "29.HT"],
           "FG": [
+            { "bn": 2, "source": "32.HT" },
             { "bn": 3, "source": "30.HT" },
-            { "bn": 4, "source": "31.HT" },
-            { "bn": 5, "source": "32.HT" }
+            { "bn": 4, "source": "31.HT" }
           ]
         }
       }

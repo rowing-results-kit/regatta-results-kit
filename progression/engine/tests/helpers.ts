@@ -31,7 +31,7 @@ export function loadTemplate(id: string): ProgressionTemplate {
 }
 
 /** Runs the engine against the compact JSON test-case input shape. */
-export function runEngine(engine: ProgressionEngine, input: TestInput): EngineOutput {
+export function runEngine(engine: ProgressionEngine, input: TestInput, lanes?: number): EngineOutput {
   const pattern = engine.selectPattern(input.entries_count);
   const sources = input.preliminary_results
     ? buildSourcesFromPreliminary(input.preliminary_results)
@@ -47,7 +47,7 @@ export function runEngine(engine: ProgressionEngine, input: TestInput): EngineOu
       }
     }
   }
-  const output = computeAdvancementFromSources(pattern, sources);
+  const output = computeAdvancementFromSources(pattern, sources, lanes);
   const tieGroups = buildTieGroups(sources);
   if (tieGroups && tieGroups.length > 0) {
     output.tie_groups = tieGroups;

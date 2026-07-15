@@ -8,7 +8,7 @@ describe("Progression Engine - all test cases", () => {
     it(`${tc.id}: ${tc.description}`, () => {
       const template = loadTemplate(tc.template);
       const engine = new ProgressionEngine(template);
-      const result = runEngine(engine, tc.input);
+      const result = runEngine(engine, tc.input, template.lanes);
       expect(projectOutput(result, tc.expected)).toEqual(comparableExpected(tc.expected));
     });
   }
